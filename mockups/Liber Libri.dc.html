@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin: 0; padding: 0; background: #E7DFD1; }
+  * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+  a { color: #7C4A2D; text-decoration: none; }
+  a:hover { color: #5C3620; text-decoration: underline; }
+  input, button, textarea, select { font: inherit; color: inherit; }
+  ::-webkit-scrollbar { width: 0; height: 0; }
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:#E7DFD1;font-family:'IBM Plex Sans',system-ui,sans-serif;color:#221F1A;padding:32px 32px 64px">
+
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:24px;max-width:1500px;margin:0 auto 28px;flex-wrap:wrap">
+    <div style="max-width:660px">
+      <div style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#8A7F70;margin-bottom:8px">Design proposal · revised for the simplified PRD</div>
+      <h1 style="font-family:Newsreader,Georgia,serif;font-size:44px;font-weight:400;letter-spacing:-0.01em;margin:0 0 8px">Liber Libri</h1>
+      <p style="margin:0;font-size:14.5px;line-height:1.55;color:#6B6257;text-wrap:pretty">One book, one state, two dates. Reading, To Read and Finished are the whole model now, so every screen below is a view of a single record changing hands. It's all clickable — finish a book, move it back, add one, and watch the year count follow.</p>
+    </div>
+    <div style="display:flex;gap:6px;background:#DAD0BF;padding:4px;border-radius:999px">
+      <button onClick="{{ showMobile }}" style="{{ mobileBtnStyle }}">Mobile prototype</button>
+      <button onClick="{{ showDesktop }}" style="{{ desktopBtnStyle }}">Desktop scale-up</button>
+    </div>
+  </div>
+
+  <sc-if value="{{ isMobileMode }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;gap:40px;align-items:flex-start;justify-content:center;flex-wrap:wrap;max-width:1500px;margin:0 auto">
+
+      <div style="display:flex;flex-direction:column;gap:14px;align-items:center">
+        <div style="width:390px;height:844px;background:#F3EDE2;border-radius:28px;overflow:hidden;position:relative;box-shadow:0 30px 60px -20px rgba(52,40,26,0.38),0 0 0 1px rgba(52,40,26,0.10);display:flex;flex-direction:column">
+
+          <sc-if value="{{ isLibrary }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;flex-direction:column;height:100%">
+              <div style="padding:52px 20px 0;background:#F3EDE2;flex-shrink:0">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+                  <div style="font-family:Newsreader,serif;font-size:23px;letter-spacing:-0.01em">Liber Libri</div>
+                  <div style="display:flex;gap:6px">
+                    <button onClick="{{ goSearch }}" aria-label="Search your library" style="width:44px;height:44px;display:grid;place-items:center;border:1px solid #DFD6C6;background:#FBF8F2;border-radius:12px;cursor:pointer" style-hover="background:#F3EAD9">
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#5A5147" stroke-width="1.8"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg>
+                    </button>
+                    <button onClick="{{ toggleLayout }}" aria-label="{{ layoutAria }}" style="width:44px;height:44px;display:grid;place-items:center;border:1px solid #DFD6C6;background:#FBF8F2;border-radius:12px;cursor:pointer" style-hover="background:#F3EAD9">
+                      <sc-if value="{{ isCardMode }}" hint-placeholder-val="{{ true }}">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#5A5147" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                      </sc-if>
+                      <sc-if value="{{ isListMode }}" hint-placeholder-val="{{ false }}">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#5A5147" stroke-width="1.8"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect></svg>
+                      </sc-if>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div style="flex:1;overflow-y:auto;padding:0 20px 132px">
+
+                <sc-if value="{{ showYearBar }}" hint-placeholder-val="{{ false }}">
+                  <div style="margin-bottom:18px">
+                    <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:10px;margin-bottom:12px">
+                      <sc-for list="{{ years }}" as="y" hint-placeholder-count="3">
+                        <button onClick="{{ y.pick }}" aria-pressed="{{ y.on }}" style="{{ y.style }}">{{ y.label }}</button>
+                      </sc-for>
+                    </div>
+                    <div style="background:#FBF8F2;border:1px solid #DFD6C6;border-radius:16px;padding:18px 20px">
+                      <div style="font-family:Newsreader,serif;font-size:38px;line-height:1;letter-spacing:-0.02em">{{ yearCount }}</div>
+                      <div style="font-size:13.5px;color:#6B6257;margin-top:6px">{{ yearCountLabel }}</div>
+                    </div>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ isEmptySection }}" hint-placeholder-val="{{ false }}">
+                  <div style="padding:56px 12px;text-align:center">
+                    <div style="font-family:Newsreader,serif;font-size:19px;margin-bottom:8px">{{ emptyTitle }}</div>
+                    <div style="font-size:13.5px;color:#6B6257;line-height:1.5;max-width:250px;margin:0 auto 20px">{{ emptyBody }}</div>
+                    <button onClick="{{ goAdd }}" style="border:1px solid #C9BCA6;background:transparent;color:#221F1A;padding:11px 20px;border-radius:999px;cursor:pointer;font-size:14px">Add a book</button>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ isCardLayout }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px 16px">
+                    <sc-for list="{{ items }}" as="b" hint-placeholder-count="4">
+                      <div onClick="{{ b.open }}" style="cursor:pointer" style-hover="opacity:0.86">
+                        <div style="{{ b.coverStyle }}">
+                          <div style="font-family:Newsreader,serif;font-size:14px;line-height:1.25;font-weight:500">{{ b.title }}</div>
+                          <div style="font-size:9.5px;letter-spacing:0.1em;text-transform:uppercase;opacity:0.72;margin-top:auto">{{ b.author }}</div>
+                        </div>
+                        <div style="font-family:Newsreader,serif;font-size:15px;line-height:1.3;margin-top:10px">{{ b.title }}</div>
+                        <div style="font-size:12px;color:#6B6257;margin-top:2px">{{ b.author }}</div>
+                        <div style="font-size:11.5px;color:#8A7F70;margin-top:6px">{{ b.dateLine }}</div>
+                        <sc-if value="{{ b.showFinish }}" hint-placeholder-val="{{ false }}">
+                          <button onClick="{{ b.finish }}" style="margin-top:9px;width:100%;border:1px solid #C9BCA6;background:#FBF8F2;padding:9px 0;border-radius:10px;font-size:12.5px;cursor:pointer;color:#221F1A" style-hover="background:#EFE3D1">Mark finished</button>
+                        </sc-if>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ isListLayout }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;flex-direction:column">
+                    <sc-for list="{{ items }}" as="b" hint-placeholder-count="4">
+                      <div onClick="{{ b.open }}" style="display:flex;gap:14px;align-items:center;padding:13px 0;border-bottom:1px solid #E2D9C9;cursor:pointer;min-height:64px" style-hover="opacity:0.86">
+                        <div style="{{ b.thumbStyle }}">{{ b.initials }}</div>
+                        <div style="flex:1;min-width:0">
+                          <div style="font-family:Newsreader,serif;font-size:16px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ b.title }}</div>
+                          <div style="font-size:12px;color:#6B6257;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ b.author }}</div>
+                          <div style="display:flex;align-items:center;gap:6px;margin-top:5px;flex-wrap:wrap">
+                            <span style="{{ b.dotStyle }}"></span>
+                            <span style="font-size:11.5px;color:#8A7F70">{{ b.listMeta }}</span>
+                          </div>
+                        </div>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#B3A692" stroke-width="1.8"><path d="M9 6l6 6-6 6"></path></svg>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+              </div>
+
+              <div style="position:absolute;left:0;right:0;bottom:0;background:#F3EDE2;border-top:1px solid #DFD6C6;padding:10px 14px 26px;display:flex;gap:6px;align-items:center">
+                <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="3">
+                  <button onClick="{{ t.pick }}" aria-current="{{ t.current }}" style="{{ t.style }}">
+                    <span style="{{ t.labelStyle }}">{{ t.label }}</span>
+                    <span style="{{ t.countStyle }}">{{ t.count }}</span>
+                  </button>
+                </sc-for>
+                <button onClick="{{ goAdd }}" aria-label="Add book" style="width:52px;height:52px;flex-shrink:0;border-radius:16px;border:none;background:#7C4A2D;color:#F8F2E8;display:grid;place-items:center;cursor:pointer;box-shadow:0 6px 14px -4px rgba(124,74,45,0.55)" style-hover="background:#6A3E25">
+                  <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+                </button>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isDetail }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;height:100%">
+              <div style="padding:52px 20px 12px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+                <button onClick="{{ goBack }}" style="display:flex;align-items:center;gap:6px;border:none;background:transparent;cursor:pointer;font-size:14px;color:#6B6257;padding:8px 8px 8px 0">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M15 6l-6 6 6 6"></path></svg>Library
+                </button>
+                <button onClick="{{ askDeleteBook }}" style="border:none;background:transparent;cursor:pointer;font-size:13px;color:#9A5B45;padding:8px 0">Delete book</button>
+              </div>
+
+              <div style="flex:1;overflow-y:auto;padding:0 20px 40px">
+                <div style="display:flex;gap:16px;margin-bottom:20px">
+                  <div style="{{ d.coverStyle }}">
+                    <div style="font-family:Newsreader,serif;font-size:13px;line-height:1.25;font-weight:500">{{ d.title }}</div>
+                    <div style="font-size:9px;letter-spacing:0.1em;text-transform:uppercase;opacity:0.72;margin-top:auto">{{ d.author }}</div>
+                  </div>
+                  <div style="flex:1;min-width:0;padding-top:2px">
+                    <div style="font-family:Newsreader,serif;font-size:24px;line-height:1.2;letter-spacing:-0.01em">{{ d.title }}</div>
+                    <div style="font-size:13.5px;color:#6B6257;margin-top:5px">{{ d.author }}</div>
+                    <div style="display:flex;align-items:center;gap:7px;margin-top:12px"><span style="{{ d.dotStyle }}"></span><span style="{{ d.sectionChipStyle }}">{{ d.sectionLabel }}</span></div>
+                  </div>
+                </div>
+
+                <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:26px">
+                  <sc-for list="{{ d.actions }}" as="a" hint-placeholder-count="2">
+                    <button onClick="{{ a.run }}" style="{{ a.style }}">
+                      <span>{{ a.label }}</span>
+                      <span style="{{ a.hintStyle }}">{{ a.hint }}</span>
+                    </button>
+                  </sc-for>
+                </div>
+
+                <div style="font-size:10.5px;letter-spacing:0.16em;text-transform:uppercase;color:#8A7F70;margin-bottom:10px">Dates</div>
+                <div style="background:#FBF8F2;border:1px solid #DFD6C6;border-radius:14px;padding:4px 16px;margin-bottom:8px">
+                  <sc-for list="{{ d.dates }}" as="r" hint-placeholder-count="2">
+                    <div style="{{ r.rowStyle }}">
+                      <div style="width:104px;flex-shrink:0;font-size:12px;color:#8A7F70">{{ r.label }}</div>
+                      <div style="flex:1;font-size:14px">{{ r.value }}</div>
+                      <sc-if value="{{ r.editable }}" hint-placeholder-val="{{ false }}">
+                        <button onClick="{{ r.edit }}" style="border:none;background:transparent;color:#7C4A2D;font-size:12.5px;cursor:pointer;padding:6px 0;flex-shrink:0">Change</button>
+                      </sc-if>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="font-size:11.5px;color:#8A7F70;line-height:1.5;margin-bottom:26px">{{ d.dateRule }}</div>
+
+                <div style="font-size:10.5px;letter-spacing:0.16em;text-transform:uppercase;color:#8A7F70;margin-bottom:10px">Notes</div>
+                <textarea value="{{ d.notes }}" onChange="{{ setNotes }}" placeholder="Private to you. Plain text." rows="3" style="width:100%;background:#FBF8F2;border:1px solid #DFD6C6;border-radius:14px;padding:14px;font-size:14px;line-height:1.55;resize:vertical;font-family:Newsreader,serif;outline:none;margin-bottom:26px"></textarea>
+
+                <div style="font-size:10.5px;letter-spacing:0.16em;text-transform:uppercase;color:#8A7F70;margin-bottom:10px">Details</div>
+                <div style="background:#FBF8F2;border:1px solid #DFD6C6;border-radius:14px;padding:4px 16px;margin-bottom:26px">
+                  <sc-for list="{{ d.fields }}" as="f" hint-placeholder-count="5">
+                    <div style="display:flex;gap:14px;padding:11px 0;border-bottom:1px solid #EFE7D9;align-items:baseline">
+                      <div style="width:104px;flex-shrink:0;font-size:12px;color:#8A7F70">{{ f.label }}</div>
+                      <div style="flex:1;font-size:13.5px;line-height:1.4">{{ f.value }}</div>
+                      <sc-if value="{{ f.overridden }}" hint-placeholder-val="{{ false }}">
+                        <button onClick="{{ f.reset }}" style="border:none;background:#EDE1D3;color:#7C4A2D;font-size:10px;letter-spacing:0.06em;text-transform:uppercase;padding:4px 7px;border-radius:5px;cursor:pointer;flex-shrink:0">Edited · reset</button>
+                      </sc-if>
+                    </div>
+                  </sc-for>
+                  <div style="padding:13px 0">
+                    <button onClick="{{ noop }}" style="border:none;background:transparent;color:#7C4A2D;font-size:13.5px;cursor:pointer;padding:0">Edit these details</button>
+                    <div style="font-size:11.5px;color:#8A7F70;margin-top:4px;line-height:1.45">Your edits stay in your library. They never change the shared edition record.</div>
+                  </div>
+                </div>
+
+                <div style="padding:14px 16px;background:#F0E8DA;border-radius:12px;font-size:12px;color:#6B6257;line-height:1.5">Added to your library {{ d.added }}. Nothing else about this book is recorded.</div>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isSearch }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;height:100%">
+              <div style="padding:52px 20px 14px;flex-shrink:0">
+                <div style="display:flex;gap:10px;align-items:center">
+                  <div style="flex:1;display:flex;align-items:center;gap:9px;background:#FBF8F2;border:1px solid #DFD6C6;border-radius:12px;padding:0 12px;height:46px">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A7F70" stroke-width="1.8"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg>
+                    <input value="{{ query }}" onChange="{{ setQuery }}" placeholder="Search your library" autoFocus="{{ true }}" style="flex:1;border:none;background:transparent;outline:none;font-size:15px;min-width:0" />
+                  </div>
+                  <button onClick="{{ goBack }}" style="border:none;background:transparent;cursor:pointer;font-size:14px;color:#6B6257;padding:8px 0">Cancel</button>
+                </div>
+                <div style="font-size:11.5px;color:#8A7F70;margin-top:9px">{{ searchHint }}</div>
+              </div>
+              <div style="flex:1;overflow-y:auto;padding:4px 20px 40px">
+                <sc-for list="{{ searchResults }}" as="b" hint-placeholder-count="3">
+                  <div onClick="{{ b.open }}" style="display:flex;gap:14px;align-items:center;padding:13px 0;border-bottom:1px solid #E2D9C9;cursor:pointer" style-hover="opacity:0.86">
+                    <div style="{{ b.thumbStyle }}">{{ b.initials }}</div>
+                    <div style="flex:1;min-width:0">
+                      <div style="font-family:Newsreader,serif;font-size:16px;line-height:1.25">{{ b.title }}</div>
+                      <div style="font-size:12px;color:#6B6257;margin-top:2px">{{ b.author }}</div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+                      <span style="{{ b.dotStyle }}"></span>
+                      <span style="{{ b.badgeStyle }}">{{ b.sectionLabel }}</span>
+                    </div>
+                  </div>
+                </sc-for>
+                <sc-if value="{{ searchEmpty }}" hint-placeholder-val="{{ false }}">
+                  <div style="padding:44px 4px;text-align:center">
+                    <div style="font-family:Newsreader,serif;font-size:18px;margin-bottom:8px">Nothing in your library matches</div>
+                    <div style="font-size:13px;color:#6B6257;line-height:1.5;max-width:260px;margin:0 auto 18px">This only searches your own shelves. Looking for something new?</div>
+                    <button onClick="{{ goAdd }}" style="border:1px solid #C9BCA6;background:transparent;padding:11px 20px;border-radius:999px;cursor:pointer;font-size:14px">Search for a book to add</button>
+                  </div>
+                </sc-if>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isAdd }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;height:100%">
+              <div style="padding:52px 20px 14px;flex-shrink:0">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+                  <div style="font-family:Newsreader,serif;font-size:21px">Add a book</div>
+                  <button onClick="{{ goBack }}" style="border:none;background:transparent;cursor:pointer;font-size:14px;color:#6B6257;padding:8px 0">Close</button>
+                </div>
+                <div style="display:flex;align-items:center;gap:9px;background:#FBF8F2;border:1px solid #DFD6C6;border-radius:12px;padding:0 12px;height:46px">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A7F70" stroke-width="1.8"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg>
+                  <input value="{{ providerQuery }}" onChange="{{ setProviderQuery }}" placeholder="Title, author, or both" style="flex:1;border:none;background:transparent;outline:none;font-size:15px;min-width:0" />
+                </div>
+                <div style="font-size:11.5px;color:#8A7F70;margin-top:9px">{{ providerHint }}</div>
+              </div>
+              <div style="flex:1;overflow-y:auto;padding:4px 20px 40px">
+                <sc-if value="{{ providerLoading }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;flex-direction:column;gap:14px;padding-top:10px">
+                    <sc-for list="{{ skeletons }}" as="s" hint-placeholder-count="3">
+                      <div style="display:flex;gap:14px;align-items:center;opacity:0.55">
+                        <div style="width:46px;height:66px;border-radius:4px;background:#E2D9C9"></div>
+                        <div style="flex:1">
+                          <div style="height:11px;width:70%;background:#E2D9C9;border-radius:3px"></div>
+                          <div style="height:9px;width:44%;background:#E8E0D1;border-radius:3px;margin-top:9px"></div>
+                        </div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ providerReady }}" hint-placeholder-val="{{ true }}">
+                  <div>
+                    <sc-for list="{{ providerResults }}" as="p" hint-placeholder-count="4">
+                      <div onClick="{{ p.open }}" style="display:flex;gap:14px;padding:14px 0;border-bottom:1px solid #E2D9C9;cursor:pointer;align-items:flex-start" style-hover="opacity:0.86">
+                        <div style="{{ p.thumbStyle }}">{{ p.initials }}</div>
+                        <div style="flex:1;min-width:0">
+                          <div style="font-family:Newsreader,serif;font-size:16px;line-height:1.25">{{ p.title }}</div>
+                          <div style="font-size:12px;color:#6B6257;margin-top:2px">{{ p.author }}</div>
+                          <div style="font-size:11.5px;color:#8A7F70;margin-top:5px;line-height:1.4">{{ p.edition }}</div>
+                          <sc-if value="{{ p.owned }}" hint-placeholder-val="{{ false }}">
+                            <div style="display:inline-block;margin-top:7px;font-size:11px;background:#EDE1D3;color:#7C4A2D;padding:3px 8px;border-radius:5px">Already in your library — opens it</div>
+                          </sc-if>
+                        </div>
+                      </div>
+                    </sc-for>
+                    <button onClick="{{ goManual }}" style="width:100%;margin-top:22px;border:1px dashed #C9BCA6;background:transparent;padding:16px;border-radius:14px;cursor:pointer;text-align:left" style-hover="background:#EFE7D9">
+                      <div style="font-size:14px">Not here? Enter it by hand</div>
+                      <div style="font-size:11.5px;color:#8A7F70;margin-top:3px">Title and one author is enough.</div>
+                    </button>
+                  </div>
+                </sc-if>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isAddDetail }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;height:100%">
+              <div style="padding:52px 20px 12px;flex-shrink:0">
+                <button onClick="{{ goAdd }}" style="display:flex;align-items:center;gap:6px;border:none;background:transparent;cursor:pointer;font-size:14px;color:#6B6257;padding:8px 8px 8px 0">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M15 6l-6 6 6 6"></path></svg>Results
+                </button>
+              </div>
+              <div style="flex:1;overflow-y:auto;padding:0 20px 40px">
+                <div style="display:flex;gap:16px;margin-bottom:22px">
+                  <div style="{{ cand.coverStyle }}">
+                    <div style="font-family:Newsreader,serif;font-size:13px;line-height:1.25;font-weight:500">{{ cand.title }}</div>
+                    <div style="font-size:9px;letter-spacing:0.1em;text-transform:uppercase;opacity:0.72;margin-top:auto">{{ cand.author }}</div>
+                  </div>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-family:Newsreader,serif;font-size:23px;line-height:1.2">{{ cand.title }}</div>
+                    <div style="font-size:13.5px;color:#6B6257;margin-top:5px">{{ cand.author }}</div>
+                    <div style="font-size:12px;color:#8A7F70;margin-top:10px;line-height:1.5">{{ cand.edition }}</div>
+                  </div>
+                </div>
+
+                <div style="font-size:10.5px;letter-spacing:0.16em;text-transform:uppercase;color:#8A7F70;margin-bottom:10px">Add to</div>
+                <div style="display:flex;gap:7px;margin-bottom:20px">
+                  <sc-for list="{{ addSections }}" as="s" hint-placeholder-count="3">
+                    <button onClick="{{ s.pick }}" aria-pressed="{{ s.on }}" style="{{ s.style }}">{{ s.label }}</button>
+                  </sc-for>
+                </div>
+
+                <sc-if value="{{ addNeedsStart }}" hint-placeholder-val="{{ false }}">
+                  <div style="margin-bottom:14px">
+                    <label style="display:block;font-size:12px;color:#6B6257;margin-bottom:6px">Start date</label>
+                    <input type="date" value="{{ addStart }}" onChange="{{ setAddStart }}" style="width:100%;height:48px;background:#FBF8F2;border:1px solid #DFD6C6;border-radius:12px;padding:0 14px;font-size:15px;outline:none" />
+                  </div>
+                </sc-if>
+                <sc-if value="{{ addNeedsFinish }}" hint-placeholder-val="{{ false }}">
+                  <div style="margin-bottom:14px">
+                    <label style="display:block;font-size:12px;color:#6B6257;margin-bottom:6px">Finish date</label>
+                    <input type="date" value="{{ addFinish }}" onChange="{{ setAddFinish }}" style="width:100%;height:48px;background:#FBF8F2;border:1px solid #DFD6C6;border-radius:12px;padding:0 14px;font-size:15px;outline:none" />
+                    <label style="display:block;font-size:12px;color:#6B6257;margin:14px 0 6px">Start date <span style="color:#A89B87">— optional</span></label>
+                    <input type="date" value="{{ addStart }}" onChange="{{ setAddStart }}" style="width:100%;height:48px;background:#FBF8F2;border:1px solid #DFD6C6;border-radius:12px;padding:0 14px;font-size:15px;outline:none" />
+                  </div>
+                </sc-if>
+                <div style="font-size:12px;color:#8A7F70;line-height:1.5;margin-bottom:22px">{{ addDateHint }}</div>
+
+                <button onClick="{{ commitAdd }}" style="width:100%;height:52px;border:none;border-radius:14px;background:#7C4A2D;color:#F8F2E8;font-size:15px;cursor:pointer" style-hover="background:#6A3E25">{{ addCta }}</button>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isManual }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;height:100%">
+              <div style="padding:52px 20px 12px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between">
+                <button onClick="{{ goAdd }}" style="display:flex;align-items:center;gap:6px;border:none;background:transparent;cursor:pointer;font-size:14px;color:#6B6257;padding:8px 8px 8px 0">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M15 6l-6 6 6 6"></path></svg>Back
+                </button>
+                <div style="font-family:Newsreader,serif;font-size:18px">By hand</div>
+              </div>
+              <div style="flex:1;overflow-y:auto;padding:8px 20px 40px">
+                <div style="font-size:12.5px;color:#6B6257;line-height:1.5;margin-bottom:20px">Two fields are required. Everything else can wait — or stay empty forever.</div>
+                <div style="display:flex;flex-direction:column;gap:14px">
+                  <sc-for list="{{ manualFields }}" as="f" hint-placeholder-count="6">
+                    <div>
+                      <label style="display:flex;justify-content:space-between;font-size:12px;color:#6B6257;margin-bottom:6px">
+                        <span>{{ f.label }}</span>
+                        <span style="{{ f.reqStyle }}">{{ f.req }}</span>
+                      </label>
+                      <input type="{{ f.type }}" placeholder="{{ f.placeholder }}" style="{{ f.inputStyle }}" />
+                      <sc-if value="{{ f.hasNote }}" hint-placeholder-val="{{ false }}">
+                        <div style="font-size:11.5px;color:#8A7F70;margin-top:5px;line-height:1.45">{{ f.note }}</div>
+                      </sc-if>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="margin-top:22px;padding:14px;background:#F0E8DA;border-radius:12px;font-size:12px;color:#6B6257;line-height:1.5">No cover to fetch, so this book gets the house placeholder — a plain typographic card. Covers can't be uploaded.</div>
+                <button onClick="{{ goBack }}" style="width:100%;height:52px;margin-top:18px;border:none;border-radius:14px;background:#7C4A2D;color:#F8F2E8;font-size:15px;cursor:pointer" style-hover="background:#6A3E25">Save to To Read</button>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ dialogOpen }}" hint-placeholder-val="{{ false }}">
+            <div style="position:absolute;inset:0;background:rgba(40,32,22,0.42);display:flex;align-items:flex-end;z-index:20">
+              <div style="width:100%;background:#F7F2E8;border-radius:24px 24px 0 0;padding:26px 22px 30px">
+                <div style="font-family:Newsreader,serif;font-size:22px;line-height:1.25;margin-bottom:8px">{{ dlg.title }}</div>
+                <div style="font-size:13.5px;color:#6B6257;line-height:1.55;margin-bottom:18px">{{ dlg.body }}</div>
+                <sc-if value="{{ dlg.hasDate }}" hint-placeholder-val="{{ false }}">
+                  <div style="margin-bottom:18px">
+                    <label style="display:block;font-size:12px;color:#6B6257;margin-bottom:6px">{{ dlg.dateLabel }}</label>
+                    <input type="date" value="{{ dlg.date }}" onChange="{{ setDialogDate }}" style="width:100%;height:48px;background:#FBF8F2;border:1px solid #DFD6C6;border-radius:12px;padding:0 14px;font-size:15px;outline:none" />
+                  </div>
+                </sc-if>
+                <sc-if value="{{ dlg.hasEffect }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;gap:10px;align-items:flex-start;background:#EFE7D9;border-radius:12px;padding:12px 14px;margin-bottom:18px">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7C4A2D" stroke-width="1.8" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5M12 16h.01"></path></svg>
+                    <div style="font-size:12.5px;color:#5A5147;line-height:1.5">{{ dlg.effect }}</div>
+                  </div>
+                </sc-if>
+                <div style="display:flex;flex-direction:column;gap:9px">
+                  <button onClick="{{ confirmDialog }}" style="{{ dlg.primaryStyle }}">{{ dlg.primary }}</button>
+                  <button onClick="{{ closeDialog }}" style="width:100%;height:50px;border:1px solid #D5CAB6;background:transparent;border-radius:14px;font-size:15px;cursor:pointer">Cancel</button>
+                </div>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ toastOpen }}" hint-placeholder-val="{{ false }}">
+            <div role="status" style="position:absolute;left:16px;right:16px;bottom:96px;background:#2C261E;color:#F3EDE2;padding:14px 16px;border-radius:12px;font-size:13.5px;line-height:1.4;z-index:15;box-shadow:0 10px 24px -8px rgba(0,0,0,0.4)">{{ toast }}</div>
+          </sc-if>
+        </div>
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;max-width:390px">
+          <sc-for list="{{ jumps }}" as="j" hint-placeholder-count="5">
+            <button onClick="{{ j.go }}" style="{{ j.style }}">{{ j.label }}</button>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="width:392px;display:flex;flex-direction:column;gap:14px">
+        <div style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#8A7F70">{{ notesHeading }}</div>
+        <sc-for list="{{ notes }}" as="n" hint-placeholder-count="3">
+          <div style="{{ n.cardStyle }}">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
+              <span style="{{ n.kindStyle }}">{{ n.kind }}</span>
+              <span style="font-family:Newsreader,serif;font-size:16px;line-height:1.25">{{ n.title }}</span>
+            </div>
+            <div style="font-size:13px;line-height:1.6;color:#5A5147;text-wrap:pretty">{{ n.text }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isDesktopMode }}" hint-placeholder-val="{{ false }}">
+    <div style="max-width:1500px;margin:0 auto">
+      <div style="background:#F3EDE2;border-radius:14px;overflow:hidden;box-shadow:0 24px 50px -22px rgba(52,40,26,0.35),0 0 0 1px rgba(52,40,26,0.10);display:flex;height:800px">
+        <div style="width:248px;flex-shrink:0;border-right:1px solid #DFD6C6;padding:28px 18px;display:flex;flex-direction:column;gap:6px">
+          <div style="font-family:Newsreader,serif;font-size:22px;padding:0 10px 22px">Liber Libri</div>
+          <sc-for list="{{ deskNav }}" as="n" hint-placeholder-count="3">
+            <button onClick="{{ n.pick }}" aria-current="{{ n.current }}" style="{{ n.style }}" style-hover="background:#EDE3D2"><span>{{ n.label }}</span><span style="{{ n.countStyle }}">{{ n.count }}</span></button>
+          </sc-for>
+          <div style="margin-top:auto;display:flex;flex-direction:column;gap:10px">
+            <button onClick="{{ noop }}" style="width:100%;height:44px;border:none;border-radius:12px;background:#7C4A2D;color:#F8F2E8;font-size:14px;cursor:pointer">Add a book</button>
+            <div style="font-size:12px;color:#8A7F70;padding:0 4px">Signed in as reader@example.com</div>
+          </div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+          <div style="padding:26px 34px 18px;border-bottom:1px solid #DFD6C6;display:flex;align-items:center;justify-content:space-between;gap:20px 24px;flex-wrap:wrap">
+            <div style="display:flex;align-items:baseline;gap:18px;flex-wrap:wrap">
+              <div style="font-family:Newsreader,serif;font-size:28px;letter-spacing:-0.01em">{{ desktopTitle }}</div>
+              <sc-if value="{{ showYearBar }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
+                  <div style="display:flex;gap:7px">
+                    <sc-for list="{{ years }}" as="y" hint-placeholder-count="3">
+                      <button onClick="{{ y.pick }}" aria-pressed="{{ y.on }}" style="{{ y.style }}">{{ y.label }}</button>
+                    </sc-for>
+                  </div>
+                  <div style="font-size:13.5px;color:#6B6257;white-space:nowrap;flex-shrink:0">{{ yearCount }} {{ yearCountLabel }}</div>
+                </div>
+              </sc-if>
+            </div>
+            <div style="display:flex;align-items:center;gap:9px;background:#FBF8F2;border:1px solid #DFD6C6;border-radius:10px;padding:0 12px;height:40px;flex:0 1 280px;min-width:180px">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8A7F70" stroke-width="1.8"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg>
+              <span style="font-size:13.5px;color:#A89B87">Search your library</span>
+            </div>
+          </div>
+          <div style="flex:1;overflow-y:auto;padding:28px 34px">
+            <sc-if value="{{ desktopEmpty }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:60px 0;max-width:520px">
+                <div style="font-family:Newsreader,serif;font-size:22px;margin-bottom:8px">{{ emptyTitle }}</div>
+                <div style="font-size:14px;color:#6B6257;line-height:1.5">{{ emptyBody }}</div>
+              </div>
+            </sc-if>
+            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:26px 22px;max-width:1000px">
+              <sc-for list="{{ desktopItems }}" as="b" hint-placeholder-count="2">
+                <div onClick="{{ b.open }}" style="cursor:pointer" style-hover="opacity:0.86">
+                  <div style="{{ b.coverStyle }}">
+                    <div style="font-family:Newsreader,serif;font-size:14px;line-height:1.25;font-weight:500">{{ b.title }}</div>
+                    <div style="font-size:9.5px;letter-spacing:0.1em;text-transform:uppercase;opacity:0.72;margin-top:auto">{{ b.author }}</div>
+                  </div>
+                  <div style="font-family:Newsreader,serif;font-size:15px;line-height:1.3;margin-top:10px">{{ b.title }}</div>
+                  <div style="font-size:12px;color:#6B6257;margin-top:2px">{{ b.author }}</div>
+                  <div style="font-size:11.5px;color:#8A7F70;margin-top:5px">{{ b.dateLine }}</div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="margin-top:34px;padding:18px 20px;background:#EFE7D9;border-radius:12px;font-size:13px;color:#5A5147;line-height:1.6;max-width:1000px;text-wrap:pretty">The wide layout changes nothing structurally: the three sections move from a bottom bar to a left rail, the grid widens from two columns to five, and the year filter sits inline with the Finished heading. Same server-rendered pages, same one-record-per-book rule. No desktop-only feature is introduced.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{}">
+const TODAY = "2026-08-02";
+
+const PALETTE = [
+  ["#2F4739", "#E9E2D2"], ["#6B3A2E", "#F2E7D8"], ["#31405C", "#E4E7EF"],
+  ["#7A6220", "#F6EED9"], ["#4A3355", "#EDE4F0"], ["#5C2F33", "#F1E2DE"],
+  ["#25423F", "#DFE9E4"], ["#6E4B1F", "#F5E8D4"], ["#3D3A33", "#EBE6DA"],
+  ["#553A5B", "#EFE3EF"], ["#334A48", "#E2ECE8"], ["#6A2F45", "#F3E1E7"]
+];
+const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+function fmt(d) {
+  if (!d) return "unknown";
+  const p = d.split("-");
+  return parseInt(p[2], 10) + " " + MONTHS[parseInt(p[1], 10) - 1] + " " + p[0];
+}
+function fmtShort(d) {
+  if (!d) return "";
+  const p = d.split("-");
+  return parseInt(p[2], 10) + " " + MONTHS[parseInt(p[1], 10) - 1];
+}
+function yearOf(d) { return d ? parseInt(d.split("-")[0], 10) : null; }
+function initials(t) {
+  return t.replace(/[^A-Za-z ]/g, "").split(" ").filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("");
+}
+function ago(d) {
+  const days = Math.round((new Date(TODAY) - new Date(d)) / 86400000);
+  if (days < 1) return "Added today";
+  if (days < 7) return "Added " + days + (days === 1 ? " day ago" : " days ago");
+  if (days < 60) { const w = Math.max(1, Math.round(days / 7)); return "Added " + w + (w === 1 ? " week ago" : " weeks ago"); }
+  const m = Math.max(1, Math.round(days / 30));
+  return "Added " + m + (m === 1 ? " month ago" : " months ago");
+}
+
+const F = (subtitle, format, publisher, published, pages, isbn13) =>
+  ({ subtitle: subtitle, format: format, publisher: publisher, published: published, pages: pages, language: "English", isbn13: isbn13 });
+
+const SEED = [
+  { id: 1, title: "The Overstory", author: "Richard Powers", section: "READING", added: "2026-07-12", started: "2026-07-12", finished: null,
+    notes: "Slow going but worth it. The Nicholas chapters are the reason to keep at it.",
+    fields: F("", "Paperback", "Vintage", "2019", "625", "9781784708245"), edited: {} },
+  { id: 2, title: "Piranesi", author: "Susanna Clarke", section: "READING", added: "2026-07-20", started: "2026-07-28", finished: null,
+    notes: "", fields: F("", "Hardback", "Bloomsbury", "2020", "245", "9781526622426"), edited: {} },
+  { id: 3, title: "Sea of Tranquility", author: "Emily St. John Mandel", section: "TO_READ", added: "2026-07-30", started: null, finished: null,
+    notes: "", fields: F("", "Paperback", "Picador", "2022", "272", "9781529083507"), edited: {} },
+  { id: 4, title: "The Left Hand of Darkness", author: "Ursula K. Le Guin", section: "TO_READ", added: "2026-07-24", started: null, finished: null,
+    notes: "", fields: F("", "Paperback", "Gollancz", "2017", "304", "9781473225947"), edited: {} },
+  { id: 5, title: "Middlemarch", author: "George Eliot", section: "TO_READ", added: "2026-02-11", started: null, finished: null,
+    notes: "", fields: F("A Study of Provincial Life", "Penguin Clothbound", "Penguin Classics", "2011", "912", "9780141196893"), edited: { publisher: true } },
+  { id: 6, title: "The Dispossessed", author: "Ursula K. Le Guin", section: "FINISHED", added: "2025-12-30", started: "2026-01-02", finished: "2026-01-11",
+    notes: "", fields: F("An Ambiguous Utopia", "Paperback", "Gollancz", "2002", "336", "9781857988826"), edited: {} },
+  { id: 7, title: "Klara and the Sun", author: "Kazuo Ishiguro", section: "FINISHED", added: "2026-05-30", started: "2026-06-01", finished: "2026-06-18",
+    notes: "", fields: F("", "Paperback", "Faber & Faber", "2022", "320", "9780571364909"), edited: {} },
+  { id: 8, title: "Tomorrow, and Tomorrow, and Tomorrow", author: "Gabrielle Zevin", section: "FINISHED", added: "2026-06-20", started: "2026-06-22", finished: "2026-07-05",
+    notes: "", fields: F("", "Paperback", "Vintage", "2023", "496", "9781529115543"), edited: {} },
+  { id: 9, title: "Circe", author: "Madeline Miller", section: "FINISHED", added: "2026-03-30", started: "2026-04-05", finished: "2026-04-22",
+    notes: "", fields: F("", "Paperback", "Bloomsbury", "2019", "352", "9781408890042"), edited: {} },
+  { id: 10, title: "Stoner", author: "John Williams", section: "FINISHED", added: "2026-01-20", started: null, finished: "2026-02-09",
+    notes: "Read years ago, logged from memory. I have no idea when I started it.",
+    fields: F("", "Paperback", "Vintage Classics", "2012", "288", "9780099561545"), edited: {} },
+  { id: 11, title: "Wolf Hall", author: "Hilary Mantel", section: "FINISHED", added: "2026-02-20", started: "2026-02-22", finished: "2026-03-04",
+    notes: "", fields: F("", "Paperback", "Fourth Estate", "2010", "672", "9780007230204"), edited: { format: true } },
+  { id: 12, title: "The Remains of the Day", author: "Kazuo Ishiguro", section: "FINISHED", added: "2025-09-14", started: "2025-09-15", finished: "2025-09-29",
+    notes: "", fields: F("", "Paperback", "Faber & Faber", "2005", "258", "9780571258246"), edited: {} }
+];
+
+const PROVIDER = [
+  { title: "The Wolves of Eternity", author: "Karl Ove Knausgård", edition: "Harvill Secker · 2023 · Hardback · 800pp · ISBN 9781787303423", owned: false },
+  { title: "The Books of Jacob", author: "Olga Tokarczuk", edition: "Fitzcarraldo Editions · 2021 · Paperback · 928pp · ISBN 9781910695593", owned: false },
+  { title: "The Books of Jacob", author: "Olga Tokarczuk", edition: "Riverhead Books · 2022 · Hardback · 992pp · ISBN 9780593087503", owned: false },
+  { title: "Piranesi", author: "Susanna Clarke", edition: "Bloomsbury · 2020 · Hardback · 245pp · ISBN 9781526622426", owned: true },
+  { title: "The Wall", author: "Marlen Haushofer", edition: "Quartet Books · 2013 · Paperback · 244pp · ISBN 9780704372979", owned: false }
+];
+
+const NOTES = {
+  library: [
+    { kind: "Decision", title: "One record, one place, one date line", text: "With multiple readings gone, a card only ever needs to answer one question: what does this book's single date mean right now? Reading shows the start date, To Read shows how long it has been waiting, Finished shows the finish date. Nothing else competes for the line." },
+    { kind: "Decision", title: "The count is exactly what you can see", text: "§8.4 now guarantees count equals visible cards, so the number needs no footnote, no asterisk and no explanation. It's set large in the display serif above the grid and left alone — no goal, no bar, no comparison." },
+    { kind: "Decision", title: "Years come from the data", text: "The year chips list only years that finished books actually fall in, plus the current year always. A user with three years of history sees three chips, not a scrolling decade picker." },
+    { kind: "Decision", title: "State is never colour alone", text: "§14.3 forbids colour-only status. In compact list the state dot is always paired with its written label; in cover cards the date line names the state in words. The dot is reinforcement, not the signal." },
+    { kind: "Question", title: "Relative age in To Read", text: "Ordering is by an internal timestamp that §8.2 keeps out of the UI as an editable field. Showing 'Added 3 weeks ago' makes the order legible without offering it for editing. Confirm you're happy exposing the approximate age." }
+  ],
+  detail: [
+    { kind: "Decision", title: "Actions state their date consequence up front", text: "Every transition in §8.13 either sets, keeps or clears a date. Rather than hide that in a confirmation, each action button carries a one-line consequence under its label — 'Clears both dates', 'Keeps your start date' — so the choice is made before the tap." },
+    { kind: "PRD gap", title: "Moving back to To Read is destructive (§8.13)", text: "Reading → To Read and Finished → To Read both silently discard dates the user typed. This is the one irreversible thing in the app that isn't a delete, so it gets a confirmation naming the dates being lost. Worth adding to the requirements explicitly." },
+    { kind: "Decision", title: "Dates are a two-row block, not a form", text: "Started and Finished, each with an inline Change. Rows that the current state forbids simply aren't shown — a To Read book has no date block at all — so the screen can never display a field the state doesn't allow." },
+    { kind: "PRD gap", title: "No revert-to-canonical in the spec (§6.3)", text: "The model distinguishes not-overridden from overridden-blank, but nothing in the UI gets a user back to the shared edition's value. Overridden fields carry an 'Edited · reset' chip. Still worth adding as a requirement." },
+    { kind: "Question", title: "Unknown start date on a finished book", text: "§8.2 allows a finished book with no start date. Stoner shows it as 'Not recorded' rather than hiding the row, so the gap looks deliberate. Should Change there offer to fill it, or stay read-only?" }
+  ],
+  add: [
+    { kind: "Decision", title: "Two searches, never merged", text: "Library search sits behind the magnifier in the header; provider search exists only inside Add Book. The empty state of each offers the other explicitly, so a private library query is never sent outward by accident (§8.5)." },
+    { kind: "PRD gap", title: "Flag duplicates before the tap (§8.6)", text: "An already-linked edition opens the existing entry instead of duplicating. Discovering that only after tapping reads as an error, so results carry the chip up front and the chip says what will happen." },
+    { kind: "Decision", title: "Editions are told apart by one line", text: "Publisher · year · format · pages · ISBN. Two printings of the same title are separable by nothing else, so that line gets equal weight to the author — see the two Books of Jacob results." },
+    { kind: "Decision", title: "Section choice decides which dates exist", text: "To Read asks for nothing. Reading reveals a start date defaulted to today. Finished requires a finish date and offers an optional start. The form never shows a field the chosen state forbids, which is the same rule the detail screen follows." },
+    { kind: "Question", title: "Manual entry pre-fill", text: "Provider timeout, rate-limit and unavailable states all preserve the query and offer retry plus manual entry (§9). Should manual entry pre-fill the typed text as the title? Not specified, and obviously useful." }
+  ]
+};
+
+class Component extends DCLogic {
+  state = {
+    mode: "mobile", screen: "library", tab: "READING", layout: "cards",
+    year: 2026, books: JSON.parse(JSON.stringify(SEED)), openId: null,
+    query: "", providerQuery: "tokarczuk", providerLoading: false,
+    candIdx: null, addSection: "TO_READ", addStart: TODAY, addFinish: TODAY,
+    dialog: null, dialogDate: TODAY, toast: null
+  };
+
+  book(id) { return this.state.books.find(b => b.id === id); }
+
+  say(msg) {
+    clearTimeout(this._t);
+    this.setState({ toast: msg });
+    this._t = setTimeout(() => this.setState({ toast: null }), 3400);
+  }
+
+  mutate(id, fn) {
+    this.setState({
+      books: this.state.books.map(b => {
+        if (b.id !== id) return b;
+        const c = JSON.parse(JSON.stringify(b));
+        fn(c);
+        return c;
+      })
+    });
+  }
+
+  coverStyle(idx, w, h, pad) {
+    const p = PALETTE[idx % PALETTE.length];
+    return "width:" + w + ";height:" + h + ";flex-shrink:0;background:" + p[0] + ";color:" + p[1] +
+      ";border-radius:3px 5px 5px 3px;padding:" + (pad || "13px 11px") + ";display:flex;flex-direction:column;box-shadow:inset 5px 0 0 -2px rgba(255,255,255,0.16),0 4px 10px -3px rgba(52,40,26,0.35)";
+  }
+  thumbStyle(idx) {
+    const p = PALETTE[idx % PALETTE.length];
+    return "width:42px;height:60px;flex-shrink:0;background:" + p[0] + ";color:" + p[1] +
+      ";border-radius:2px 4px 4px 2px;display:grid;place-items:center;font-family:Newsreader,serif;font-size:14px;box-shadow:inset 4px 0 0 -2px rgba(255,255,255,0.16)";
+  }
+  dot(section) {
+    return "width:6px;height:6px;border-radius:50%;flex-shrink:0;background:" +
+      (section === "READING" ? "#7C4A2D" : section === "FINISHED" ? "#2F4739" : "#B3A692");
+  }
+  label(s) { return s === "READING" ? "Reading" : s === "TO_READ" ? "To Read" : "Finished"; }
+
+  dateLine(b) {
+    if (b.section === "READING") return "Started " + fmtShort(b.started);
+    if (b.section === "TO_READ") return ago(b.added);
+    return "Finished " + fmtShort(b.finished);
+  }
+
+  countFor(y) {
+    return this.state.books.filter(b => b.section === "FINISHED" && yearOf(b.finished) === y).length;
+  }
+
+  renderVals() {
+    const s = this.state;
+    const idxOf = (b) => s.books.findIndex(x => x.id === b.id);
+    const btn = (on) => "border:none;border-radius:999px;padding:9px 16px;font-size:13px;cursor:pointer;background:" +
+      (on ? "#F7F2E8" : "transparent") + ";color:" + (on ? "#221F1A" : "#6B6257") + ";box-shadow:" + (on ? "0 1px 3px rgba(52,40,26,0.18)" : "none");
+
+    let items;
+    if (s.tab === "FINISHED") {
+      items = s.books.filter(b => b.section === "FINISHED" && yearOf(b.finished) === s.year)
+        .sort((a, b) => new Date(b.finished) - new Date(a.finished));
+    } else if (s.tab === "READING") {
+      items = s.books.filter(b => b.section === "READING").sort((a, b) => new Date(b.started) - new Date(a.started));
+    } else {
+      items = s.books.filter(b => b.section === "TO_READ").sort((a, b) => new Date(b.added) - new Date(a.added));
+    }
+
+    const decorate = (b) => ({
+      title: b.title, author: b.author, initials: initials(b.title),
+      coverStyle: this.coverStyle(idxOf(b), "100%", "232px"),
+      thumbStyle: this.thumbStyle(idxOf(b)),
+      dateLine: this.dateLine(b),
+      listMeta: this.label(b.section) + " · " + this.dateLine(b),
+      dotStyle: this.dot(b.section),
+      sectionLabel: this.label(b.section),
+      badgeStyle: "font-size:11px;padding:4px 9px;border-radius:6px;background:#EDE5D6;color:#6B6257",
+      showFinish: b.section === "READING",
+      finish: (e) => { if (e && e.stopPropagation) e.stopPropagation(); this.setState({ openId: b.id, dialog: "finish", dialogDate: TODAY }); },
+      open: () => this.setState({ screen: "detail", openId: b.id })
+    });
+
+    const yearSet = {};
+    s.books.forEach(b => { if (b.section === "FINISHED" && b.finished) yearSet[yearOf(b.finished)] = true; });
+    yearSet[yearOf(TODAY)] = true;
+    const years = Object.keys(yearSet).map(Number).sort((a, b) => b - a).map(y => ({
+      label: String(y), on: y === s.year ? "true" : "false", pick: () => this.setState({ year: y }),
+      style: "flex-shrink:0;border:1px solid " + (y === s.year ? "#221F1A" : "#DFD6C6") + ";background:" +
+        (y === s.year ? "#221F1A" : "#FBF8F2") + ";color:" + (y === s.year ? "#F7F2E8" : "#6B6257") +
+        ";padding:8px 16px;border-radius:999px;font-size:13px;cursor:pointer"
+    }));
+
+    const count = this.countFor(s.year);
+
+    const sectionCount = (k) => k === "FINISHED"
+      ? this.countFor(s.year)
+      : s.books.filter(b => b.section === k).length;
+
+    const tabs = [["READING", "Reading"], ["TO_READ", "To Read"], ["FINISHED", "Finished"]].map(([k, label]) => {
+      const on = s.tab === k;
+      return {
+        label, count: String(sectionCount(k)), current: on ? "page" : "false",
+        pick: () => this.setState({ tab: k }),
+        style: "flex:1;min-height:52px;border:none;border-radius:14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:" + (on ? "#E4D8C4" : "transparent"),
+        labelStyle: "font-size:12.5px;color:" + (on ? "#221F1A" : "#6B6257") + ";font-weight:" + (on ? "500" : "400"),
+        countStyle: "font-size:11px;color:" + (on ? "#7C4A2D" : "#A89B87")
+      };
+    });
+
+    // ---- detail
+    const ob = this.book(s.openId) || s.books[0];
+    const act = (label, hint, primary, dialog, date) => ({
+      label, hint,
+      run: () => this.setState({ dialog, dialogDate: date || TODAY }),
+      style: "width:100%;text-align:left;padding:14px 16px;border-radius:13px;cursor:pointer;border:1px solid " +
+        (primary ? "#7C4A2D" : "#D5CAB6") + ";background:" + (primary ? "#7C4A2D" : "#FBF8F2") +
+        ";color:" + (primary ? "#F8F2E8" : "#221F1A") + ";font-size:15px;display:flex;flex-direction:column;gap:3px",
+      hintStyle: "font-size:11.5px;line-height:1.4;color:" + (primary ? "rgba(248,242,232,0.75)" : "#8A7F70")
+    });
+
+    let actions, dates, dateRule;
+    if (ob.section === "READING") {
+      actions = [
+        act("Mark finished", "Keeps your start date and adds this book to " + yearOf(TODAY) + ".", true, "finish"),
+        act("Move back to To Read", "Clears the start date. There's no record of having begun it.", false, "toread")
+      ];
+      dates = [["Started", fmt(ob.started), true], ["Finished", "—", false]];
+      dateRule = "A book being read always has a start date and never a finish date.";
+    } else if (ob.section === "TO_READ") {
+      actions = [
+        act("Start reading", "Sets today as the start date.", true, "start"),
+        act("Log it as already finished", "Finish date required. Start date can stay unknown.", false, "logfinished")
+      ];
+      dates = [];
+      dateRule = "";
+    } else {
+      actions = [
+        act("Move to Reading", "Clears the finish date and takes it out of your " + s.year + " count.", true, "reading", ob.started || TODAY),
+        act("Move to To Read", "Clears both dates and removes it from the count.", false, "toread")
+      ];
+      dates = [["Started", ob.started ? fmt(ob.started) : "Not recorded", true], ["Finished", fmt(ob.finished), true]];
+      dateRule = ob.started ? "A finished book needs a finish date; the start date is optional." : "This book was logged without a start date, which is allowed.";
+    }
+
+    const d = {
+      title: ob.title, author: ob.author, notes: ob.notes, added: fmt(ob.added),
+      coverStyle: this.coverStyle(idxOf(ob), "104px", "150px", "11px 10px"),
+      sectionLabel: this.label(ob.section), dotStyle: this.dot(ob.section),
+      sectionChipStyle: "font-size:11.5px;padding:5px 11px;border-radius:6px;background:" +
+        (ob.section === "READING" ? "#EDE1D3" : ob.section === "FINISHED" ? "#DEE7DE" : "#E7DFD1") + ";color:#4A4237",
+      actions, dateRule,
+      dates: dates.map(([label, value, editable], k) => ({
+        label, value, editable,
+        rowStyle: "display:flex;gap:14px;align-items:center;padding:12px 0;" + (k < dates.length - 1 ? "border-bottom:1px solid #EFE7D9;" : ""),
+        edit: () => this.say("Date editing is out of scope for this prototype — validation rules from §8.13 would apply here.")
+      })),
+      fields: [
+        ["subtitle", "Subtitle", ob.fields.subtitle], ["format", "Edition", ob.fields.format],
+        ["publisher", "Publisher", ob.fields.publisher], ["published", "Published", ob.fields.published],
+        ["pages", "Pages", ob.fields.pages], ["language", "Language", ob.fields.language],
+        ["isbn13", "ISBN-13", ob.fields.isbn13]
+      ].map(([key, label, value]) => ({
+        label, value: value || "—", overridden: !!ob.edited[key],
+        reset: () => this.say("Reverted " + label.toLowerCase() + " to the shared edition value.")
+      }))
+    };
+
+    // ---- dialogs
+    const D = {
+      finish: { title: "Finished " + ob.title + "?", body: "Your start date of " + fmt(ob.started) + " is kept.", hasDate: true, dateLabel: "Finish date", primary: "Mark finished" },
+      toread: {
+        title: "Move to To Read?", hasDate: false, primary: "Clear dates and move", danger: true,
+        body: "This book goes back to the shelf as if you'd never opened it.",
+        effect: ob.section === "READING"
+          ? "The start date of " + fmt(ob.started) + " will be cleared and cannot be recovered."
+          : "The finish date of " + fmt(ob.finished) + (ob.started ? " and the start date of " + fmt(ob.started) : "") + " will be cleared, and it leaves your " + yearOf(ob.finished) + " count."
+      },
+      start: { title: "Start reading", body: "The start date defaults to today. Change it if you began earlier.", hasDate: true, dateLabel: "Start date", primary: "Start reading" },
+      logfinished: { title: "Log as finished", body: "A finish date is required. Leave the start date unrecorded if you don't remember it — that's allowed.", hasDate: true, dateLabel: "Finish date", primary: "Log it" },
+      reading: {
+        title: "Move back to Reading", hasDate: true, dateLabel: "Start date", primary: "Move to Reading",
+        body: ob.started ? "Your original start date is kept — adjust it only if it was wrong." : "This book has no start date on record, so today is used.",
+        effect: "The finish date of " + fmt(ob.finished) + " is cleared, so your " + yearOf(ob.finished) + " count drops to " + Math.max(0, this.countFor(yearOf(ob.finished)) - 1) + "."
+      },
+      delbook: { title: "Delete " + ob.title + "?", body: "Removes this book from your library along with its dates, notes and metadata edits. The other user's copy is untouched. This cannot be undone.", hasDate: false, primary: "Delete from my library", danger: true }
+    };
+    const cfg = D[s.dialog] || D.finish;
+    const dlg = Object.assign({}, cfg, {
+      date: s.dialogDate, hasEffect: !!cfg.effect,
+      primaryStyle: "width:100%;height:50px;border:none;border-radius:14px;font-size:15px;cursor:pointer;background:" +
+        (cfg.danger ? "#8E3F2C" : "#7C4A2D") + ";color:#F8F2E8"
+    });
+
+    // ---- library search
+    const q = s.query.trim().toLowerCase();
+    const matches = q ? s.books.filter(b => (b.title + " " + b.author).toLowerCase().includes(q)) : [];
+
+    // ---- provider
+    const pq = s.providerQuery.trim().toLowerCase();
+    const providerResults = PROVIDER.filter(p => !pq || (p.title + " " + p.author).toLowerCase().includes(pq))
+      .map((p, k) => Object.assign({}, p, {
+        initials: initials(p.title), thumbStyle: this.thumbStyle(k + 3),
+        open: () => {
+          const owned = s.books.find(b => b.title === p.title);
+          if (owned) { this.setState({ screen: "detail", openId: owned.id }); this.say("Already in your library — opened the entry you have."); }
+          else this.setState({ screen: "addDetail", candIdx: PROVIDER.indexOf(p), addSection: "TO_READ" });
+        }
+      }));
+    const cp = PROVIDER[s.candIdx == null ? 1 : s.candIdx];
+
+    const addSections = [["TO_READ", "To Read"], ["READING", "Reading"], ["FINISHED", "Finished"]].map(([k, label]) => ({
+      label, on: s.addSection === k ? "true" : "false", pick: () => this.setState({ addSection: k }),
+      style: "flex:1;padding:12px 4px;border-radius:12px;font-size:13px;cursor:pointer;border:1px solid " +
+        (s.addSection === k ? "#221F1A" : "#DFD6C6") + ";background:" + (s.addSection === k ? "#221F1A" : "#FBF8F2") +
+        ";color:" + (s.addSection === k ? "#F7F2E8" : "#6B6257")
+    }));
+
+    const manualFields = [
+      { label: "Title", req: "Required", type: "text", placeholder: "", note: "" },
+      { label: "Author", req: "Required", type: "text", placeholder: "One or more, in order", note: "" },
+      { label: "Subtitle", req: "Optional", type: "text", placeholder: "", note: "" },
+      { label: "Edition or format", req: "Optional", type: "text", placeholder: "Paperback, first edition…", note: "" },
+      { label: "ISBN-13", req: "Optional", type: "text", placeholder: "", note: "Validated if given. Editing it here doesn't change how the shared edition is identified." },
+      { label: "Publisher", req: "Optional", type: "text", placeholder: "", note: "" },
+      { label: "Published", req: "Optional", type: "text", placeholder: "Year, or full date", note: "A year on its own is fine." },
+      { label: "Pages", req: "Optional", type: "number", placeholder: "", note: "" }
+    ].map(f => Object.assign({}, f, {
+      hasNote: !!f.note,
+      reqStyle: "color:" + (f.req === "Required" ? "#7C4A2D" : "#A89B87"),
+      inputStyle: "width:100%;height:48px;background:#FBF8F2;border:1px solid " + (f.req === "Required" ? "#C9BCA6" : "#DFD6C6") + ";border-radius:12px;padding:0 14px;font-size:15px;outline:none"
+    }));
+
+    const noteKey = s.screen === "detail" ? "detail" : (s.screen === "add" || s.screen === "addDetail" || s.screen === "manual") ? "add" : "library";
+    const notes = NOTES[noteKey].map(n => ({
+      kind: n.kind, title: n.title, text: n.text,
+      cardStyle: "background:" + (n.kind === "PRD gap" ? "#F7EFE2" : "#FBF8F2") + ";border:1px solid " +
+        (n.kind === "PRD gap" ? "#E3D2B8" : "#DFD6C6") + ";border-radius:14px;padding:16px 18px",
+      kindStyle: "flex-shrink:0;font-size:9.5px;letter-spacing:0.1em;text-transform:uppercase;padding:3px 7px;border-radius:5px;background:" +
+        (n.kind === "PRD gap" ? "#E3CDA8" : n.kind === "Question" ? "#DCE3D8" : "#E7DFD1") + ";color:#4A4237"
+    }));
+
+    const jumps = [["library", "Library"], ["detail", "Book detail"], ["add", "Add book"], ["manual", "By hand"], ["search", "Search"]].map(([k, label]) => {
+      const on = s.screen === k || (k === "add" && s.screen === "addDetail");
+      return {
+        label, go: () => this.setState({ screen: k, openId: s.openId || 1, dialog: null }),
+        style: "border:1px solid " + (on ? "#9A8C74" : "#D2C7B3") + ";background:" + (on ? "#DED3BE" : "transparent") +
+          ";color:#4A4237;font-size:12px;padding:7px 13px;border-radius:999px;cursor:pointer"
+      };
+    });
+
+    return {
+      isMobileMode: s.mode === "mobile", isDesktopMode: s.mode === "desktop",
+      showMobile: () => this.setState({ mode: "mobile" }), showDesktop: () => this.setState({ mode: "desktop" }),
+      mobileBtnStyle: btn(s.mode === "mobile"), desktopBtnStyle: btn(s.mode === "desktop"),
+
+      isLibrary: s.screen === "library", isDetail: s.screen === "detail", isSearch: s.screen === "search",
+      isAdd: s.screen === "add", isAddDetail: s.screen === "addDetail", isManual: s.screen === "manual",
+
+      isCardMode: s.layout === "cards", isListMode: s.layout === "list",
+      layoutAria: s.layout === "cards" ? "Switch to compact list" : "Switch to cover cards",
+      toggleLayout: () => {
+        const n = s.layout === "cards" ? "list" : "cards";
+        this.setState({ layout: n });
+        this.say(n === "list" ? "Compact list. Saved to your account." : "Cover cards. Saved to your account.");
+      },
+      isCardLayout: s.layout === "cards" && items.length > 0,
+      isListLayout: s.layout === "list" && items.length > 0,
+      isEmptySection: items.length === 0,
+      emptyTitle: s.tab === "FINISHED" ? "Nothing finished in " + s.year : s.tab === "TO_READ" ? "Nothing waiting" : "You're not reading anything",
+      emptyBody: s.tab === "FINISHED" ? "Pick another year, or add a book you've already read." : s.tab === "TO_READ" ? "This is the shelf of books you mean to get to." : "Start something from To Read, or add a book.",
+
+      tabs, items: items.map(decorate), years,
+      showYearBar: s.tab === "FINISHED",
+      yearCount: String(count),
+      yearCountLabel: (count === 1 ? "book read in " : "books read in ") + s.year,
+
+      goSearch: () => this.setState({ screen: "search", query: "" }),
+      goAdd: () => this.setState({ screen: "add" }),
+      goManual: () => this.setState({ screen: "manual" }),
+      goBack: () => this.setState({ screen: "library" }),
+      noop: () => this.say("Editing fields is out of scope for this prototype."),
+
+      d, setNotes: (e) => this.mutate(ob.id, b => { b.notes = e.target.value; }),
+
+      askDeleteBook: () => this.setState({ dialog: "delbook" }),
+      dialogOpen: !!s.dialog, dlg,
+      setDialogDate: (e) => this.setState({ dialogDate: e.target.value }),
+      closeDialog: () => this.setState({ dialog: null }),
+      confirmDialog: () => {
+        const id = ob.id, date = s.dialogDate, kind = s.dialog;
+        if (kind === "finish" || kind === "logfinished") {
+          this.mutate(id, b => { b.finished = date; b.section = "FINISHED"; });
+          this.say("Finished. Your " + yearOf(date) + " count is now " + (this.countFor(yearOf(date)) + 1) + ".");
+        } else if (kind === "toread") {
+          const was = ob.section;
+          this.mutate(id, b => { b.section = "TO_READ"; b.started = null; b.finished = null; });
+          this.say(was === "READING" ? "Back on the shelf. The start date was cleared." : "Moved to To Read. Both dates were cleared.");
+        } else if (kind === "start") {
+          this.mutate(id, b => { b.started = date; b.finished = null; b.section = "READING"; });
+          this.say("Now in Reading, started " + fmt(date) + ".");
+        } else if (kind === "reading") {
+          const y = yearOf(ob.finished);
+          this.mutate(id, b => { b.finished = null; b.started = b.started || date; b.section = "READING"; });
+          this.say("Back in Reading. Your " + y + " count is now " + Math.max(0, this.countFor(y) - 1) + ".");
+        } else if (kind === "delbook") {
+          this.setState({ books: s.books.filter(b => b.id !== id), screen: "library" });
+          this.say("Removed from your library. The other account's copy is untouched.");
+        }
+        this.setState({ dialog: null });
+      },
+
+      query: s.query, setQuery: (e) => this.setState({ query: e.target.value }),
+      searchHint: q ? matches.length + (matches.length === 1 ? " book" : " books") + " in your library" : "Titles and authors, including any you've edited yourself.",
+      searchResults: matches.map(decorate), searchEmpty: !!q && matches.length === 0,
+
+      providerQuery: s.providerQuery,
+      setProviderQuery: (e) => {
+        this.setState({ providerQuery: e.target.value, providerLoading: true });
+        clearTimeout(this._p);
+        this._p = setTimeout(() => this.setState({ providerLoading: false }), 650);
+      },
+      providerHint: "Searches an outside catalogue. Your own library is never sent.",
+      providerLoading: s.providerLoading, providerReady: !s.providerLoading,
+      skeletons: [1, 2, 3], providerResults,
+      cand: { title: cp.title, author: cp.author, edition: cp.edition, coverStyle: this.coverStyle(4, "104px", "150px", "11px 10px") },
+
+      addSections,
+      addNeedsStart: s.addSection === "READING",
+      addNeedsFinish: s.addSection === "FINISHED",
+      addStart: s.addStart, addFinish: s.addFinish,
+      setAddStart: (e) => this.setState({ addStart: e.target.value }),
+      setAddFinish: (e) => this.setState({ addFinish: e.target.value }),
+      addDateHint: s.addSection === "TO_READ"
+        ? "No dates are stored for a To Read book. You can start it whenever."
+        : s.addSection === "READING"
+          ? "Defaults to today. These are calendar dates — they don't shift with timezones."
+          : "Finish date is required. Leave the start date as-is if you don't remember when you began.",
+      addCta: s.addSection === "TO_READ" ? "Add to To Read" : s.addSection === "READING" ? "Add and start reading" : "Add as finished",
+      commitAdd: () => {
+        const nid = Date.now();
+        const nb = {
+          id: nid, title: cp.title, author: cp.author, section: s.addSection, added: TODAY,
+          started: s.addSection === "READING" ? s.addStart : s.addSection === "FINISHED" ? s.addStart : null,
+          finished: s.addSection === "FINISHED" ? s.addFinish : null,
+          notes: "",
+          fields: F("", "Paperback", cp.edition.split(" · ")[0], cp.edition.split(" · ")[1], "", ""),
+          edited: {}
+        };
+        this.setState({ books: s.books.concat([nb]), screen: "library", tab: s.addSection, year: yearOf(TODAY) });
+        this.say("Added. Cover copied from the catalogue and stored locally.");
+      },
+
+      manualFields,
+      notesHeading: noteKey === "detail" ? "Notes on this screen — book detail" : noteKey === "add" ? "Notes on this screen — adding a book" : "Notes on this screen — the library",
+      notes, jumps,
+      toastOpen: !!s.toast, toast: s.toast,
+
+      desktopTitle: this.label(s.tab),
+      desktopEmpty: items.length === 0,
+      desktopItems: items.map(b => ({
+        title: b.title, author: b.author, dateLine: this.dateLine(b),
+        coverStyle: this.coverStyle(idxOf(b), "100%", "250px"),
+        open: () => this.setState({ mode: "mobile", screen: "detail", openId: b.id })
+      })),
+      deskNav: [["READING", "Reading"], ["TO_READ", "To Read"], ["FINISHED", "Finished"]].map(([k, label]) => {
+        const on = s.tab === k;
+        return {
+          label, count: String(sectionCount(k)), current: on ? "page" : "false",
+          pick: () => this.setState({ tab: k }),
+          style: "display:flex;align-items:center;justify-content:space-between;width:100%;text-align:left;border:none;cursor:pointer;padding:11px 12px;border-radius:10px;font-size:14px;color:" +
+            (on ? "#221F1A" : "#5A5147") + ";background:" + (on ? "#E8DCC8" : "transparent"),
+          countStyle: "font-size:12.5px;color:" + (on ? "#7C4A2D" : "#8A7F70")
+        };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>
