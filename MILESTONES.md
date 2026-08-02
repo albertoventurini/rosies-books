@@ -1,18 +1,19 @@
-# Rosie's Books — Implementation Milestones
+# Rosie's books — Implementation Milestones
 
 | Field | Value |
 | --- | --- |
-| Product | Rosie's Books |
+| Product | Rosie's books |
 | Source requirements | `PRD.md` |
 | Source design | `mockups/Liber Libri.dc.html` |
+| Engineering conventions | `ENGINEERING_CONVENTIONS.md` |
 | Document status | Draft for review |
 | Release boundary | Docker Compose service and operating documentation; deployment to a host is not included |
 
 ## 1. Planning decisions
 
-- The application will use Java, Quarkus, Qute, and PostgreSQL.
+- The application will use Java, Quarkus, Qute, jOOQ, and PostgreSQL.
+- Persistence will use imperative JDBC and generated jOOQ schema types, not Hibernate ORM or handwritten SQL as the ordinary query mechanism.
 - Server-rendered views will use Qute checked/type-safe templates with build-time validation.
-- This Qute decision supersedes the JTE candidate and JTE integration spike currently named in `PRD.md` for purposes of this implementation plan.
 - The production artifact will be the Quarkus JVM fast-jar packaged in a Docker image. Native-image compilation is outside this plan unless later measurements justify revisiting the decision.
 - Pages will be server-rendered. JavaScript will be limited to progressive enhancement where it makes an interaction materially better.
 - Schema changes will use versioned migrations.
@@ -53,7 +54,7 @@ No milestone should introduce ratings, goals, tags, recommendations, social beha
 
 ### Task execution contract
 
-Each numbered task below is a substantial, coherent unit assigned to one agent. An agent starting with a new context window must be able to understand the task from its entry, `PRD.md`, and the repository at the task's milestone baseline; no prior conversation is required. Milestones are sequential. Within a milestone, tasks may rely on earlier numbered tasks where the dependency is evident from the delivered application flow.
+Each numbered task below is a substantial, coherent unit assigned to one agent. An agent starting with a new context window must be able to understand the task from its entry, `PRD.md`, `ENGINEERING_CONVENTIONS.md`, and the repository at the task's milestone baseline; no prior conversation is required. Milestones are sequential. Within a milestone, tasks may rely on earlier numbered tasks where the dependency is evident from the delivered application flow.
 
 For every task, the assigned agent must:
 
@@ -71,10 +72,10 @@ A task should normally deliver a usable vertical slice or a complete technical f
 Tasks:
 
 - **0-1 — Scaffold and pin the application.**
-  - Select compatible Java, Quarkus, Qute, PostgreSQL, migration-tool, build-tool, and test-tool versions.
+  - Select compatible Java, Quarkus, Qute, jOOQ, PostgreSQL, migration-tool, build-tool, and test-tool versions.
   - Record every selected version, the reason for non-obvious choices, and the repository locations used to upgrade it.
-  - Scaffold explicit packages/modules for web, application, domain, persistence, provider, and identity concerns.
-  - Document allowed dependency directions and add build and architecture checks proving dependency resolution and boundary enforcement.
+  - Scaffold feature-first top-level packages for the initial business capabilities, colocating their web, use-case, domain, and persistence code rather than creating top-level technical-layer packages.
+  - Define each feature's small exposed API and allowed feature dependencies, and add ArchUnit checks proving internal-package encapsulation, infrastructure confinement, and an acyclic feature graph.
 - **0-2 — Establish the web foundation.**
   - Integrate Qute and render one minimal route through the shared server-side application shell in development/test and packaged JVM modes.
   - Use a checked/type-safe template and prove invalid template expressions or parameter contracts fail the build.
@@ -84,6 +85,8 @@ Tasks:
 - **0-3 — Establish PostgreSQL, migrations, and persistence testing.**
   - Add a health-checked development Docker Compose PostgreSQL service with explicit application/test configuration and documented start, stop, and data-reset behavior.
   - Configure versioned migrations and verify they apply in order to a clean database and cause a detectable startup failure when migration fails.
+  - Generate jOOQ schema types reproducibly from the versioned migrations, integrate generated sources into compilation, and fail the build when generated types and the migrated schema disagree.
+  - Configure jOOQ against the Quarkus-managed JDBC datasource and prove application transaction participation and rollback behavior.
   - Implement the chosen per-run isolated PostgreSQL integration-test setup, including its cleanup model and one repository round trip.
   - Prove binary cover data and MIME metadata can be written/read at the intended maximum size, reject data above the limit, and record the measured limit for milestone 7.
   - Expose one documented command that runs unit and PostgreSQL-backed integration tests.
@@ -107,7 +110,7 @@ Exit criteria:
 Tasks:
 
 - **1-1 — Implement the core ownership schema.**
-  - Add forward migrations and persistence mappings for User, UserPreference, Edition, ordered Edition authors, UserEdition, and private metadata overrides.
+  - Add forward migrations, generated jOOQ schema types, and persistence adapters for User, UserPreference, Edition, ordered Edition authors, UserEdition, and private metadata overrides.
   - Define foreign-key ownership and deletion behavior explicitly.
   - Preserve unknown, year-only, year-month, and full publication dates without inventing missing components; test round trips, comparisons, and invalid components.
   - Store normalized ISBN-13 and provider/edition identifiers with canonical uniqueness rules and deterministic constraint-to-domain error mapping.
@@ -290,8 +293,8 @@ Tasks:
   - Standardize provider-independent empty, enhancement-loading, validation, connectivity, not-found, unauthorized, conflict, and unexpected-error states.
   - Escape all user text and render descriptions as plain/untrusted content.
   - Add representative browser assertions or screenshots for every flow and viewport, with no clipping or horizontal page scrolling.
-- **6-2 — Package Rosie's Books as an online PWA.**
-  - Add the web app manifest, all required icon sizes, theme/background metadata, standalone display mode, start URL, and mobile safe-area behavior under the Rosie's Books name.
+- **6-2 — Package Rosie's books as an online PWA.**
+  - Add the web app manifest, all required icon sizes, theme/background metadata, standalone display mode, start URL, and mobile safe-area behavior under the Rosie's books name.
   - Decide and record whether a service worker is needed.
   - If used, cache only versioned public static assets, bypass private/authenticated pages and mutations, and define/test cache update behavior; if omitted, record why installability and resilience still hold.
   - Present an accurate online-required state after load-time or submission-time connectivity loss, preserve safe form input where practical, never queue mutations, and make no offline-data claim.
@@ -303,7 +306,7 @@ Tasks:
 
 Exit criteria:
 
-- Rosie's Books is installable and fully usable in a normal browser tab.
+- Rosie's books is installable and fully usable in a normal browser tab.
 - It makes no claim that private data or mutations work offline.
 - Essential provider-independent workflows work with JavaScript enhancements unavailable.
 - All milestone 2–5 flows pass the narrow-mobile and desktop smoke suite without clipping or horizontal page scrolling.
@@ -399,7 +402,7 @@ Exit criteria:
 
 ### Milestone 9 — Release packaging, operations documentation, and acceptance
 
-**Outcome:** Rosie's Books is deliverable as a production-oriented Docker Compose service with documented operation and evidence that the in-scope PRD release criteria pass.
+**Outcome:** Rosie's books is deliverable as a production-oriented Docker Compose service with documented operation and evidence that the in-scope PRD release criteria pass.
 
 Tasks:
 
@@ -439,6 +442,7 @@ Exit criteria:
 A milestone is complete only when:
 
 - Its tasks and exit criteria are satisfied, not merely coded.
+- Its implementation follows `ENGINEERING_CONVENTIONS.md`, or an exception is explicitly recorded.
 - New behavior has proportionate unit, persistence, request, and/or browser tests.
 - User-owned queries and mutations include a negative cross-user test when applicable.
 - Schema changes are expressed as forward versioned migrations and work from a clean database.
@@ -453,7 +457,7 @@ These are deliberately unresolved until the milestone that needs them:
 
 | Decision | Decide in | Required output |
 | --- | --- | --- |
-| Exact framework/library versions, build tool, migration tool, and integration-test setup | Milestone 0 | Recorded technical choices and reproducible commands |
+| Exact framework/library versions, build tool, migration tool, jOOQ generation/integration setup, and integration-test setup | Milestone 0 | Recorded technical choices and reproducible commands |
 | External book provider | Milestone 7, task 7-1 | Decision record, adapter contract, normalization and operating rules |
 | OIDC provider | Milestone 8 | Updated requirements if needed, decision record, claim/session/configuration rules |
 

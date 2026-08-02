@@ -1,8 +1,8 @@
-# Liber Libri — Product Requirements Document
+# Rosie's books — Product Requirements Document
 
 | Field | Value |
 | --- | --- |
-| Product | Liber Libri |
+| Product | Rosie's books |
 | Document status | Requirements complete; ready for implementation planning |
 | Product type | Mobile-first progressive web application (PWA) |
 | Initial audience | Two allowlisted users with fully private libraries |
@@ -10,7 +10,7 @@
 
 ## 1. Product summary
 
-Liber Libri is a deliberately small book-tracking application intended to replace a personal spreadsheet. It performs one task well: maintaining a private record of books a user wants to read, is reading, or has finished.
+Rosie's books is a deliberately small book-tracking application intended to replace a personal spreadsheet. It performs one task well: maintaining a private record of books a user wants to read, is reading, or has finished.
 
 The application must be fast and comfortable on a mobile phone, particularly when installed or used through an iPhone browser. It will use server-rendered pages with progressive enhancement where useful. It is not a social network, recommendation service, reading challenge, review platform, or general-purpose personal knowledge system.
 
@@ -503,8 +503,9 @@ User 1 ─── * UserEdition * ─── 1 Edition 1 ─── 0..1 CoverAsset
 
 These are implementation directions rather than irreversible product requirements:
 
-- Java with Quarkus is the preferred backend candidate.
-- Server-side rendering is preferred, with JTE as the template-engine candidate.
+- The backend uses Java with Quarkus and an imperative application style.
+- Server-side rendering uses checked/type-safe Qute templates.
+- Persistence uses jOOQ with generated schema types, imperative JDBC, and PostgreSQL as specified in `ENGINEERING_CONVENTIONS.md`.
 - JavaScript should be limited to progressive enhancements such as dialogs, layout switching, and responsive interactions that materially improve usability.
 - A relational database is used for transactional data, metadata overlays, current state and dates, preferences, and binary cover storage.
 - Schema changes are managed through versioned migrations.
@@ -513,7 +514,7 @@ These are implementation directions rather than irreversible product requirement
 - Cover images are served from application-controlled storage with appropriate cache headers and responsive sizing.
 - The UI must remain functionally correct when progressive enhancements fail, except where the authentication provider itself requires browser scripting.
 
-A short technical spike should validate JTE integration, OIDC behavior in iPhone standalone mode, the chosen database's binary-cover behavior, and at least one provider adapter before implementation is committed.
+The implementation milestones validate Qute, jOOQ transaction and code-generation integration, OIDC behavior in iPhone standalone mode, PostgreSQL binary-cover behavior, and the selected provider adapter at the points where those risks are introduced.
 
 ## 14. Non-functional requirements
 

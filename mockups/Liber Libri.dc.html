@@ -26,7 +26,7 @@
   <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:24px;max-width:1500px;margin:0 auto 28px;flex-wrap:wrap">
     <div style="max-width:660px">
       <div style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#8A7F70;margin-bottom:8px">Design proposal · revised for the simplified PRD</div>
-      <h1 style="font-family:Newsreader,Georgia,serif;font-size:44px;font-weight:400;letter-spacing:-0.01em;margin:0 0 8px">Liber Libri</h1>
+      <h1 style="font-family:Newsreader,Georgia,serif;font-size:44px;font-weight:400;letter-spacing:-0.01em;margin:0 0 8px">Rosie's books</h1>
       <p style="margin:0;font-size:14.5px;line-height:1.55;color:#6B6257;text-wrap:pretty">One book, one state, two dates. Reading, To Read and Finished are the whole model now, so every screen below is a view of a single record changing hands. It's all clickable — finish a book, move it back, add one, and watch the year count follow.</p>
     </div>
     <div style="display:flex;gap:6px;background:#DAD0BF;padding:4px;border-radius:999px">
@@ -45,7 +45,7 @@
             <div style="display:flex;flex-direction:column;height:100%">
               <div style="padding:52px 20px 0;background:#F3EDE2;flex-shrink:0">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-                  <div style="font-family:Newsreader,serif;font-size:23px;letter-spacing:-0.01em">Liber Libri</div>
+                  <div style="font-family:Newsreader,serif;font-size:23px;letter-spacing:-0.01em">Rosie's books</div>
                   <div style="display:flex;gap:6px">
                     <button onClick="{{ goSearch }}" aria-label="Search your library" style="width:44px;height:44px;display:grid;place-items:center;border:1px solid #DFD6C6;background:#FBF8F2;border-radius:12px;cursor:pointer" style-hover="background:#F3EAD9">
                       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#5A5147" stroke-width="1.8"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg>
@@ -432,7 +432,7 @@
     <div style="max-width:1500px;margin:0 auto">
       <div style="background:#F3EDE2;border-radius:14px;overflow:hidden;box-shadow:0 24px 50px -22px rgba(52,40,26,0.35),0 0 0 1px rgba(52,40,26,0.10);display:flex;height:800px">
         <div style="width:248px;flex-shrink:0;border-right:1px solid #DFD6C6;padding:28px 18px;display:flex;flex-direction:column;gap:6px">
-          <div style="font-family:Newsreader,serif;font-size:22px;padding:0 10px 22px">Liber Libri</div>
+          <div style="font-family:Newsreader,serif;font-size:22px;padding:0 10px 22px">Rosie's books</div>
           <sc-for list="{{ deskNav }}" as="n" hint-placeholder-count="3">
             <button onClick="{{ n.pick }}" aria-current="{{ n.current }}" style="{{ n.style }}" style-hover="background:#EDE3D2"><span>{{ n.label }}</span><span style="{{ n.countStyle }}">{{ n.count }}</span></button>
           </sc-for>
