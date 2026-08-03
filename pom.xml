@@ -127,35 +127,6 @@
         <groupId>org.jooq</groupId>
         <artifactId>jooq-codegen-maven</artifactId>
         <version>${jooq.version}</version>
-        <configuration>
-          <generator>
-            <database>
-              <name>org.jooq.meta.extensions.ddl.DDLDatabase</name>
-              <properties>
-                <property>
-                  <key>scripts</key>
-                  <value>src/main/resources/db/migration/*.sql</value>
-                </property>
-                <property>
-                  <key>sort</key>
-                  <value>flyway</value>
-                </property>
-                <property>
-                  <key>defaultNameCase</key>
-                  <value>lower</value>
-                </property>
-              </properties>
-            </database>
-            <generate>
-              <deprecated>false</deprecated>
-              <records>false</records>
-            </generate>
-            <target>
-              <packageName>com.albertoventurini.rosiesbooks.library.persistence.jooq</packageName>
-              <directory>${project.build.directory}/generated-sources/jooq</directory>
-            </target>
-          </generator>
-        </configuration>
         <dependencies>
           <dependency>
             <groupId>org.jooq</groupId>
@@ -165,11 +136,78 @@
         </dependencies>
         <executions>
           <execution>
-            <id>generate-jooq-schema</id>
+            <id>generate-identity-jooq-schema</id>
             <goals>
               <goal>generate</goal>
             </goals>
             <phase>generate-sources</phase>
+            <configuration>
+              <generator>
+                <database>
+                  <name>org.jooq.meta.extensions.ddl.DDLDatabase</name>
+                  <includes>app_user</includes>
+                  <properties>
+                    <property>
+                      <key>scripts</key>
+                      <value>src/main/resources/db/migration/*.sql</value>
+                    </property>
+                    <property>
+                      <key>sort</key>
+                      <value>flyway</value>
+                    </property>
+                    <property>
+                      <key>defaultNameCase</key>
+                      <value>lower</value>
+                    </property>
+                  </properties>
+                </database>
+                <generate>
+                  <deprecated>false</deprecated>
+                  <records>false</records>
+                </generate>
+                <target>
+                  <packageName>com.albertoventurini.rosiesbooks.identity.persistence.jooq</packageName>
+                  <directory>${project.build.directory}/generated-sources/jooq-identity</directory>
+                </target>
+              </generator>
+            </configuration>
+          </execution>
+          <execution>
+            <id>generate-library-jooq-schema</id>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+            <phase>generate-sources</phase>
+            <configuration>
+              <generator>
+                <database>
+                  <name>org.jooq.meta.extensions.ddl.DDLDatabase</name>
+                  <includes>cover_asset|user_preference|edition|edition_author|user_edition|user_edition_metadata_override|user_edition_author_override</includes>
+                  <properties>
+                    <property>
+                      <key>scripts</key>
+                      <value>src/main/resources/db/migration/*.sql</value>
+                    </property>
+                    <property>
+                      <key>sort</key>
+                      <value>flyway</value>
+                    </property>
+                    <property>
+                      <key>defaultNameCase</key>
+                      <value>lower</value>
+                    </property>
+                  </properties>
+                </database>
+                <generate>
+                  <deprecated>false</deprecated>
+                  <records>false</records>
+                </generate>
+                <target>
+                  <packageName>com.albertoventurini.rosiesbooks.library.persistence.jooq</packageName>
+                  <directory>${project.build.directory}/generated-sources/jooq-library</directory>
+                </target>
+              </generator>
+            </configuration>
           </execution>
         </executions>
       </plugin>

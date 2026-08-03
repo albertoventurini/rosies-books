@@ -14,9 +14,11 @@ another.
 | `platform` | Shared technical bootstrap only | Nothing |
 
 Each feature root has an `@AppModule` declaration in its `package-info.java`. Only the feature's
-`api` namespace is available to another feature. Those namespaces are intentionally empty in this
-scaffold: add a type only when a real cross-feature consumer requires it. Application-wide
-architectural metadata such as `AppModule` lives at the application root rather than in a feature.
+`api` namespace is available to another feature. `identity.api.UserId` is the intentional narrow
+identity-to-library contract: every owner-scoped library persistence operation requires it without
+exposing identity persistence or OIDC types. Other API namespaces remain empty until a real
+cross-feature consumer requires a type. Application-wide architectural metadata such as
+`AppModule` lives at the application root rather than in a feature.
 
 ## Package conventions
 

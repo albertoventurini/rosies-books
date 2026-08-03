@@ -31,6 +31,10 @@ class CoverAssetRepository {
         .fetchOptional(record -> new CoverAsset(record.value1(), record.value2(), record.value3()));
   }
 
+  boolean delete(UUID id) {
+    return dsl.deleteFrom(COVER_ASSET).where(COVER_ASSET.ID.eq(id)).execute() == 1;
+  }
+
   long count() {
     return dsl.fetchCount(COVER_ASSET);
   }

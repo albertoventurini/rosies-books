@@ -76,19 +76,23 @@ schema change; never edit a migration that has been applied to a shared or deplo
 Flyway validates and migrates at application startup. Clean and automatic repair are disabled, so
 an invalid migration fails startup and requires a deliberate forward fix.
 
-During Maven's `generate-sources` phase, `jooq-codegen-maven` uses `DDLDatabase` to read the same
-migrations in Flyway order and writes Java sources under `target/generated-sources/jooq`. The
-generated directory is build output and must not be committed. Run generation and compilation
-without Docker with:
+During Maven's `generate-sources` phase, two `jooq-codegen-maven` executions use `DDLDatabase` to
+read the same migrations in Flyway order. Identity generates only `app_user` under
+`identity.persistence.jooq`; library generates its tables, including `cover_asset`, under
+`library.persistence.jooq`. Both targets live below `target/generated-sources`, are build output,
+and must not be committed. The PostgreSQL-only extension and index statements in V4 are marked for
+the DDL parser to ignore; Flyway still applies them to PostgreSQL and catalog tests verify them.
+Run generation and compilation without Docker with:
 
 ```shell
 ./mvnw compile
 ```
 
-Application persistence code uses only generated tables and fields. A PostgreSQL-backed schema
-compatibility test compares those generated columns, types, nullability, keys, and the named
-5 MiB check with the live migrated schema. SQL parsing, generated-source compilation, and the live
-comparison therefore all participate in `verify`.
+Application persistence code uses only generated tables and fields. PostgreSQL-backed schema
+compatibility tests compare generated columns, types, nullability, keys, named checks, unique
+constraints, and foreign-key deletion actions with the live migrated schema. SQL parsing,
+generated-source compilation, live comparison, and index-plan eligibility therefore all
+participate in `verify`.
 
 ## Test isolation and verification
 
