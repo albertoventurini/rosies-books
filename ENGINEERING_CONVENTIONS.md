@@ -41,11 +41,18 @@ Use **red–green–refactor** for every observable behavior:
 2. Run it and confirm that it fails for the expected reason.
 3. Implement the smallest coherent production change that makes it pass.
 4. Refactor while keeping the tests green.
-5. Run the smallest relevant suite, then every broader suite required by the task.
+5. Verify the change using the proportionate test scope and execution cadence below.
 6. Update affected documentation and shared contracts in the same change.
 
 Additional rules:
 
+- Treat a red–green–refactor cycle as one coherent behavior boundary, not as one cycle per
+  assertion or implementation correction. A typical task should need only a small number of
+  meaningful cycles.
+- During implementation, use the cheapest targeted command that provides useful feedback. Once
+  the implementation is coherent, run its combined focused suite once, then run the full
+  documented verification command once before completion. Repeat a broader run only when a
+  failure or subsequent change makes it necessary.
 - A defect fix must include a regression test that fails without the fix.
 - Never weaken, remove, or ignore a valid test merely to make the build green.
 - Tests should assert externally observable behavior and domain rules, not private implementation structure.
@@ -180,12 +187,18 @@ Use the lowest test level that proves the behavior, with broader tests at bounda
 
 For all tests:
 
+- Prefer fast, framework-free domain tests while developing feature behavior. Add Quarkus,
+  PostgreSQL, browser, or packaged-JVM coverage only where the behavior actually crosses that
+  boundary.
+- Consolidate request assertions that share a runtime and test profile. Use separate suites only
+  for a distinct lifecycle, profile, or testing capability such as log capture.
+- Keep packaged-JVM coverage as a small application-level smoke suite. Do not duplicate the full
+  request suite in packaged mode.
 - User-owned behavior must include a negative cross-user case where applicable.
 - Failure-path tests must verify that no partial durable change remains.
 - Ordering, time, generated data, and concurrency tests must be deterministic.
 - Prefer representative builders and fixtures over large copied setup blocks.
 - Mock external boundaries, not the application's own domain behavior.
-- A task should first run its focused suite and then the documented project verification command before completion.
 
 ## 9. Security, privacy, and observability
 

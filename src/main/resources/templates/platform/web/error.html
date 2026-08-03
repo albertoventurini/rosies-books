@@ -1,0 +1,14 @@
+{@com.albertoventurini.rosiesbooks.platform.web.ErrorPage page}
+{#include platform/web/shell}
+  {#title}{page.title}{/title}
+  {#content}
+    <header class="site-header">
+      <p class="eyebrow">Rosie's books</p>
+      <h1>{page.title}</h1>
+    </header>
+    <main class="page-content" id="main-content">
+      <p>{page.message}</p>
+      <p class="correlation-id">Reference: <span>{page.correlationId}</span></p>
+    </main>
+  {/content}
+{/include}

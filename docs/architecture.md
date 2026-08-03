@@ -30,6 +30,7 @@ Adapters are placed under the feature that owns the behavior:
 - `<feature>.persistence` contains jOOQ, JDBC, and PostgreSQL adapters.
 - `identity.authentication` contains OIDC adapters.
 - `platform.web` contains shared web bootstrap only.
+- `platform.health` contains side-effect-free process health checks.
 - `platform.database` contains shared datasource and database bootstrap only.
 
 Domain and use-case packages may be introduced within a feature when behavior exists; the
