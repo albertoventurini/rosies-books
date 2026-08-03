@@ -12,9 +12,11 @@ public class UnreachableDatasourceHealthProfile implements QuarkusTestProfile {
   public Map<String, String> getConfigOverrides() {
     return Map.of(
         "quarkus.datasource.db-kind", "postgresql",
+        "quarkus.datasource.devservices.enabled", "false",
         "quarkus.datasource.jdbc.url", "jdbc:postgresql://127.0.0.1:1/rosies",
         "quarkus.datasource.username", USERNAME,
         "quarkus.datasource.password", PASSWORD,
-        "quarkus.datasource.jdbc.acquisition-timeout", "1S");
+        "quarkus.datasource.jdbc.acquisition-timeout", "1S",
+        "quarkus.flyway.migrate-at-start", "false");
   }
 }

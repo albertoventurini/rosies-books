@@ -23,6 +23,11 @@ class HealthTest {
   @Test
   void reportsReadiness() {
     assertUp("/q/health/ready", "application-readiness");
+    given()
+        .when()
+        .get("/q/health/ready")
+        .then()
+        .body("checks.name", hasItem("Database connections health check"));
   }
 
   private static void assertUp(String path, String checkName) {

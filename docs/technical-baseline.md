@@ -1,8 +1,9 @@
 # Technical baseline
 
-This document records the pinned starting point from task 0-1 and the tooling added by task 0-2. A
+This document records the pinned starting point from task 0-1 and the foundations added through
+task 0-3. A
 pin is owned either directly by a Maven property, by the imported Quarkus platform BOM, by the
-checksum-verified wrapper, or by the future Compose file named below. Quarkus-managed dependency
+checksum-verified wrapper, or by the Compose image named below. Quarkus-managed dependency
 versions are not restated on dependencies when the BOM already supplies the selected version.
 
 ## Runtime and libraries
@@ -14,12 +15,12 @@ versions are not restated on dependencies when the BOM already supplies the sele
 | Maven Wrapper scripts | 3.3.4 | `wrapperVersion` in `.mvn/wrapper/maven-wrapper.properties` | Current script-only wrapper; avoids checking in a wrapper JAR | [Maven Wrapper 3.3.4](https://maven.apache.org/wrapper/) |
 | Quarkus Platform | 3.33.2.1 LTS | `quarkus.platform.version` and imported `quarkus-bom` | Production-recommended LTS line with Java 25 support | [Quarkus releases](https://quarkus.io/releases/) |
 | jOOQ Open Source | 3.21.6 | `jooq.version` | Provider-neutral SQL DSL, later wired directly to Agroal rather than through a Quarkiverse extension | [jOOQ versions](https://www.jooq.org/download/versions) |
-| PostgreSQL server | 18.4 | Future `compose.yaml` image `postgres:18.4` in task 0-3 | Pinned production database; no container is introduced in this task | [PostgreSQL 18.4](https://www.postgresql.org/docs/release/18.4/) |
+| PostgreSQL server | 18.4 | `compose.yaml` and test Dev Services image `postgres:18.4` | Same pinned database for development and PostgreSQL-backed tests | [PostgreSQL 18.4](https://www.postgresql.org/docs/release/18.4/) |
 | PostgreSQL JDBC | 42.7.10 | `postgresql.jdbc.version` | Explicit task baseline for the JDBC driver used by the Quarkus PostgreSQL extension | [pgJDBC 42.7.10](https://jdbc.postgresql.org/changelogs/2026-02-11-42/) |
-| Flyway core and PostgreSQL | 12.0.0 | Quarkus Platform BOM; `quarkus-flyway` and `quarkus-flyway-postgresql` extensions | Versioned PostgreSQL migrations, configured in task 0-3 | [Flyway engine release notes](https://documentation.red-gate.com/flyway/release-notes-and-older-versions/release-notes-for-flyway-engine) |
+| Flyway core and PostgreSQL | 12.0.0 | Quarkus Platform BOM; `quarkus-flyway` and `quarkus-flyway-postgresql` extensions | Startup validation and migration from versioned PostgreSQL SQL | [Flyway engine release notes](https://documentation.red-gate.com/flyway/release-notes-and-older-versions/release-notes-for-flyway-engine) |
 | JUnit Jupiter | 6.0.3 | Quarkus Platform BOM | Unit and architecture test engine aligned with Quarkus Test | [JUnit 6.0.3](https://docs.junit.org/6.0.3/release-notes/) |
 | ArchUnit | 1.4.2 | `archunit.version` | Executable package and dependency boundaries | [ArchUnit 1.4.2](https://github.com/TNG/ArchUnit/releases/tag/v1.4.2) |
-| Testcontainers | 2.0.4 | Quarkus Platform BOM | PostgreSQL integration-test baseline, present but not activated until task 0-3 | [Testcontainers 2.0.4](https://github.com/testcontainers/testcontainers-java/releases/tag/2.0.4) |
+| Testcontainers | 2.0.4 | Quarkus Platform BOM | Non-reused PostgreSQL Dev Services and isolated packaged-startup failure test | [Testcontainers 2.0.4](https://github.com/testcontainers/testcontainers-java/releases/tag/2.0.4) |
 | SmallRye Health extension | 3.33.2.1 | Quarkus Platform BOM; `quarkus-smallrye-health` extension | Startup, liveness, readiness, and configured Agroal readiness endpoints | [Quarkus SmallRye Health](https://quarkus.io/guides/smallrye-health) |
 | REST Assured | 5.5.6 | Quarkus Platform BOM; test-scoped `rest-assured` dependency | HTTP request assertions in Quarkus and packaged-JVM tests | [REST Assured](https://rest-assured.io/) |
 
@@ -37,6 +38,7 @@ and Testcontainers) use the BOM without a dependency-level override.
 | Maven Enforcer Plugin | 3.6.3 | `maven.enforcer.version` | Rejects an unpinned Maven or Java runtime | [Enforcer Plugin](https://maven.apache.org/enforcer/maven-enforcer-plugin/) |
 | Spotless Maven Plugin | 3.6.0 | `spotless.version` | Reproducible Java and POM formatting checks in `verify` | [Spotless 3.6.0](https://github.com/diffplug/spotless/releases/tag/maven/3.6.0) |
 | google-java-format | 1.35.0 | `google.java.format.version` | Single Java formatting implementation | [google-java-format 1.35.0](https://github.com/google/google-java-format/releases/tag/v1.35.0) |
+| jOOQ Codegen Maven Plugin | 3.21.6 | `jooq.version`; `generate-jooq-schema` execution | Generates internal library persistence types from Flyway SQL without a live database | [jOOQ DDLDatabase](https://www.jooq.org/doc/3.21/manual/code-generation/codegen-meta-sources/codegen-ddl/) |
 
 ## Upgrade verification
 
@@ -74,7 +76,7 @@ Confirm the important resolved versions individually:
 Failsafe upgrades are owned by `maven.failsafe.version`. After changing it, run `./mvnw verify`
 and confirm that the packaged JVM tests launch the production fast-jar.
 
-After task 0-3 introduces Compose, verify a PostgreSQL image change with:
+Verify a PostgreSQL image change with:
 
 ```shell
 docker compose config
