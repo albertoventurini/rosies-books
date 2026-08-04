@@ -20,3 +20,7 @@
 - Keep essential workflows correct without JavaScript; never mutate state through GET or HEAD.
 - Never log private notes, credentials, tokens, cookies, allowlists, or unnecessary search content.
 - Preserve unrelated work, update affected contracts and documentation, and report the validation performed.
+
+## Commit messages
+
+- Format every commit subject as `<type>(<task>): <description>`, for example `feat(2-5): add owner-scoped book deletion workflow`.

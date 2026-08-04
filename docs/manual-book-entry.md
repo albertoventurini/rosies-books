@@ -109,3 +109,17 @@ Edition, ordered-author, and UserEdition writes share the same transaction. A fa
 boundary rolls back all canonical and private rows, so no partial book can remain.
 
 CSRF protection remains deferred to the form-security foundation milestone.
+
+## Completed manual-library journey
+
+The PostgreSQL-backed request suite exercises manual creation in To Read, Reading, and Finished,
+exact request replay without duplication, ordinary and confirmed state changes on the same owned
+IDs, stale and repeated submissions, deletion cancellation, successful permanent deletion,
+failure rollback followed by retry, and cross-user denial. It uses only the two development
+identities and local PostgreSQL; no provider lookup or live OIDC interaction participates.
+
+Manual Editions created here have neither provider identity nor cover. Deleting their final
+UserEdition reference through `POST /books/{userEditionId}/delete` therefore also removes the
+orphan Edition and its canonical authors in the same transaction. An Edition shared by another
+user is retained until its final reference is removed. Cover-asset deletion remains outside this
+workflow.

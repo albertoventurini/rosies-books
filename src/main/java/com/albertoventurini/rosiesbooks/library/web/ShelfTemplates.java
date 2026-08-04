@@ -20,3 +20,9 @@ class StateChangeTemplates {
 
   static native TemplateInstance state(StateChangePage page);
 }
+
+@CheckedTemplate(basePath = "library/web")
+class BookDeletionTemplates {
+
+  static native TemplateInstance delete(BookDeletionPage page);
+}

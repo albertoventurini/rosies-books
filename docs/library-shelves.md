@@ -15,6 +15,8 @@ The browser routes are:
 | `GET`, `HEAD` | `/finished` | Current user's Finished shelf |
 | `GET`, `HEAD` | `/books/{userEditionId}/state` | Shelf-change form for an owned book |
 | `POST` | `/books/{userEditionId}/state` | Validate, confirm, cancel, or apply a shelf change |
+| `GET`, `HEAD` | `/books/{userEditionId}/delete` | Permanent-deletion confirmation for an owned book |
+| `POST` | `/books/{userEditionId}/delete` | Cancel or permanently delete an owned book |
 
 Shelf routes return `401 Unauthorized` when `CurrentUserProvider` cannot resolve the request.
 They never fall back to a development identity. In development and tests, selecting a user still
@@ -111,7 +113,37 @@ transaction preserves the prior state, dates, timestamp, and version.
 
 Successful manual additions use `303 See Other` with `notice=book-added`, successful changes use
 `notice=state-changed`, and cancellation uses `notice=state-change-cancelled`. Only those fixed
-codes render a shelf status banner. A shelf-only, plain-JavaScript enhancement removes a recognized
-notice parameter from browser history immediately and removes the transient banner after five
-seconds. With JavaScript disabled, the banner stays visible until navigation. Validation, conflict,
-and unexpected-error messages are never transient.
+codes, plus deletion's `book-deleted` and `book-deletion-cancelled`, render a shelf status banner. A
+shelf-only, plain-JavaScript enhancement removes a recognized notice parameter from browser history
+immediately and removes the transient banner after five seconds. With JavaScript disabled, the
+banner stays visible until navigation. Validation, conflict, and unexpected-error messages are
+never transient.
+
+## Permanent deletion
+
+Each shelf row has an ordinary `Delete` link to a server-rendered confirmation. Viewing the page,
+including its safe `HEAD` handling, never mutates data. The page shows the escaped effective title,
+current shelf, and an explicit warning that dates, notes, and private metadata will be permanently
+removed. Its form contains the current optimistic `version` and supports only `intent=delete` or
+`intent=cancel`.
+
+Cancellation ignores a stale but well-formed version, performs no mutation, and returns `303 See
+Other` to the book's current shelf with `notice=book-deletion-cancelled`. Deletion requires the
+rendered version. Success returns `303` to the former shelf with `notice=book-deleted`; a stale
+form returns `409 Conflict` with a link to load a fresh confirmation. Invalid versions or intents
+return `400`. Malformed, unknown, already-deleted, and cross-user IDs all return the same
+non-identifying `404`.
+
+The public deletion use case accepts `CurrentUser` on every lookup and mutation and exposes only a
+deletion projection: effective title, shelf, and version. In one PostgreSQL transaction it finds
+the owner-scoped private row, locks its canonical Edition, then rechecks owner, ID, and expected
+version. The UserEdition delete cascades through scalar and ordered-author override rows. The
+canonical Edition and ordered canonical authors are also deleted only when the Edition is manual,
+has no provider identity, and has no remaining UserEdition reference. Shared, provider-origin, and
+provider-identified Editions, other owners' links and private data, and cover assets are retained.
+The Edition lock serializes concurrent deletion of the final shared references.
+
+Any persistence failure uses the shared correlation-ID `500` response. The transaction rolls back
+both private-row deletion and orphan cleanup, leaving the same version retryable. No migration is
+needed because the existing foreign keys, cascades, restrictions, and optimistic version support
+the workflow.

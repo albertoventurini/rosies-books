@@ -1,0 +1,43 @@
+{@com.albertoventurini.rosiesbooks.library.web.BookDeletionPage page}
+{#include platform/web/shell}
+  {#title}Delete book · {page.productName}{/title}
+  {#content}
+    <div class="library-shell">
+      <aside class="library-sidebar">
+        <div class="library-identity">
+          <a class="product-name" href="/reading">{page.productName}</a>
+          <span class="current-user-label">{page.userDisplayLabel}</span>
+        </div>
+      </aside>
+      <main class="manual-main" id="main-content">
+        <header class="manual-header">
+          <p class="eyebrow">Current shelf: {page.currentShelf}</p>
+          <h1>Delete book</h1>
+          <p class="state-book-title">{page.title}</p>
+        </header>
+
+        {#if page.conflict}
+          <div class="form-error-summary" role="alert">
+            <p>This book changed after this confirmation was opened. Review a fresh confirmation before trying again.</p>
+          </div>
+          <div class="form-actions"><a href="/books/{page.bookId}/delete">Review deletion confirmation</a></div>
+        {#else}
+          {#if page.hasError}
+            <div class="form-error-summary" role="alert"><p>{page.error}</p></div>
+          {/if}
+          <div class="form-warning" role="alert">
+            <h2>Permanently delete this book?</h2>
+            <p>All dates, notes, and private metadata will be permanently removed. This cannot be undone.</p>
+          </div>
+          <form class="manual-form" method="post" action="/books/{page.bookId}/delete">
+            <input type="hidden" name="version" value="{page.version}">
+            <div class="form-actions">
+              <button class="button-secondary" type="submit" name="intent" value="cancel">Cancel</button>
+              <button class="button-primary" type="submit" name="intent" value="delete">Delete permanently</button>
+            </div>
+          </form>
+        {/if}
+      </main>
+    </div>
+  {/content}
+{/include}

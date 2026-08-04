@@ -58,6 +58,8 @@ class ShelfResource {
           case "book-added" -> "The book was added successfully.";
           case "state-changed" -> "The book was moved successfully.";
           case "state-change-cancelled" -> "The shelf change was cancelled.";
+          case "book-deleted" -> "The book was deleted permanently.";
+          case "book-deletion-cancelled" -> "The book deletion was cancelled.";
           default -> null;
         };
     return ShelfTemplates.shelf(
