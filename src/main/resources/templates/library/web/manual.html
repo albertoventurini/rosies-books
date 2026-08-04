@@ -1,0 +1,156 @@
+{@com.albertoventurini.rosiesbooks.library.web.ManualBookPage page}
+{#include platform/web/shell}
+  {#title}Add a book manually · {page.productName}{/title}
+  {#content}
+    <div class="library-shell">
+      <aside class="library-sidebar">
+        <div class="library-identity">
+          <a class="product-name" href="/reading">{page.productName}</a>
+          <span class="current-user-label">{page.userDisplayLabel}</span>
+        </div>
+        <nav class="shelf-navigation" aria-label="Library shelves">
+          {#for item in page.navigation}
+            <a href="{item.route}" class="shelf-navigation-link">{item.label}</a>
+          {/for}
+        </nav>
+      </aside>
+      <main class="manual-main" id="main-content">
+        <header class="manual-header">
+          <p class="eyebrow">Your library</p>
+          <h1>Add a book manually</h1>
+          <p>Enter the edition details, then review them before anything is saved.</p>
+        </header>
+
+        {#if page.form.errors.size > 0}
+          <div class="form-error-summary" role="alert">
+            <p>Check the highlighted fields and try again.</p>
+            {#for error in page.form.errorsFor('form')}<p>{error}</p>{/for}
+          </div>
+        {/if}
+
+        <form class="manual-form" method="post" action="/books/new/manual" novalidate>
+          <section class="form-section" aria-labelledby="bibliographic-heading">
+            <h2 id="bibliographic-heading">Book details</h2>
+
+            <div class="form-field">
+              <label for="title">Title <span aria-hidden="true">*</span></label>
+              <input id="title" name="title" value="{page.form.title}" maxlength="500" required aria-describedby="title-errors"{#if page.form.hasError('title')} aria-invalid="true"{/if}>
+              <div class="field-errors" id="title-errors">{#for error in page.form.errorsFor('title')}<p>{error}</p>{/for}</div>
+            </div>
+
+            <fieldset class="form-field author-fields" aria-describedby="authors-errors">
+              <legend>Authors <span aria-hidden="true">*</span></legend>
+              {#for author in page.form.authors}
+                <div class="author-row">
+                  <label class="visually-hidden" for="author-{author_index}">Author {author_count}</label>
+                  <input id="author-{author_index}" name="authors" value="{author}" maxlength="300" aria-describedby="authors-errors"{#if page.form.hasError('authors')} aria-invalid="true"{/if}>
+                  <button class="button-secondary" type="submit" name="intent" value="remove-author-{author_index}" formnovalidate>Remove</button>
+                </div>
+              {/for}
+              <button class="button-secondary" type="submit" name="intent" value="add-author" formnovalidate>Add another author</button>
+              <div class="field-errors" id="authors-errors">{#for error in page.form.errorsFor('authors')}<p>{error}</p>{/for}</div>
+            </fieldset>
+
+            <div class="form-field">
+              <label for="subtitle">Subtitle</label>
+              <input id="subtitle" name="subtitle" value="{page.form.subtitle}" maxlength="500" aria-describedby="subtitle-errors"{#if page.form.hasError('subtitle')} aria-invalid="true"{/if}>
+              <div class="field-errors" id="subtitle-errors">{#for error in page.form.errorsFor('subtitle')}<p>{error}</p>{/for}</div>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-field">
+                <label for="format">Format or edition</label>
+                <input id="format" name="format" value="{page.form.format}" maxlength="500" aria-describedby="format-errors"{#if page.form.hasError('format')} aria-invalid="true"{/if}>
+                <div class="field-errors" id="format-errors">{#for error in page.form.errorsFor('format')}<p>{error}</p>{/for}</div>
+              </div>
+              <div class="form-field">
+                <label for="publisher">Publisher</label>
+                <input id="publisher" name="publisher" value="{page.form.publisher}" maxlength="500" aria-describedby="publisher-errors"{#if page.form.hasError('publisher')} aria-invalid="true"{/if}>
+                <div class="field-errors" id="publisher-errors">{#for error in page.form.errorsFor('publisher')}<p>{error}</p>{/for}</div>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-field">
+                <label for="isbn10">ISBN-10</label>
+                <input id="isbn10" name="isbn10" value="{page.form.isbn10}" maxlength="64" inputmode="text" aria-describedby="isbn10-errors"{#if page.form.hasError('isbn10')} aria-invalid="true"{/if}>
+                <div class="field-errors" id="isbn10-errors">{#for error in page.form.errorsFor('isbn10')}<p>{error}</p>{/for}</div>
+              </div>
+              <div class="form-field">
+                <label for="isbn13">ISBN-13</label>
+                <input id="isbn13" name="isbn13" value="{page.form.isbn13}" maxlength="64" inputmode="numeric" aria-describedby="isbn13-errors"{#if page.form.hasError('isbn13')} aria-invalid="true"{/if}>
+                <div class="field-errors" id="isbn13-errors">{#for error in page.form.errorsFor('isbn13')}<p>{error}</p>{/for}</div>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-field">
+                <label for="publicationDate">Publication date</label>
+                <input id="publicationDate" name="publicationDate" value="{page.form.publicationDate}" placeholder="YYYY, YYYY-MM, or YYYY-MM-DD" aria-describedby="publicationDate-errors"{#if page.form.hasError('publicationDate')} aria-invalid="true"{/if}>
+                <div class="field-errors" id="publicationDate-errors">{#for error in page.form.errorsFor('publicationDate')}<p>{error}</p>{/for}</div>
+              </div>
+              <div class="form-field">
+                <label for="pageCount">Page count</label>
+                <input id="pageCount" name="pageCount" value="{page.form.pageCount}" inputmode="numeric" aria-describedby="pageCount-errors"{#if page.form.hasError('pageCount')} aria-invalid="true"{/if}>
+                <div class="field-errors" id="pageCount-errors">{#for error in page.form.errorsFor('pageCount')}<p>{error}</p>{/for}</div>
+              </div>
+            </div>
+
+            <div class="form-field">
+              <label for="language">Language</label>
+              <input id="language" name="language" value="{page.form.language}" maxlength="500" aria-describedby="language-errors"{#if page.form.hasError('language')} aria-invalid="true"{/if}>
+              <div class="field-errors" id="language-errors">{#for error in page.form.errorsFor('language')}<p>{error}</p>{/for}</div>
+            </div>
+
+            <div class="form-field">
+              <label for="description">Description</label>
+              <textarea id="description" name="description" rows="7" maxlength="10000" aria-describedby="description-errors"{#if page.form.hasError('description')} aria-invalid="true"{/if}>{page.form.description}</textarea>
+              <div class="field-errors" id="description-errors">{#for error in page.form.errorsFor('description')}<p>{error}</p>{/for}</div>
+            </div>
+          </section>
+
+          <section class="form-section" aria-labelledby="state-heading">
+            <h2 id="state-heading">Shelf and dates</h2>
+            <div class="form-field">
+              <label for="state">Shelf <span aria-hidden="true">*</span></label>
+              <select id="state" name="state" aria-describedby="state-errors"{#if page.form.hasError('state')} aria-invalid="true"{/if}>
+                <option value="TO_READ"{#if page.form.toRead} selected{/if}>To Read</option>
+                <option value="READING"{#if page.form.reading} selected{/if}>Reading</option>
+                <option value="FINISHED"{#if page.form.finished} selected{/if}>Finished</option>
+              </select>
+              <button class="button-secondary" type="submit" name="intent" value="change-state" formnovalidate>Update date fields</button>
+              <div class="field-errors" id="state-errors">{#for error in page.form.errorsFor('state')}<p>{error}</p>{/for}</div>
+            </div>
+
+            {#if page.form.reading}
+              <div class="form-field">
+                <label for="startedOn">Start date <span aria-hidden="true">*</span></label>
+                <input id="startedOn" type="date" name="startedOn" value="{page.form.startedOn}" required aria-describedby="startedOn-errors"{#if page.form.hasError('startedOn')} aria-invalid="true"{/if}>
+                <div class="field-errors" id="startedOn-errors">{#for error in page.form.errorsFor('startedOn')}<p>{error}</p>{/for}</div>
+              </div>
+            {/if}
+            {#if page.form.finished}
+              <div class="form-grid">
+                <div class="form-field">
+                  <label for="startedOn">Start date <span class="label-note">optional</span></label>
+                  <input id="startedOn" type="date" name="startedOn" value="{page.form.startedOn}" aria-describedby="startedOn-errors"{#if page.form.hasError('startedOn')} aria-invalid="true"{/if}>
+                  <div class="field-errors" id="startedOn-errors">{#for error in page.form.errorsFor('startedOn')}<p>{error}</p>{/for}</div>
+                </div>
+                <div class="form-field">
+                  <label for="finishedOn">Finish date <span aria-hidden="true">*</span></label>
+                  <input id="finishedOn" type="date" name="finishedOn" value="{page.form.finishedOn}" required aria-describedby="finishedOn-errors"{#if page.form.hasError('finishedOn')} aria-invalid="true"{/if}>
+                  <div class="field-errors" id="finishedOn-errors">{#for error in page.form.errorsFor('finishedOn')}<p>{error}</p>{/for}</div>
+                </div>
+              </div>
+            {/if}
+          </section>
+
+          <div class="form-actions">
+            <a href="/reading">Cancel</a>
+            <button class="button-primary" type="submit" name="intent" value="review">Review book</button>
+          </div>
+        </form>
+      </main>
+    </div>
+  {/content}
+{/include}

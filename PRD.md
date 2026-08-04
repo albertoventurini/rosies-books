@@ -228,7 +228,7 @@ Date rules during addition:
 - **Reading:** start date is set automatically to today.
 - **Finished:** finish date is required and defaults to today; start date is optional.
 
-The user can edit the dates before saving. Date values are date-only values and must not shift because of server timezone conversion.
+The user can edit the dates before saving. Date values are date-only values and must not shift because of server timezone conversion. Until per-user timezone preferences exist, server-derived default dates use the configured application default zone (`Africa/Johannesburg` by default), never the JVM's ambient timezone.
 
 ### 8.7 External book-provider abstraction
 

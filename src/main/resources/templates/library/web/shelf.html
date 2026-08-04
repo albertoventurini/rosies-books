@@ -17,7 +17,10 @@
       <main class="shelf-main" id="main-content">
         <header class="shelf-header">
           <p class="eyebrow">Your library</p>
-          <h1>{page.heading}</h1>
+          <div class="shelf-heading-row">
+            <h1>{page.heading}</h1>
+            <a class="button-link" href="/books/new/manual">Add book manually</a>
+          </div>
         </header>
         {#if page.books.empty}
           <p class="shelf-empty">{page.emptyMessage}</p>

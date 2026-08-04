@@ -1,0 +1,65 @@
+{@com.albertoventurini.rosiesbooks.library.web.ManualBookReviewPage page}
+{#include platform/web/shell}
+  {#title}Review manual book · {page.productName}{/title}
+  {#content}
+    <div class="library-shell">
+      <aside class="library-sidebar">
+        <div class="library-identity">
+          <a class="product-name" href="/reading">{page.productName}</a>
+          <span class="current-user-label">{page.userDisplayLabel}</span>
+        </div>
+        <nav class="shelf-navigation" aria-label="Library shelves">
+          {#for item in page.navigation}<a href="{item.route}" class="shelf-navigation-link">{item.label}</a>{/for}
+        </nav>
+      </aside>
+      <main class="manual-main" id="main-content">
+        <header class="manual-header">
+          <p class="eyebrow">Manual entry</p>
+          <h1>Review manual book</h1>
+          <p class="review-notice" role="status"><strong>Nothing has been saved.</strong> This review is only a preview.</p>
+        </header>
+
+        <section class="review-card" aria-labelledby="review-title">
+          <h2 id="review-title">{page.review.title}</h2>
+          {#if page.review.subtitle}<p class="review-subtitle">{page.review.subtitle}</p>{/if}
+          <dl class="review-details">
+            <div><dt>Authors</dt><dd>{#for author in page.review.authors}<span>{author}</span>{/for}</dd></div>
+            {#if page.review.format}<div><dt>Format or edition</dt><dd>{page.review.format}</dd></div>{/if}
+            {#if page.review.isbn10}<div><dt>ISBN-10</dt><dd>{page.review.isbn10}</dd></div>{/if}
+            {#if page.review.isbn13}<div><dt>ISBN-13</dt><dd>{page.review.isbn13}</dd></div>{/if}
+            {#if page.review.publisher}<div><dt>Publisher</dt><dd>{page.review.publisher}</dd></div>{/if}
+            {#if page.review.publicationDate}<div><dt>Publication date</dt><dd>{page.review.publicationDate}</dd></div>{/if}
+            {#if page.review.pageCount}<div><dt>Page count</dt><dd>{page.review.pageCount}</dd></div>{/if}
+            {#if page.review.language}<div><dt>Language</dt><dd>{page.review.language}</dd></div>{/if}
+            {#if page.review.description}<div><dt>Description</dt><dd class="review-description">{page.review.description}</dd></div>{/if}
+            <div><dt>Shelf</dt><dd>{page.review.state}</dd></div>
+            {#if page.review.startedOn}<div><dt>Start date</dt><dd>{page.review.startedOn}</dd></div>{/if}
+            {#if page.review.finishedOn}<div><dt>Finish date</dt><dd>{page.review.finishedOn}</dd></div>{/if}
+          </dl>
+        </section>
+
+        <form class="form-actions" method="post" action="/books/new/manual">
+          <input type="hidden" name="intent" value="edit">
+          <input type="hidden" name="title" value="{page.form.title}">
+          {#for author in page.form.authors}<input type="hidden" name="authors" value="{author}">{/for}
+          <input type="hidden" name="subtitle" value="{page.form.subtitle}">
+          <input type="hidden" name="format" value="{page.form.format}">
+          <input type="hidden" name="isbn10" value="{page.form.isbn10}">
+          <input type="hidden" name="isbn13" value="{page.form.isbn13}">
+          <input type="hidden" name="publisher" value="{page.form.publisher}">
+          <input type="hidden" name="publicationDate" value="{page.form.publicationDate}">
+          <input type="hidden" name="pageCount" value="{page.form.pageCount}">
+          <input type="hidden" name="language" value="{page.form.language}">
+          <input type="hidden" name="description" value="{page.form.description}">
+          <input type="hidden" name="state" value="{page.form.state}">
+          {#if page.form.reading}<input type="hidden" name="startedOn" value="{page.form.startedOn}">{/if}
+          {#if page.form.finished}
+            <input type="hidden" name="startedOn" value="{page.form.startedOn}">
+            <input type="hidden" name="finishedOn" value="{page.form.finishedOn}">
+          {/if}
+          <button class="button-primary" type="submit">Edit book</button>
+        </form>
+      </main>
+    </div>
+  {/content}
+{/include}
