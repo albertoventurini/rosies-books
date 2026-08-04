@@ -59,6 +59,14 @@ class ArchitectureRuleFixtureTest {
         "io.quarkus.qute.Template");
   }
 
+  @Test
+  void detectsAUserEditionIdOnlyOperation() {
+    assertViolation(
+        ArchitectureRules.userEditionOperationsRequireCurrentUser(FIXTURES + ".ownership"),
+        FIXTURES + ".ownership",
+        "accepts UserEdition identity without CurrentUser");
+  }
+
   private static void assertViolation(ArchRule rule, String fixturePackage, String expectedText) {
     JavaClasses classes = new ClassFileImporter().importPackages(fixturePackage);
     String report = rule.evaluate(classes).getFailureReport().toString();

@@ -9,6 +9,11 @@ public class UnreachableDatasourceHealthProfile implements QuarkusTestProfile {
   static final String PASSWORD = "health-private-password";
 
   @Override
+  public String getConfigProfile() {
+    return "prod";
+  }
+
+  @Override
   public Map<String, String> getConfigOverrides() {
     return Map.of(
         "quarkus.datasource.db-kind", "postgresql",

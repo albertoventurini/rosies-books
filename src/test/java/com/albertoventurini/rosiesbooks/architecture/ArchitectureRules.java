@@ -1,10 +1,12 @@
 package com.albertoventurini.rosiesbooks.architecture;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.methods;
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 
 import com.tngtech.archunit.core.domain.Dependency;
 import com.tngtech.archunit.core.domain.JavaClass;
+import com.tngtech.archunit.core.domain.JavaMethod;
 import com.tngtech.archunit.lang.ArchCondition;
 import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.lang.ConditionEvents;
@@ -68,6 +70,16 @@ final class ArchitectureRules {
         .should(confineOidcTypes(basePackage))
         .allowEmptyShould(false)
         .as("OIDC types stay in identity authentication adapters");
+  }
+
+  static ArchRule userEditionOperationsRequireCurrentUser(String basePackage) {
+    return methods()
+        .that()
+        .areDeclaredInClassesThat()
+        .resideInAPackage(basePackage + ".library..")
+        .should(requireCurrentUserForUserEditionOperations())
+        .allowEmptyShould(false)
+        .as("library repository and service UserEdition operations require CurrentUser");
   }
 
   private static ArchCondition<JavaClass> respectFeatureBoundaries(String basePackage) {
@@ -141,6 +153,36 @@ final class ArchitectureRules {
         "depend on OIDC only from an identity authentication adapter",
         target -> belongsToPackage(target, "io.quarkus.oidc"),
         source -> belongsToPackage(source, basePackage + ".identity.authentication"));
+  }
+
+  private static ArchCondition<JavaMethod> requireCurrentUserForUserEditionOperations() {
+    return new ArchCondition<>(
+        "accept CurrentUser whenever they accept UserEdition or UserEditionId") {
+      @Override
+      public void check(JavaMethod method, ConditionEvents events) {
+        if (!method.getOwner().getSimpleName().endsWith("Repository")
+            && !method.getOwner().getSimpleName().endsWith("Service")) {
+          return;
+        }
+        Set<String> parameterTypes =
+            method.getRawParameterTypes().stream()
+                .map(JavaClass::getName)
+                .collect(java.util.stream.Collectors.toSet());
+        boolean acceptsUserEdition =
+            parameterTypes.contains(
+                    "com.albertoventurini.rosiesbooks.library.persistence.UserEdition")
+                || parameterTypes.contains(
+                    "com.albertoventurini.rosiesbooks.library.internal.UserEditionId");
+        boolean acceptsCurrentUser =
+            parameterTypes.contains("com.albertoventurini.rosiesbooks.identity.api.CurrentUser");
+        if (acceptsUserEdition && !acceptsCurrentUser) {
+          events.add(
+              SimpleConditionEvent.violated(
+                  method,
+                  method.getFullName() + " accepts UserEdition identity without CurrentUser"));
+        }
+      }
+    };
   }
 
   private static ArchCondition<JavaClass> confineDependencies(

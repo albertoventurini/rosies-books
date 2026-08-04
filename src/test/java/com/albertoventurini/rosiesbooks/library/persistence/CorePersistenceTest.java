@@ -7,7 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.albertoventurini.rosiesbooks.identity.api.UserId;
+import com.albertoventurini.rosiesbooks.identity.api.CurrentUser;
+import com.albertoventurini.rosiesbooks.identity.internal.DevelopmentUser;
 import com.albertoventurini.rosiesbooks.library.internal.CanonicalIsbns;
 import com.albertoventurini.rosiesbooks.library.internal.EditionId;
 import com.albertoventurini.rosiesbooks.library.internal.Finished;
@@ -51,23 +52,25 @@ class CorePersistenceTest {
   @Inject MetadataOverrideRepository overrides;
   @Inject CorePersistenceTestCoordinator coordinator;
 
-  private UserId firstUser;
-  private UserId secondUser;
+  private CurrentUser firstUser;
+  private CurrentUser secondUser;
 
   @BeforeEach
   void createUsers() {
-    firstUser = new UserId(UUID.randomUUID());
-    secondUser = new UserId(UUID.randomUUID());
-    insertUser(firstUser, "first");
-    insertUser(secondUser, "second");
+    firstUser = DevelopmentUser.READER_ONE.currentUser();
+    secondUser = DevelopmentUser.READER_TWO.currentUser();
+    ensureDevelopmentUser(DevelopmentUser.READER_ONE);
+    ensureDevelopmentUser(DevelopmentUser.READER_TWO);
   }
 
   @AfterEach
   void removeRows() {
     dsl.execute(
         "truncate table user_edition_author_override, user_edition_metadata_override,"
-            + " user_edition, edition_author, user_preference, edition, app_user, cover_asset"
+            + " user_edition, edition_author, user_preference, edition, cover_asset"
             + " restart identity cascade");
+    ensureDevelopmentUser(DevelopmentUser.READER_ONE);
+    ensureDevelopmentUser(DevelopmentUser.READER_TWO);
   }
 
   @Test
@@ -447,7 +450,7 @@ class CorePersistenceTest {
     dsl.deleteFrom(com.albertoventurini.rosiesbooks.identity.persistence.jooq.Tables.APP_USER)
         .where(
             com.albertoventurini.rosiesbooks.identity.persistence.jooq.Tables.APP_USER.ID.eq(
-                firstUser.value()))
+                firstUser.id().value()))
         .execute();
     assertTrue(userEditions.find(firstUser, firstLink.id()).isEmpty());
     assertTrue(overrides.find(firstUser, firstLink.id()).isEmpty());
@@ -588,15 +591,17 @@ class CorePersistenceTest {
                 .execute());
   }
 
-  private void insertUser(UserId id, String subject) {
+  private void ensureDevelopmentUser(DevelopmentUser user) {
     var users = com.albertoventurini.rosiesbooks.identity.persistence.jooq.Tables.APP_USER;
     dsl.insertInto(users)
-        .set(users.ID, id.value())
-        .set(users.OIDC_ISSUER, "https://issuer.example")
-        .set(users.OIDC_SUBJECT, subject)
-        .set(users.EMAIL, subject + "@example.com")
-        .set(users.CREATED_AT, OffsetDateTime.ofInstant(CREATED, ZoneOffset.UTC))
-        .set(users.UPDATED_AT, OffsetDateTime.ofInstant(UPDATED, ZoneOffset.UTC))
+        .set(users.ID, user.currentUser().id().value())
+        .set(users.OIDC_ISSUER, DevelopmentUser.OIDC_ISSUER)
+        .set(users.OIDC_SUBJECT, user.oidcSubject())
+        .set(users.EMAIL, user.email())
+        .set(users.CREATED_AT, OffsetDateTime.ofInstant(DevelopmentUser.CREATED_AT, ZoneOffset.UTC))
+        .set(users.UPDATED_AT, OffsetDateTime.ofInstant(DevelopmentUser.CREATED_AT, ZoneOffset.UTC))
+        .onConflict(users.ID)
+        .doNothing()
         .execute();
   }
 

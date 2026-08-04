@@ -9,6 +9,8 @@ import com.albertoventurini.rosiesbooks.identity.api.UserId;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import org.jooq.DSLContext;
 import org.jooq.exception.DataAccessException;
@@ -23,15 +25,18 @@ class UserPersistenceTest {
 
   @Inject UserRepository repository;
   @Inject DSLContext dsl;
+  private final Set<UUID> createdUserIds = new HashSet<>();
 
   @AfterEach
   void removeUsers() {
-    dsl.deleteFrom(APP_USER).execute();
+    dsl.deleteFrom(APP_USER).where(APP_USER.ID.in(createdUserIds)).execute();
+    createdUserIds.clear();
   }
 
   @Test
   void createsFindsAndDeletesAUserWithCallerSuppliedUtcTimestamps() {
     User user = user("subject-1");
+    createdUserIds.add(user.id().value());
 
     repository.create(user);
 
@@ -43,6 +48,7 @@ class UserPersistenceTest {
   @Test
   void mapsOnlyTheNamedOidcIdentityConflict() {
     User first = user("same-subject");
+    createdUserIds.add(first.id().value());
     repository.create(first);
 
     assertThrows(

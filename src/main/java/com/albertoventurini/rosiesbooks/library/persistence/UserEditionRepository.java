@@ -4,7 +4,7 @@ import static com.albertoventurini.rosiesbooks.library.persistence.jooq.Tables.E
 import static com.albertoventurini.rosiesbooks.library.persistence.jooq.Tables.EDITION_AUTHOR;
 import static com.albertoventurini.rosiesbooks.library.persistence.jooq.Tables.USER_EDITION;
 
-import com.albertoventurini.rosiesbooks.identity.api.UserId;
+import com.albertoventurini.rosiesbooks.identity.api.CurrentUser;
 import com.albertoventurini.rosiesbooks.library.internal.EditionId;
 import com.albertoventurini.rosiesbooks.library.internal.Finished;
 import com.albertoventurini.rosiesbooks.library.internal.Reading;
@@ -30,7 +30,7 @@ class UserEditionRepository {
     this.dsl = dsl;
   }
 
-  void link(UserId owner, UserEdition userEdition) {
+  void link(CurrentUser owner, UserEdition userEdition) {
     StateColumns state = columns(userEdition.state());
     var canonical =
         dsl.select(EDITION.TITLE)
@@ -51,7 +51,7 @@ class UserEditionRepository {
     try {
       dsl.insertInto(USER_EDITION)
           .set(USER_EDITION.ID, userEdition.id().value())
-          .set(USER_EDITION.USER_ID, owner.value())
+          .set(USER_EDITION.USER_ID, owner.id().value())
           .set(USER_EDITION.EDITION_ID, userEdition.editionId().value())
           .set(USER_EDITION.STATE, state.state())
           .set(USER_EDITION.STARTED_ON, state.startedOn())
@@ -70,9 +70,9 @@ class UserEditionRepository {
     }
   }
 
-  Optional<UserEdition> find(UserId owner, UserEditionId id) {
+  Optional<UserEdition> find(CurrentUser owner, UserEditionId id) {
     return dsl.selectFrom(USER_EDITION)
-        .where(USER_EDITION.USER_ID.eq(owner.value()).and(USER_EDITION.ID.eq(id.value())))
+        .where(USER_EDITION.USER_ID.eq(owner.id().value()).and(USER_EDITION.ID.eq(id.value())))
         .fetchOptional(
             row ->
                 new UserEdition(
@@ -87,14 +87,14 @@ class UserEditionRepository {
                     instant(row.get(USER_EDITION.UPDATED_AT))));
   }
 
-  Optional<EditionId> findEditionId(UserId owner, UserEditionId id) {
+  Optional<EditionId> findEditionId(CurrentUser owner, UserEditionId id) {
     return dsl.select(USER_EDITION.EDITION_ID)
         .from(USER_EDITION)
-        .where(USER_EDITION.USER_ID.eq(owner.value()).and(USER_EDITION.ID.eq(id.value())))
+        .where(USER_EDITION.USER_ID.eq(owner.id().value()).and(USER_EDITION.ID.eq(id.value())))
         .fetchOptional(record -> new EditionId(record.value1()));
   }
 
-  boolean updateState(UserId owner, UserEditionId id, ReadingState state, Instant updatedAt) {
+  boolean updateState(CurrentUser owner, UserEditionId id, ReadingState state, Instant updatedAt) {
     Objects.requireNonNull(state, "state");
     Objects.requireNonNull(updatedAt, "updatedAt");
     StateColumns columns = columns(state);
@@ -103,24 +103,24 @@ class UserEditionRepository {
             .set(USER_EDITION.STARTED_ON, columns.startedOn())
             .set(USER_EDITION.FINISHED_ON, columns.finishedOn())
             .set(USER_EDITION.UPDATED_AT, atUtc(updatedAt))
-            .where(USER_EDITION.USER_ID.eq(owner.value()).and(USER_EDITION.ID.eq(id.value())))
+            .where(USER_EDITION.USER_ID.eq(owner.id().value()).and(USER_EDITION.ID.eq(id.value())))
             .execute()
         == 1;
   }
 
   boolean updateSearchProjections(
-      UserId owner, UserEditionId id, String effectiveTitle, String effectiveAuthors) {
+      CurrentUser owner, UserEditionId id, String effectiveTitle, String effectiveAuthors) {
     return dsl.update(USER_EDITION)
             .set(USER_EDITION.EFFECTIVE_TITLE_SEARCH, effectiveTitle)
             .set(USER_EDITION.EFFECTIVE_AUTHORS_SEARCH, effectiveAuthors)
-            .where(USER_EDITION.USER_ID.eq(owner.value()).and(USER_EDITION.ID.eq(id.value())))
+            .where(USER_EDITION.USER_ID.eq(owner.id().value()).and(USER_EDITION.ID.eq(id.value())))
             .execute()
         == 1;
   }
 
-  boolean delete(UserId owner, UserEditionId id) {
+  boolean delete(CurrentUser owner, UserEditionId id) {
     return dsl.deleteFrom(USER_EDITION)
-            .where(USER_EDITION.USER_ID.eq(owner.value()).and(USER_EDITION.ID.eq(id.value())))
+            .where(USER_EDITION.USER_ID.eq(owner.id().value()).and(USER_EDITION.ID.eq(id.value())))
             .execute()
         == 1;
   }

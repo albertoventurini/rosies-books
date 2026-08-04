@@ -53,6 +53,12 @@ class ArchitectureTest {
     ArchitectureRules.oidcTypesStayInIdentityAuthentication(BASE_PACKAGE).check(PRODUCTION_CLASSES);
   }
 
+  @Test
+  void userEditionEntryPointsRequireCurrentUser() {
+    ArchitectureRules.userEditionOperationsRequireCurrentUser(BASE_PACKAGE)
+        .check(PRODUCTION_CLASSES);
+  }
+
   private static void assertModule(String feature, String... allowedDependencies) {
     Package featurePackage;
     try {

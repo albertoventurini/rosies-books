@@ -1,6 +1,6 @@
 package com.albertoventurini.rosiesbooks.library.persistence;
 
-import com.albertoventurini.rosiesbooks.identity.api.UserId;
+import com.albertoventurini.rosiesbooks.identity.api.CurrentUser;
 import com.albertoventurini.rosiesbooks.library.internal.MetadataOverrides;
 import com.albertoventurini.rosiesbooks.library.internal.ReadingState;
 import com.albertoventurini.rosiesbooks.library.internal.UserEditionId;
@@ -39,33 +39,36 @@ class CorePersistenceTestCoordinator {
   }
 
   @Transactional
-  void link(UserId owner, UserEdition userEdition) {
+  void link(CurrentUser owner, UserEdition userEdition) {
     userEditions.link(owner, userEdition);
   }
 
   @Transactional
-  boolean updateState(UserId owner, UserEditionId id, ReadingState state, Instant updatedAt) {
+  boolean updateState(CurrentUser owner, UserEditionId id, ReadingState state, Instant updatedAt) {
     return userEditions.updateState(owner, id, state, updatedAt);
   }
 
   @Transactional
-  void updateStateThenFail(UserId owner, UserEditionId id, ReadingState state, Instant updatedAt) {
+  void updateStateThenFail(
+      CurrentUser owner, UserEditionId id, ReadingState state, Instant updatedAt) {
     userEditions.updateState(owner, id, state, updatedAt);
     throw new DeliberateFailure();
   }
 
   @Transactional
-  boolean saveOverrides(UserId owner, UserEditionId id, MetadataOverrides metadataOverrides) {
+  boolean saveOverrides(CurrentUser owner, UserEditionId id, MetadataOverrides metadataOverrides) {
     return metadata.save(owner, id, metadataOverrides);
   }
 
   @Transactional
-  boolean saveOverridesDirect(UserId owner, UserEditionId id, MetadataOverrides metadataOverrides) {
+  boolean saveOverridesDirect(
+      CurrentUser owner, UserEditionId id, MetadataOverrides metadataOverrides) {
     return overrides.save(owner, id, metadataOverrides);
   }
 
   @Transactional
-  void saveOverridesThenFail(UserId owner, UserEditionId id, MetadataOverrides metadataOverrides) {
+  void saveOverridesThenFail(
+      CurrentUser owner, UserEditionId id, MetadataOverrides metadataOverrides) {
     metadata.save(owner, id, metadataOverrides);
     throw new DeliberateFailure();
   }

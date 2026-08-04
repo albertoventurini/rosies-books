@@ -1,0 +1,22 @@
+{@com.albertoventurini.rosiesbooks.identity.web.DevelopmentUsersPage page}
+{#include platform/web/shell}
+  {#title}Choose a development user{/title}
+  {#content}
+    <header class="site-header">
+      <p class="eyebrow">Local development</p>
+      <h1>Choose a user</h1>
+    </header>
+    <main class="page-content" id="main-content">
+      <p>This selector is local development tooling, not authentication.</p>
+      {#if page.error}<p role="alert">{page.error}</p>{/if}
+      {#for user in page.users}
+        <form method="post" action="/dev/users">
+          <input type="hidden" name="alias" value="{user.alias}">
+          <button type="submit"{#if user.selected} aria-current="true"{/if}>
+            {user.displayLabel}{#if user.selected} (selected){/if}
+          </button>
+        </form>
+      {/for}
+    </main>
+  {/content}
+{/include}

@@ -1,13 +1,15 @@
 # Core ownership schema
 
-Tasks 1-1 through 1-3 establish the persistence boundary for shared canonical editions, private
-user libraries, normalized ISBN identity, private effective metadata, and reading-state rules.
-Seeded users, the manual-add workflow, and web behavior remain outside this contract.
+Tasks 1-1 through 1-4 establish the persistence and current-user boundary for shared canonical
+editions, private user libraries, normalized ISBN identity, private effective metadata,
+reading-state rules, and profile-scoped development identities. The manual-add workflow remains
+outside this contract.
 
 ## Table and feature ownership
 
-Identity owns `app_user` and its generated jOOQ model. `identity.api.UserId` is the sole contract
-the library needs from identity. Library owns `cover_asset`, `user_preference`, `edition`,
+Identity owns `app_user` and its generated jOOQ model. `identity.api.CurrentUser`, containing a
+stable `UserId`, is the owner value the library receives from identity. Library owns `cover_asset`,
+`user_preference`, `edition`,
 `edition_author`, `user_edition`, `user_edition_metadata_override`, and
 `user_edition_author_override`, together with their generated jOOQ models.
 
@@ -17,9 +19,10 @@ zone` values in PostgreSQL. Reading dates remain date-only `LocalDate` values.
 
 ## Ownership and deletion
 
-Every private UserEdition or override repository operation accepts a `UserId` and scopes its SQL
-to both the owner and record identity. A foreign or unknown UserEdition therefore produces the
-same empty/false result. The database applies these lifetime rules:
+Every private UserEdition or override repository and use-case operation accepts a `CurrentUser`
+and scopes its SQL to both the contained owner ID and record identity. Preferences also require
+`CurrentUser`. A foreign or unknown UserEdition therefore produces the same empty/false result.
+The database applies these lifetime rules:
 
 - Deleting a User cascades to that user's preference, UserEditions, metadata overrides, and ordered
   author overrides. It does not delete a shared Edition.
@@ -37,7 +40,7 @@ replacement.
 
 State updates follow the same transaction contract. The owner-scoped repository writes the state,
 both reading-date columns, and a caller-supplied UTC `updated_at` in one statement. It scopes the
-statement by both `UserId` and `UserEditionId`, returning false for foreign and unknown records
+statement by both the current user's `UserId` and `UserEditionId`, returning false for foreign and unknown records
 without revealing which case occurred. The repository never opens its own transaction, so a later
 failure in the calling use case rolls the update back.
 
@@ -138,3 +141,34 @@ Adapters inspect PostgreSQL SQL state `23505` and the named constraint before tr
 failure. They expose stable persistence failures for duplicate OIDC identity, canonical ISBN-13,
 provider edition identity, and a duplicate Edition link for one user. Any other database failure is
 re-thrown unchanged.
+
+## Development identities and selector
+
+Development and test startup transactionally ensures these fixed fake identities exist in the
+existing `app_user` table:
+
+| Alias | Display label | User ID | Email |
+| --- | --- | --- | --- |
+| `reader-one` | Reader One | `00000000-0000-0000-0000-000000000001` | `reader-one@rosies-books.invalid` |
+| `reader-two` | Reader Two | `00000000-0000-0000-0000-000000000002` | `reader-two@rosies-books.invalid` |
+
+Their issuer is `https://oidc.rosies-books.invalid/development`; their subjects are the fixed
+aliases prefixed with `development:`. The creation and update timestamp is fixed as well, making a
+complete row deterministic. Re-running the seeder retains an exactly matching row. If a fixed ID
+has different data, or a fixed OIDC identity belongs to another row, startup fails. Both seed
+writes share one transaction, so a conflict cannot leave only one user inserted. This startup data
+requires no migration and is never created in a production build.
+
+In development and test builds, `GET /dev/users` renders the two display labels and marks the
+current selection. `POST /dev/users` accepts an exact alias, writes it to the `rosies-dev-user`
+cookie, and redirects to `/` with status 303. Invalid aliases return 400 without setting a cookie.
+The cookie has `Path=/`, `HttpOnly`, and `SameSite=Lax`; it contains no UUID, email, or other private
+data. It is intentionally unsigned because this trusted local selector already permits choosing
+either seed user. It is development tooling, not authentication, and must never be adopted as the
+production session design.
+
+Missing, malformed, and unknown cookie values resolve no current user. Production builds have no
+seed writer or `/dev/users` routes and use a provider that always returns empty. Consequently they
+start normally before milestone 8 but deny every identity-dependent workflow. Milestone 8 replaces
+only the current-user provider and session adapter; the `CurrentUser` library boundary remains
+unchanged.

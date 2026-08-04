@@ -4,7 +4,7 @@ import static com.albertoventurini.rosiesbooks.library.persistence.jooq.Tables.U
 import static com.albertoventurini.rosiesbooks.library.persistence.jooq.Tables.USER_EDITION_AUTHOR_OVERRIDE;
 import static com.albertoventurini.rosiesbooks.library.persistence.jooq.Tables.USER_EDITION_METADATA_OVERRIDE;
 
-import com.albertoventurini.rosiesbooks.identity.api.UserId;
+import com.albertoventurini.rosiesbooks.identity.api.CurrentUser;
 import com.albertoventurini.rosiesbooks.library.internal.Isbn10;
 import com.albertoventurini.rosiesbooks.library.internal.Isbn13;
 import com.albertoventurini.rosiesbooks.library.internal.MetadataOverride;
@@ -26,7 +26,7 @@ class MetadataOverrideRepository {
     this.dsl = dsl;
   }
 
-  boolean save(UserId owner, UserEditionId userEditionId, MetadataOverrides overrides) {
+  boolean save(CurrentUser owner, UserEditionId userEditionId, MetadataOverrides overrides) {
     dsl.deleteFrom(USER_EDITION_METADATA_OVERRIDE)
         .where(
             USER_EDITION_METADATA_OVERRIDE
@@ -40,7 +40,7 @@ class MetadataOverrideRepository {
                                 USER_EDITION
                                     .ID
                                     .eq(USER_EDITION_METADATA_OVERRIDE.USER_EDITION_ID)
-                                    .and(USER_EDITION.USER_ID.eq(owner.value()))))))
+                                    .and(USER_EDITION.USER_ID.eq(owner.id().value()))))))
         .execute();
 
     PartialPublicationDate publicationDate = overrides.publicationDate().value().orElse(null);
@@ -102,7 +102,7 @@ class MetadataOverrideRepository {
                         USER_EDITION
                             .ID
                             .eq(userEditionId.value())
-                            .and(USER_EDITION.USER_ID.eq(owner.value()))))
+                            .and(USER_EDITION.USER_ID.eq(owner.id().value()))))
             .execute();
     if (inserted == 0) {
       return false;
@@ -130,20 +130,23 @@ class MetadataOverrideRepository {
                         USER_EDITION_METADATA_OVERRIDE
                             .USER_EDITION_ID
                             .eq(userEditionId.value())
-                            .and(USER_EDITION.USER_ID.eq(owner.value()))))
+                            .and(USER_EDITION.USER_ID.eq(owner.id().value()))))
             .execute();
       }
     }
     return true;
   }
 
-  Optional<MetadataOverrides> find(UserId owner, UserEditionId userEditionId) {
+  Optional<MetadataOverrides> find(CurrentUser owner, UserEditionId userEditionId) {
     return dsl.select(USER_EDITION_METADATA_OVERRIDE.fields())
         .from(USER_EDITION_METADATA_OVERRIDE)
         .join(USER_EDITION)
         .on(USER_EDITION.ID.eq(USER_EDITION_METADATA_OVERRIDE.USER_EDITION_ID))
         .where(
-            USER_EDITION.USER_ID.eq(owner.value()).and(USER_EDITION.ID.eq(userEditionId.value())))
+            USER_EDITION
+                .USER_ID
+                .eq(owner.id().value())
+                .and(USER_EDITION.ID.eq(userEditionId.value())))
         .fetchOptional(
             row -> {
               boolean authorsOverridden =
@@ -157,7 +160,7 @@ class MetadataOverrideRepository {
                           .where(
                               USER_EDITION
                                   .USER_ID
-                                  .eq(owner.value())
+                                  .eq(owner.id().value())
                                   .and(USER_EDITION.ID.eq(userEditionId.value())))
                           .orderBy(USER_EDITION_AUTHOR_OVERRIDE.POSITION)
                           .fetch(USER_EDITION_AUTHOR_OVERRIDE.NAME)

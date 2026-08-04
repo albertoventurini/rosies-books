@@ -1,6 +1,6 @@
 package com.albertoventurini.rosiesbooks.library.persistence;
 
-import com.albertoventurini.rosiesbooks.identity.api.UserId;
+import com.albertoventurini.rosiesbooks.identity.api.CurrentUser;
 import com.albertoventurini.rosiesbooks.library.internal.EditionMetadata;
 import com.albertoventurini.rosiesbooks.library.internal.EffectiveMetadataResolver;
 import com.albertoventurini.rosiesbooks.library.internal.MetadataOverrides;
@@ -26,7 +26,7 @@ class MetadataOverrideService {
   }
 
   @Transactional
-  boolean save(UserId owner, UserEditionId id, MetadataOverrides proposed) {
+  boolean save(CurrentUser owner, UserEditionId id, MetadataOverrides proposed) {
     Optional<Edition> canonical = userEditions.findEditionId(owner, id).flatMap(editions::find);
     if (canonical.isEmpty()) {
       return false;
