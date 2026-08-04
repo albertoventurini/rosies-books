@@ -148,6 +148,8 @@ class CoreOwnershipSchemaTest {
                 "edition_isbn_13_checksum",
                 "edition_isbn_pair_consistent",
                 "user_edition_state_check",
+                "user_edition_state_dates",
+                "user_edition_date_chronology",
                 "user_edition_metadata_override_publication_date_value",
                 "user_edition_metadata_override_isbn_10_checksum",
                 "user_edition_metadata_override_isbn_13_checksum",

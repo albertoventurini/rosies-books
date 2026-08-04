@@ -1,9 +1,8 @@
 # Core ownership schema
 
-Tasks 1-1 and 1-2 establish the persistence boundary for shared canonical editions, private user
-libraries, normalized ISBN identity, and private effective metadata. The complete
-reading-state/date matrix, seeded users, manual-add workflow, and web behavior remain outside this
-contract.
+Tasks 1-1 through 1-3 establish the persistence boundary for shared canonical editions, private
+user libraries, normalized ISBN identity, private effective metadata, and reading-state rules.
+Seeded users, the manual-add workflow, and web behavior remain outside this contract.
 
 ## Table and feature ownership
 
@@ -35,6 +34,45 @@ when invoked by a transactional use-case coordinator. The metadata override use 
 transaction that replaces a complete override snapshot and ordered author rows and then refreshes
 both effective search projections. Validation or any later write failure rolls back the complete
 replacement.
+
+State updates follow the same transaction contract. The owner-scoped repository writes the state,
+both reading-date columns, and a caller-supplied UTC `updated_at` in one statement. It scopes the
+statement by both `UserId` and `UserEditionId`, returning false for foreign and unknown records
+without revealing which case occurred. The repository never opens its own transaction, so a later
+failure in the calling use case rolls the update back.
+
+## Reading states and transitions
+
+The framework-independent `ReadingState` model makes invalid date shapes unrepresentable:
+
+- `ToRead` contains no dates.
+- `Reading` requires one `LocalDate` start.
+- `Finished` requires one `LocalDate` finish, represents an unknown start with `Optional.empty()`,
+  and rejects a finish before a known start. Equal start and finish dates are valid.
+
+State changes are planned without persistence or other side effects. Browser-local today and the
+finish date are explicit inputs; the server clock and timezone are not consulted. Same-state moves
+and missing or contradictory inputs are rejected. The complete cross-state matrix is:
+
+| Source | Target | Start date result | Finish date result | Confirmation |
+| --- | --- | --- | --- | --- |
+| To Read | Reading | Set to supplied local today | Clear | None |
+| To Read | Finished | Set to supplied optional start, or unknown | Set to supplied finish | None |
+| Reading | To Read | Clear | Clear | `DISCARD_RECORDED_DATES` |
+| Reading | Finished | Retain existing start; replacement is rejected | Set to supplied finish | None |
+| Finished | Reading | Retain known start, otherwise set to supplied local today | Clear | None |
+| Finished | To Read | Clear | Clear | `DISCARD_RECORDED_DATES` |
+
+The planner returns a `TransitionPlan` containing the resulting validated state and an optional
+confirmation requirement. A caller must obtain the indicated confirmation before persisting a
+To Read plan; confirmation handling itself belongs to a later web task.
+
+PostgreSQL repeats the domain invariants with the named `user_edition_state_dates` check for the
+complete state/date-presence matrix and `user_edition_date_chronology` for date order. The original
+`user_edition_state_check` continues to restrict the state vocabulary. Migration V6 adds these as
+immediately validated constraints: it performs no repair or coercion, so deployment fails if a V5
+database contains an incompatible historical row. Operators must investigate and correct such data
+deliberately before retrying the migration.
 
 ## Canonical identifiers and metadata
 

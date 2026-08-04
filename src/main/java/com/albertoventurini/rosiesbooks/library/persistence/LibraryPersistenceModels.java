@@ -4,9 +4,9 @@ import com.albertoventurini.rosiesbooks.library.internal.CanonicalIsbns;
 import com.albertoventurini.rosiesbooks.library.internal.EditionId;
 import com.albertoventurini.rosiesbooks.library.internal.EditionMetadata;
 import com.albertoventurini.rosiesbooks.library.internal.PartialPublicationDate;
+import com.albertoventurini.rosiesbooks.library.internal.ReadingState;
 import com.albertoventurini.rosiesbooks.library.internal.UserEditionId;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -20,12 +20,6 @@ enum LibraryLayout {
 enum MetadataOrigin {
   MANUAL,
   PROVIDER
-}
-
-enum ReadingState {
-  TO_READ,
-  READING,
-  FINISHED
 }
 
 record Edition(
@@ -82,8 +76,15 @@ record UserEdition(
     UserEditionId id,
     EditionId editionId,
     ReadingState state,
-    LocalDate startedOn,
-    LocalDate finishedOn,
     String privateNotes,
     Instant createdAt,
-    Instant updatedAt) {}
+    Instant updatedAt) {
+
+  UserEdition {
+    Objects.requireNonNull(id, "id");
+    Objects.requireNonNull(editionId, "editionId");
+    Objects.requireNonNull(state, "state");
+    Objects.requireNonNull(createdAt, "createdAt");
+    Objects.requireNonNull(updatedAt, "updatedAt");
+  }
+}

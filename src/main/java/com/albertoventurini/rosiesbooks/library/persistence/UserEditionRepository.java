@@ -6,11 +6,17 @@ import static com.albertoventurini.rosiesbooks.library.persistence.jooq.Tables.U
 
 import com.albertoventurini.rosiesbooks.identity.api.UserId;
 import com.albertoventurini.rosiesbooks.library.internal.EditionId;
+import com.albertoventurini.rosiesbooks.library.internal.Finished;
+import com.albertoventurini.rosiesbooks.library.internal.Reading;
+import com.albertoventurini.rosiesbooks.library.internal.ReadingState;
+import com.albertoventurini.rosiesbooks.library.internal.ToRead;
 import com.albertoventurini.rosiesbooks.library.internal.UserEditionId;
 import jakarta.enterprise.context.ApplicationScoped;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.Objects;
 import java.util.Optional;
 import org.jooq.DSLContext;
 import org.jooq.exception.DataAccessException;
@@ -25,6 +31,7 @@ class UserEditionRepository {
   }
 
   void link(UserId owner, UserEdition userEdition) {
+    StateColumns state = columns(userEdition.state());
     var canonical =
         dsl.select(EDITION.TITLE)
             .from(EDITION)
@@ -46,9 +53,9 @@ class UserEditionRepository {
           .set(USER_EDITION.ID, userEdition.id().value())
           .set(USER_EDITION.USER_ID, owner.value())
           .set(USER_EDITION.EDITION_ID, userEdition.editionId().value())
-          .set(USER_EDITION.STATE, userEdition.state().name())
-          .set(USER_EDITION.STARTED_ON, userEdition.startedOn())
-          .set(USER_EDITION.FINISHED_ON, userEdition.finishedOn())
+          .set(USER_EDITION.STATE, state.state())
+          .set(USER_EDITION.STARTED_ON, state.startedOn())
+          .set(USER_EDITION.FINISHED_ON, state.finishedOn())
           .set(USER_EDITION.PRIVATE_NOTES, userEdition.privateNotes())
           .set(USER_EDITION.EFFECTIVE_TITLE_SEARCH, canonical.orElseThrow().value1())
           .set(USER_EDITION.EFFECTIVE_AUTHORS_SEARCH, authors)
@@ -71,9 +78,10 @@ class UserEditionRepository {
                 new UserEdition(
                     new UserEditionId(row.get(USER_EDITION.ID)),
                     new EditionId(row.get(USER_EDITION.EDITION_ID)),
-                    ReadingState.valueOf(row.get(USER_EDITION.STATE)),
-                    row.get(USER_EDITION.STARTED_ON),
-                    row.get(USER_EDITION.FINISHED_ON),
+                    readingState(
+                        row.get(USER_EDITION.STATE),
+                        row.get(USER_EDITION.STARTED_ON),
+                        row.get(USER_EDITION.FINISHED_ON)),
                     row.get(USER_EDITION.PRIVATE_NOTES),
                     instant(row.get(USER_EDITION.CREATED_AT)),
                     instant(row.get(USER_EDITION.UPDATED_AT))));
@@ -84,6 +92,20 @@ class UserEditionRepository {
         .from(USER_EDITION)
         .where(USER_EDITION.USER_ID.eq(owner.value()).and(USER_EDITION.ID.eq(id.value())))
         .fetchOptional(record -> new EditionId(record.value1()));
+  }
+
+  boolean updateState(UserId owner, UserEditionId id, ReadingState state, Instant updatedAt) {
+    Objects.requireNonNull(state, "state");
+    Objects.requireNonNull(updatedAt, "updatedAt");
+    StateColumns columns = columns(state);
+    return dsl.update(USER_EDITION)
+            .set(USER_EDITION.STATE, columns.state())
+            .set(USER_EDITION.STARTED_ON, columns.startedOn())
+            .set(USER_EDITION.FINISHED_ON, columns.finishedOn())
+            .set(USER_EDITION.UPDATED_AT, atUtc(updatedAt))
+            .where(USER_EDITION.USER_ID.eq(owner.value()).and(USER_EDITION.ID.eq(id.value())))
+            .execute()
+        == 1;
   }
 
   boolean updateSearchProjections(
@@ -110,4 +132,25 @@ class UserEditionRepository {
   private static Instant instant(OffsetDateTime value) {
     return value.toInstant();
   }
+
+  private static StateColumns columns(ReadingState state) {
+    return switch (state) {
+      case ToRead ignored -> new StateColumns("TO_READ", null, null);
+      case Reading reading -> new StateColumns("READING", reading.startedOn(), null);
+      case Finished finished ->
+          new StateColumns("FINISHED", finished.startedOn().orElse(null), finished.finishedOn());
+    };
+  }
+
+  private static ReadingState readingState(
+      String state, LocalDate startedOn, LocalDate finishedOn) {
+    return switch (state) {
+      case "TO_READ" -> new ToRead();
+      case "READING" -> new Reading(startedOn);
+      case "FINISHED" -> new Finished(Optional.ofNullable(startedOn), finishedOn);
+      default -> throw new IllegalArgumentException("Unknown persisted reading state: " + state);
+    };
+  }
+
+  private record StateColumns(String state, LocalDate startedOn, LocalDate finishedOn) {}
 }

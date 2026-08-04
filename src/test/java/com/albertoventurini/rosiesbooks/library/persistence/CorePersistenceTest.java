@@ -10,11 +10,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.albertoventurini.rosiesbooks.identity.api.UserId;
 import com.albertoventurini.rosiesbooks.library.internal.CanonicalIsbns;
 import com.albertoventurini.rosiesbooks.library.internal.EditionId;
+import com.albertoventurini.rosiesbooks.library.internal.Finished;
 import com.albertoventurini.rosiesbooks.library.internal.Isbn10;
 import com.albertoventurini.rosiesbooks.library.internal.Isbn13;
 import com.albertoventurini.rosiesbooks.library.internal.MetadataOverride;
 import com.albertoventurini.rosiesbooks.library.internal.MetadataOverrides;
+import com.albertoventurini.rosiesbooks.library.internal.MoveToFinished;
 import com.albertoventurini.rosiesbooks.library.internal.PartialPublicationDate;
+import com.albertoventurini.rosiesbooks.library.internal.Reading;
+import com.albertoventurini.rosiesbooks.library.internal.ReadingState;
+import com.albertoventurini.rosiesbooks.library.internal.ReadingStateTransitions;
+import com.albertoventurini.rosiesbooks.library.internal.ToRead;
 import com.albertoventurini.rosiesbooks.library.internal.UserEditionId;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
@@ -183,6 +189,109 @@ class CorePersistenceTest {
             .fetchSingle();
     assertEquals(edition.title(), projections.value1());
     assertEquals(String.join(" ", edition.authors()), projections.value2());
+  }
+
+  @Test
+  void roundTripsEveryValidReadingStateShape() {
+    List<ReadingState> states =
+        List.of(
+            new ToRead(),
+            new Reading(LocalDate.of(2026, 8, 1)),
+            new Finished(Optional.empty(), LocalDate.of(2026, 8, 3)),
+            new Finished(Optional.of(LocalDate.of(2026, 7, 1)), LocalDate.of(2026, 8, 3)));
+
+    for (ReadingState state : states) {
+      Edition edition = edition(null, null, null, PartialPublicationDate.unknown(), null);
+      coordinator.createEdition(edition);
+      UserEdition linked = userEdition(edition.id(), state);
+
+      coordinator.link(firstUser, linked);
+
+      assertEquals(linked, userEditions.find(firstUser, linked.id()).orElseThrow());
+    }
+  }
+
+  @Test
+  void updatesReadingStateAndTimestampOnlyForTheOwningUserAndKnownRecord() {
+    Edition edition = edition(null, null, null, PartialPublicationDate.unknown(), null);
+    coordinator.createEdition(edition);
+    UserEdition original = userEdition(edition.id(), new ToRead());
+    coordinator.link(firstUser, original);
+    Instant stateUpdatedAt = Instant.parse("2026-08-04T12:34:56Z");
+
+    assertFalse(
+        userEditions.updateState(
+            secondUser, original.id(), new Reading(LocalDate.of(2026, 8, 4)), stateUpdatedAt));
+    assertFalse(
+        userEditions.updateState(
+            firstUser,
+            new UserEditionId(UUID.randomUUID()),
+            new Reading(LocalDate.of(2026, 8, 4)),
+            stateUpdatedAt));
+    assertEquals(original, userEditions.find(firstUser, original.id()).orElseThrow());
+
+    assertTrue(
+        coordinator.updateState(
+            firstUser, original.id(), new Reading(LocalDate.of(2026, 8, 4)), stateUpdatedAt));
+
+    UserEdition updated = userEditions.find(firstUser, original.id()).orElseThrow();
+    assertEquals(original.id(), updated.id());
+    assertEquals(original.editionId(), updated.editionId());
+    assertEquals(original.privateNotes(), updated.privateNotes());
+    assertEquals(original.createdAt(), updated.createdAt());
+    assertEquals(new Reading(LocalDate.of(2026, 8, 4)), updated.state());
+    assertEquals(stateUpdatedAt, updated.updatedAt());
+  }
+
+  @Test
+  void rejectsEveryInvalidPersistedReadingStateShapeAndReversedDates() {
+    Edition edition = edition(null, null, null, PartialPublicationDate.unknown(), null);
+    coordinator.createEdition(edition);
+    UserEdition linked = userEdition(edition.id(), new ToRead());
+    coordinator.link(firstUser, linked);
+    LocalDate start = LocalDate.of(2026, 8, 2);
+    LocalDate finish = LocalDate.of(2026, 8, 3);
+
+    assertInvalidPersistedState(linked.id(), "TO_READ", start, null, "user_edition_state_dates");
+    assertInvalidPersistedState(linked.id(), "TO_READ", null, finish, "user_edition_state_dates");
+    assertInvalidPersistedState(linked.id(), "TO_READ", start, finish, "user_edition_state_dates");
+    assertInvalidPersistedState(linked.id(), "READING", null, null, "user_edition_state_dates");
+    assertInvalidPersistedState(linked.id(), "READING", null, finish, "user_edition_state_dates");
+    assertInvalidPersistedState(linked.id(), "READING", start, finish, "user_edition_state_dates");
+    assertInvalidPersistedState(linked.id(), "FINISHED", null, null, "user_edition_state_dates");
+    assertInvalidPersistedState(linked.id(), "FINISHED", start, null, "user_edition_state_dates");
+    assertInvalidPersistedState(
+        linked.id(), "FINISHED", finish.plusDays(1), finish, "user_edition_date_chronology");
+    assertEquals(linked, userEditions.find(firstUser, linked.id()).orElseThrow());
+  }
+
+  @Test
+  void rollsBackAStateUpdateWhenItsTransactionLaterFails() {
+    Edition edition = edition(null, null, null, PartialPublicationDate.unknown(), null);
+    coordinator.createEdition(edition);
+    UserEdition original = userEdition(edition.id(), new ToRead());
+    coordinator.link(firstUser, original);
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ReadingStateTransitions()
+                .plan(
+                    original.state(),
+                    new MoveToFinished(
+                        LocalDate.of(2026, 8, 4), Optional.of(LocalDate.of(2026, 8, 5)))));
+    assertEquals(original, userEditions.find(firstUser, original.id()).orElseThrow());
+
+    assertThrows(
+        CorePersistenceTestCoordinator.DeliberateFailure.class,
+        () ->
+            coordinator.updateStateThenFail(
+                firstUser,
+                original.id(),
+                new Finished(Optional.empty(), LocalDate.of(2026, 8, 4)),
+                Instant.parse("2026-08-04T12:34:56Z")));
+
+    assertEquals(original, userEditions.find(firstUser, original.id()).orElseThrow());
   }
 
   @Test
@@ -444,6 +553,25 @@ class CorePersistenceTest {
         .fetchSingle(USER_EDITION.EFFECTIVE_TITLE_SEARCH);
   }
 
+  private void assertInvalidPersistedState(
+      UserEditionId id,
+      String state,
+      LocalDate startedOn,
+      LocalDate finishedOn,
+      String constraint) {
+    DataAccessException failure =
+        assertThrows(
+            DataAccessException.class,
+            () ->
+                dsl.update(USER_EDITION)
+                    .set(USER_EDITION.STATE, state)
+                    .set(USER_EDITION.STARTED_ON, startedOn)
+                    .set(USER_EDITION.FINISHED_ON, finishedOn)
+                    .where(USER_EDITION.ID.eq(id.value()))
+                    .execute());
+    assertTrue(PostgresConstraint.isCheckViolation(failure, constraint));
+  }
+
   private void assertInvalidPublicationDate(Integer year, Integer month, Integer day) {
     assertThrows(
         DataAccessException.class,
@@ -515,15 +643,13 @@ class CorePersistenceTest {
   }
 
   private static UserEdition userEdition(EditionId editionId) {
+    return userEdition(
+        editionId, new Finished(Optional.of(LocalDate.of(2026, 1, 2)), LocalDate.of(2026, 8, 3)));
+  }
+
+  private static UserEdition userEdition(EditionId editionId, ReadingState state) {
     return new UserEdition(
-        new UserEditionId(UUID.randomUUID()),
-        editionId,
-        ReadingState.FINISHED,
-        LocalDate.of(2026, 1, 2),
-        LocalDate.of(2026, 8, 3),
-        "private notes",
-        CREATED,
-        UPDATED);
+        new UserEditionId(UUID.randomUUID()), editionId, state, "private notes", CREATED, UPDATED);
   }
 
   private static MetadataOverrides inheritedOverrides() {
