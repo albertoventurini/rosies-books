@@ -1,6 +1,6 @@
 {@com.albertoventurini.rosiesbooks.library.web.StateChangePage page}
 {#include platform/web/shell}
-  {#title}Change state · {page.productName}{/title}
+  {#title}Change shelf · {page.productName}{/title}
   {#content}
     <div class="library-shell">
       <aside class="library-sidebar">
@@ -11,8 +11,8 @@
       </aside>
       <main class="manual-main" id="main-content">
         <header class="manual-header">
-          <p class="eyebrow">{page.currentState}</p>
-          <h1>Change state</h1>
+          <p class="eyebrow">Current shelf: {page.currentState}</p>
+          <h1>Change shelf</h1>
           <p class="state-book-title">{page.title}</p>
         </header>
 
@@ -23,7 +23,7 @@
           <div class="form-actions"><a href="/books/{page.bookId}/state">Review current state</a></div>
         {#else if page.confirmation}
           <div class="form-warning" role="alert">
-            <h2>Confirm moving this book to To Read</h2>
+            <h2>Confirm moving this book to the To Read shelf</h2>
             <p>This will clear all recorded reading dates.</p>
             {#if page.clearsStart}<p>Start date to clear: <strong>{page.startedDateFromCurrent}</strong></p>{/if}
             {#if page.clearsFinish}<p>Finish date to clear: <strong>{page.finishedDateFromCurrent}</strong></p>{/if}
@@ -33,7 +33,7 @@
             <input type="hidden" name="target" value="TO_READ">
             <div class="form-actions">
               <button class="button-secondary" type="submit" name="intent" value="cancel">Cancel</button>
-              <button class="button-primary" type="submit" name="intent" value="confirm">Confirm change</button>
+              <button class="button-primary" type="submit" name="intent" value="confirm">Confirm shelf change</button>
             </div>
           </form>
         {#else}
@@ -43,36 +43,54 @@
               {#for error in page.errorsFor('form')}<p>{error}</p>{/for}
             </div>
           {/if}
-          <nav class="state-targets" aria-label="Destination shelf">
-            {#for option in page.targets}
-              <a href="/books/{page.bookId}/state?target={option.value}"{#if option.selected} aria-current="page"{/if}>{option.label}</a>
-            {/for}
-          </nav>
           <form class="manual-form" method="post" action="/books/{page.bookId}/state" novalidate>
             <input type="hidden" name="version" value="{page.version}">
-            <input type="hidden" name="target" value="{page.target}">
-            <div class="field-errors" id="target-errors">{#for error in page.errorsFor('target')}<p>{error}</p>{/for}</div>
-            {#if page.toFinished}
-              {#if page.acceptsStartDate}
+            <div class="form-field state-target-field">
+              <label for="target">Destination shelf</label>
+              <select id="target" name="target" aria-describedby="target-errors" data-shelf-target{#if page.hasError('target')} aria-invalid="true"{/if}>
+                {#for option in page.targets}
+                  <option value="{option.value}"{#if option.selected} selected{/if}>{option.label}</option>
+                {/for}
+              </select>
+              <div class="field-errors" id="target-errors">{#for error in page.errorsFor('target')}<p>{error}</p>{/for}</div>
+            </div>
+
+            <div data-shelf-date-fields="READING"{#if page.toReading}{#else} hidden{/if}>
+              {#if page.readingStartEditable}
                 <div class="form-field">
-                  <label for="startedOn">Start date <span class="label-note">optional</span></label>
-                  <input id="startedOn" type="date" name="startedOn" value="{page.startedOn}" aria-describedby="startedOn-errors"{#if page.hasError('startedOn')} aria-invalid="true"{/if}>
-                  <div class="field-errors" id="startedOn-errors">{#for error in page.errorsFor('startedOn')}<p>{error}</p>{/for}</div>
+                  <label for="readingStartedOn">Start date <span aria-hidden="true">*</span></label>
+                  <input id="readingStartedOn" type="date" name="readingStartedOn" value="{page.readingStartedOn}" required aria-describedby="readingStartedOn-errors"{#if page.toReading}{#else} disabled{/if}{#if page.hasError('readingStartedOn')} aria-invalid="true"{/if}>
+                  <div class="field-errors" id="readingStartedOn-errors">{#for error in page.errorsFor('readingStartedOn')}<p>{error}</p>{/for}</div>
                 </div>
+              {#else if page.readingStartRetained}
+                <p class="retained-date">The existing start date will be retained: <strong>{page.currentStartedOn}</strong></p>
+              {/if}
+            </div>
+
+            <div data-shelf-date-fields="FINISHED"{#if page.toFinished}{#else} hidden{/if}>
+              {#if page.finishedStartEditable}
+                <div class="form-field">
+                  <label for="finishedStartedOn">Start date <span class="label-note">optional</span></label>
+                  <input id="finishedStartedOn" type="date" name="finishedStartedOn" value="{page.finishedStartedOn}" aria-describedby="finishedStartedOn-errors"{#if page.toFinished}{#else} disabled{/if}{#if page.hasError('finishedStartedOn')} aria-invalid="true"{/if}>
+                  <div class="field-errors" id="finishedStartedOn-errors">{#for error in page.errorsFor('finishedStartedOn')}<p>{error}</p>{/for}</div>
+                </div>
+              {#else if page.finishedStartRetained}
+                <p class="retained-date">Start date: <strong>{page.currentStartedOn}</strong> (retained)</p>
               {/if}
               <div class="form-field">
                 <label for="finishedOn">Finish date <span aria-hidden="true">*</span></label>
-                <input id="finishedOn" type="date" name="finishedOn" value="{page.finishedOn}" required aria-describedby="finishedOn-errors"{#if page.hasError('finishedOn')} aria-invalid="true"{/if}>
+                <input id="finishedOn" type="date" name="finishedOn" value="{page.finishedOn}" required aria-describedby="finishedOn-errors"{#if page.toFinished}{#else} disabled{/if}{#if page.hasError('finishedOn')} aria-invalid="true"{/if}>
                 <div class="field-errors" id="finishedOn-errors">{#for error in page.errorsFor('finishedOn')}<p>{error}</p>{/for}</div>
               </div>
-            {/if}
+            </div>
             <div class="form-actions">
               <button class="button-secondary" type="submit" name="intent" value="cancel">Cancel</button>
-              <button class="button-primary" type="submit" name="intent" value="change">Continue</button>
+              <button class="button-primary" type="submit" name="intent" value="change">Save</button>
             </div>
           </form>
         {/if}
       </main>
     </div>
+    <script src="/assets/state-change.js" defer></script>
   {/content}
 {/include}

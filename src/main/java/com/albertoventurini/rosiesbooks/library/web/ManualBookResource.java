@@ -123,7 +123,7 @@ class ManualBookResource {
     }
     ManualBookDraft draft = validation.draft().orElseThrow();
     AddedBook added = additions.add(owner, parsedRequestId, draft.metadata(), draft.readingState());
-    return Response.seeOther(URI.create(routeFor(added.state()))).build();
+    return Response.seeOther(URI.create(routeFor(added.state()) + "?notice=book-added")).build();
   }
 
   private CurrentUser requireCurrentUser() {

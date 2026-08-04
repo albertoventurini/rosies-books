@@ -13,8 +13,8 @@ The browser routes are:
 | `GET`, `HEAD` | `/reading` | Current user's Reading shelf |
 | `GET`, `HEAD` | `/to-read` | Current user's To Read shelf |
 | `GET`, `HEAD` | `/finished` | Current user's Finished shelf |
-| `GET`, `HEAD` | `/books/{userEditionId}/state` | State-change form for an owned book |
-| `POST` | `/books/{userEditionId}/state` | Validate, confirm, cancel, or apply a state change |
+| `GET`, `HEAD` | `/books/{userEditionId}/state` | Shelf-change form for an owned book |
+| `POST` | `/books/{userEditionId}/state` | Validate, confirm, cancel, or apply a shelf change |
 
 Shelf routes return `401 Unauthorized` when `CurrentUserProvider` cannot resolve the request.
 They never fall back to a development identity. In development and tests, selecting a user still
@@ -71,16 +71,18 @@ mutation controls remain outside this task.
 
 ## State changes, dates, and confirmation
 
-Each shelf row has an ordinary `Change state` link. The state page offers only the other two
-shelves, and the workflow remains complete when JavaScript is disabled. All six transitions use
-the shared domain transition planner:
+Each shelf row has an ordinary `Change shelf` link. The page offers only the other two shelves.
+Changing the destination selector immediately shows the relevant date fields: Reading shows its
+start date, while Finished shows start and finish dates. A small plain-JavaScript enhancement
+handles that conditional display; the submitted workflow remains functional when JavaScript is
+disabled. All six transitions use the shared domain transition planner:
 
 | From | To | Date result |
 | --- | --- | --- |
-| To Read | Reading | Start is today in `rosies-books.default-zone` |
+| To Read | Reading | Start defaults to today in `rosies-books.default-zone` and may be changed |
 | To Read | Finished | Finish defaults to zoned today; start is optional |
 | Reading | Finished | Existing start is retained; finish defaults to zoned today |
-| Finished | Reading | Known start is retained, otherwise it becomes zoned today; finish is cleared |
+| Finished | Reading | Known start is retained; an unknown start defaults to zoned today and may be changed; finish is cleared |
 | Reading | To Read | Start is cleared after confirmation |
 | Finished | To Read | Known start and finish are cleared after confirmation |
 
@@ -107,8 +109,9 @@ distinguishes a stale version from inaccessible data without disclosing whether 
 the ID. Unexpected failures continue through the shared correlation-ID `500` response; the
 transaction preserves the prior state, dates, timestamp, and version.
 
-Successful changes use `303 See Other` with `notice=state-changed`; cancellation uses
-`notice=state-change-cancelled`. Only those fixed codes render a shelf status banner. A shelf-only,
-plain-JavaScript enhancement removes a recognized notice parameter from browser history immediately
-and removes the transient banner after five seconds. With JavaScript disabled, the banner stays
-visible until navigation. Validation, conflict, and unexpected-error messages are never transient.
+Successful manual additions use `303 See Other` with `notice=book-added`, successful changes use
+`notice=state-changed`, and cancellation uses `notice=state-change-cancelled`. Only those fixed
+codes render a shelf status banner. A shelf-only, plain-JavaScript enhancement removes a recognized
+notice parameter from browser history immediately and removes the transient banner after five
+seconds. With JavaScript disabled, the banner stays visible until navigation. Validation, conflict,
+and unexpected-error messages are never transient.

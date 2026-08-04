@@ -17,10 +17,14 @@ record StateChangePage(
     String currentShelfRoute,
     long version,
     String target,
-    String startedOn,
+    String readingStartedOn,
+    String finishedStartedOn,
     String finishedOn,
+    String currentStartedOn,
     List<StateTargetView> targets,
     Map<String, List<String>> errors,
+    boolean readingStartEditable,
+    boolean readingStartRetained,
     boolean confirmation,
     boolean conflict) {
 
@@ -33,33 +37,38 @@ record StateChangePage(
       String userLabel,
       BookState book,
       String target,
-      String startedOn,
+      String readingStartedOn,
+      String finishedStartedOn,
       String finishedOn,
       Map<String, List<String>> errors) {
-    return create(userLabel, book, target, startedOn, finishedOn, errors, false, false);
+    return create(
+        userLabel,
+        book,
+        target,
+        readingStartedOn,
+        finishedStartedOn,
+        finishedOn,
+        errors,
+        false,
+        false);
   }
 
   static StateChangePage confirmation(String userLabel, BookState book) {
-    String start =
-        book.state() instanceof Reading reading
-            ? reading.startedOn().toString()
-            : book.state() instanceof Finished finished
-                ? finished.startedOn().map(LocalDate::toString).orElse("")
-                : "";
     String finish =
         book.state() instanceof Finished finished ? finished.finishedOn().toString() : "";
-    return create(userLabel, book, "TO_READ", start, finish, Map.of(), true, false);
+    return create(userLabel, book, "TO_READ", "", "", finish, Map.of(), true, false);
   }
 
   static StateChangePage conflict(String userLabel, BookState book) {
-    return create(userLabel, book, "", "", "", Map.of(), false, true);
+    return create(userLabel, book, "", "", "", "", Map.of(), false, true);
   }
 
   private static StateChangePage create(
       String userLabel,
       BookState book,
       String target,
-      String startedOn,
+      String readingStartedOn,
+      String finishedStartedOn,
       String finishedOn,
       Map<String, List<String>> errors,
       boolean confirmation,
@@ -73,10 +82,14 @@ record StateChangePage(
         route(book.state()),
         book.version(),
         target,
-        startedOn == null ? "" : startedOn,
+        readingStartedOn == null ? "" : readingStartedOn,
+        finishedStartedOn == null ? "" : finishedStartedOn,
         finishedOn == null ? "" : finishedOn,
+        currentStart(book.state()),
         targets(book.state(), target),
         errors,
+        readingStartEditable(book.state()),
+        readingStartRetained(book.state()),
         confirmation,
         conflict);
   }
@@ -97,8 +110,16 @@ record StateChangePage(
     return target.equals("FINISHED");
   }
 
-  public boolean acceptsStartDate() {
-    return toFinished() && currentState.equals("To Read");
+  public boolean toReading() {
+    return target.equals("READING");
+  }
+
+  public boolean finishedStartEditable() {
+    return currentState.equals("To Read");
+  }
+
+  public boolean finishedStartRetained() {
+    return currentState.equals("Reading");
   }
 
   public boolean clearsStart() {
@@ -110,7 +131,7 @@ record StateChangePage(
   }
 
   public String startedDateFromCurrent() {
-    return startedOn;
+    return currentStartedOn;
   }
 
   public String finishedDateFromCurrent() {
@@ -131,6 +152,23 @@ record StateChangePage(
     return List.of(
         new StateTargetView("TO_READ", "To Read", selected.equals("TO_READ")),
         new StateTargetView("READING", "Reading", selected.equals("READING")));
+  }
+
+  private static boolean readingStartEditable(ReadingState state) {
+    return state instanceof com.albertoventurini.rosiesbooks.library.internal.ToRead
+        || state instanceof Finished finished && finished.startedOn().isEmpty();
+  }
+
+  private static boolean readingStartRetained(ReadingState state) {
+    return state instanceof Finished finished && finished.startedOn().isPresent();
+  }
+
+  private static String currentStart(ReadingState state) {
+    if (state instanceof Reading reading) return reading.startedOn().toString();
+    if (state instanceof Finished finished) {
+      return finished.startedOn().map(LocalDate::toString).orElse("");
+    }
+    return "";
   }
 
   static String route(ReadingState state) {

@@ -43,8 +43,23 @@ class StateChangeResourceTest {
         .then()
         .statusCode(200)
         .body(containsString("href=\"/books/" + toReading + "/state\""));
-    change(toReading, 0, "READING", null, null).statusCode(303);
-    assertState(toReading, "READING", LocalDate.now(), null, 1);
+    String readingForm =
+        given()
+            .cookie("rosies-dev-user", DevelopmentUser.READER_ONE.alias())
+            .queryParam("target", "READING")
+            .get("/books/" + toReading + "/state")
+            .then()
+            .statusCode(200)
+            .extract()
+            .asString();
+    assertThat(readingForm, containsString("<label for=\"target\">Destination shelf</label>"));
+    assertThat(readingForm, containsString("value=\"READING\" selected"));
+    assertThat(readingForm, containsString("name=\"readingStartedOn\""));
+    assertThat(readingForm, containsString("/assets/state-change.js"));
+    assertThat(readingForm, not(containsString("Show date fields")));
+    assertThat(readingForm, containsString(">Save</button>"));
+    change(toReading, 0, "READING", "2026-07-14", null).statusCode(303);
+    assertState(toReading, "READING", LocalDate.of(2026, 7, 14), null, 1);
 
     UUID toFinished = addBook(DevelopmentUser.READER_ONE, "TO_READ", null, null, "To finished");
     change(toFinished, 0, "FINISHED", "2026-07-01", "2026-08-02").statusCode(303);
@@ -67,6 +82,19 @@ class StateChangeResourceTest {
             LocalDate.of(2026, 5, 2),
             LocalDate.of(2026, 5, 9),
             "Finished reading");
+    String retainedStartForm =
+        given()
+            .cookie("rosies-dev-user", DevelopmentUser.READER_ONE.alias())
+            .queryParam("target", "READING")
+            .get("/books/" + finishedReading + "/state")
+            .then()
+            .statusCode(200)
+            .extract()
+            .asString();
+    assertThat(
+        retainedStartForm,
+        containsString("The existing start date will be retained: <strong>2026-05-02</strong>"));
+    assertThat(retainedStartForm, not(containsString("name=\"readingStartedOn\"")));
     change(finishedReading, 0, "READING", null, null).statusCode(303);
     assertState(finishedReading, "READING", LocalDate.of(2026, 5, 2), null, 1);
 
@@ -77,8 +105,8 @@ class StateChangeResourceTest {
             null,
             LocalDate.of(2026, 5, 9),
             "Unknown start");
-    change(finishedUnknownStart, 0, "READING", null, null).statusCode(303);
-    assertState(finishedUnknownStart, "READING", LocalDate.now(), null, 1);
+    change(finishedUnknownStart, 0, "READING", "2026-05-01", null).statusCode(303);
+    assertState(finishedUnknownStart, "READING", LocalDate.of(2026, 5, 1), null, 1);
   }
 
   @Test
@@ -176,6 +204,14 @@ class StateChangeResourceTest {
         .body(containsString("/assets/shelf-notice.js"));
     given()
         .cookie("rosies-dev-user", DevelopmentUser.READER_ONE.alias())
+        .queryParam("notice", "book-added")
+        .get("/to-read")
+        .then()
+        .statusCode(200)
+        .body(containsString("The book was added successfully."))
+        .body(containsString("data-transient-notice"));
+    given()
+        .cookie("rosies-dev-user", DevelopmentUser.READER_ONE.alias())
         .queryParam("notice", "validation-error")
         .get("/reading")
         .then()
@@ -212,7 +248,10 @@ class StateChangeResourceTest {
             .formParam("intent", intent)
             .formParam("version", version)
             .formParam("target", target);
-    if (started != null) request.formParam("startedOn", started);
+    if (started != null) {
+      request.formParam(
+          target.equals("READING") ? "readingStartedOn" : "finishedStartedOn", started);
+    }
     if (finished != null) request.formParam("finishedOn", finished);
     return request.when().post("/books/" + id + "/state");
   }

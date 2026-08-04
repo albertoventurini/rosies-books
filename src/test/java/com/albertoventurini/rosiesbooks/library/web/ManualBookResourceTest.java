@@ -197,7 +197,7 @@ class ManualBookResourceTest {
         .post("/books/new/manual")
         .then()
         .statusCode(303)
-        .header("Location", "http://localhost:8081/reading");
+        .header("Location", "http://localhost:8081/reading?notice=book-added");
 
     assertThat(dsl.fetchCount(EDITION), is(1));
     assertThat(dsl.fetchCount(USER_EDITION), is(1));
@@ -234,7 +234,7 @@ class ManualBookResourceTest {
           .post("/books/new/manual")
           .then()
           .statusCode(303)
-          .header("Location", "http://localhost:8081/to-read");
+          .header("Location", "http://localhost:8081/to-read?notice=book-added");
     }
     assertThat(dsl.fetchCount(EDITION), is(1));
     assertThat(dsl.fetchCount(USER_EDITION), is(1));

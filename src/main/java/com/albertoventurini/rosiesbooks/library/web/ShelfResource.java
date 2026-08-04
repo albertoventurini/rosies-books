@@ -55,8 +55,9 @@ class ShelfResource {
                         Response.status(Response.Status.UNAUTHORIZED).build()));
     String notice =
         switch (noticeCode == null ? "" : noticeCode) {
+          case "book-added" -> "The book was added successfully.";
           case "state-changed" -> "The book was moved successfully.";
-          case "state-change-cancelled" -> "The state change was cancelled.";
+          case "state-change-cancelled" -> "The shelf change was cancelled.";
           default -> null;
         };
     return ShelfTemplates.shelf(

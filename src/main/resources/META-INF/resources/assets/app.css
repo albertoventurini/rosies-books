@@ -287,16 +287,17 @@ h1 {
   background: var(--color-surface-raised);
 }
 
-.state-targets {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-4);
-  margin-bottom: var(--space-6);
+.state-target-field {
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  background: var(--color-surface-raised);
 }
 
-.state-targets [aria-current="page"] {
-  color: var(--color-ink);
-  font-weight: 600;
+.retained-date {
+  padding: var(--space-4);
+  border-left: 0.25rem solid var(--color-accent);
+  background: var(--color-surface-raised);
 }
 
 .state-book-title {

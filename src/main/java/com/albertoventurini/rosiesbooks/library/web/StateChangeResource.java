@@ -61,9 +61,11 @@ class StateChangeResource {
     CurrentUser owner = requireCurrentUser();
     BookState book = find(owner, rawId);
     String selected = validTarget(book, target) ? target : defaultTarget(book);
-    String finish = selected.equals("FINISHED") ? today().toString() : "";
+    String readingStart = today().toString();
+    String finish = today().toString();
     return StateChangeTemplates.state(
-        StateChangePage.form(owner.displayLabel(), book, selected, "", finish, Map.of()));
+        StateChangePage.form(
+            owner.displayLabel(), book, selected, readingStart, "", finish, Map.of()));
   }
 
   @POST
@@ -74,7 +76,8 @@ class StateChangeResource {
       @RestForm String intent,
       @RestForm String version,
       @RestForm String target,
-      @RestForm String startedOn,
+      @RestForm String readingStartedOn,
+      @RestForm String finishedStartedOn,
       @RestForm String finishedOn) {
     CurrentUser owner = requireCurrentUser();
     BookState book = find(owner, rawId);
@@ -99,10 +102,12 @@ class StateChangeResource {
 
     ReadingStateTransition transition = null;
     if (!errors.containsKey("target")) {
-      transition = transition(book, target, startedOn, finishedOn, errors);
+      transition =
+          transition(book, target, readingStartedOn, finishedStartedOn, finishedOn, errors);
     }
     if (!errors.isEmpty()) {
-      return badRequest(owner, book, target, startedOn, finishedOn, errors);
+      return badRequest(
+          owner, book, target, readingStartedOn, finishedStartedOn, finishedOn, errors);
     }
 
     ChangeResult result;
@@ -120,7 +125,8 @@ class StateChangeResource {
           owner,
           book,
           target,
-          startedOn,
+          readingStartedOn,
+          finishedStartedOn,
           finishedOn,
           Map.of("finishedOn", List.of(exception.getMessage())));
     }
@@ -145,28 +151,38 @@ class StateChangeResource {
   private ReadingStateTransition transition(
       BookState book,
       String target,
-      String startedOn,
+      String readingStartedOn,
+      String finishedStartedOn,
       String finishedOn,
       Map<String, List<String>> errors) {
     return switch (target) {
       case "TO_READ" -> {
-        if (!blank(startedOn) || !blank(finishedOn)) {
+        if (!blank(readingStartedOn) || !blank(finishedStartedOn) || !blank(finishedOn)) {
           errors.put("form", List.of("Dates cannot be supplied when moving to To Read."));
         }
         yield new MoveToRead();
       }
       case "READING" -> {
-        if (!blank(startedOn) || !blank(finishedOn)) {
-          errors.put("form", List.of("Dates cannot be replaced when moving to Reading."));
+        if (!blank(finishedOn)) {
+          errors.put("finishedOn", List.of("A Reading book cannot have a finish date."));
+        }
+        if (readingStartIsEditable(book)) {
+          LocalDate start =
+              parseDate(readingStartedOn, "readingStartedOn", true, errors).orElse(null);
+          yield start == null ? null : new MoveToReading(start);
+        }
+        if (!blank(readingStartedOn)) {
+          errors.put("readingStartedOn", List.of("The existing start date cannot be replaced."));
         }
         yield new MoveToReading(today());
       }
       case "FINISHED" -> {
         LocalDate finish = parseDate(finishedOn, "finishedOn", true, errors).orElse(null);
-        Optional<LocalDate> start = parseDate(startedOn, "startedOn", false, errors);
+        Optional<LocalDate> start =
+            parseDate(finishedStartedOn, "finishedStartedOn", false, errors);
         if (!(book.state() instanceof com.albertoventurini.rosiesbooks.library.internal.ToRead)
             && start.isPresent()) {
-          errors.put("startedOn", List.of("The existing start date cannot be replaced."));
+          errors.put("finishedStartedOn", List.of("The existing start date cannot be replaced."));
         }
         yield finish == null ? null : new MoveToFinished(finish, start);
       }
@@ -183,6 +199,13 @@ class StateChangeResource {
       errors.put(field, List.of("Enter a valid date."));
       return Optional.empty();
     }
+  }
+
+  private static boolean readingStartIsEditable(BookState book) {
+    return book.state() instanceof com.albertoventurini.rosiesbooks.library.internal.ToRead
+        || book.state()
+                instanceof com.albertoventurini.rosiesbooks.library.internal.Finished finished
+            && finished.startedOn().isEmpty();
   }
 
   private BookState find(CurrentUser owner, String rawId) {
@@ -251,7 +274,8 @@ class StateChangeResource {
       CurrentUser owner,
       BookState book,
       String target,
-      String startedOn,
+      String readingStartedOn,
+      String finishedStartedOn,
       String finishedOn,
       Map<String, List<String>> errors) {
     return Response.status(Response.Status.BAD_REQUEST)
@@ -261,7 +285,8 @@ class StateChangeResource {
                     owner.displayLabel(),
                     book,
                     target == null ? "" : target,
-                    startedOn,
+                    readingStartedOn,
+                    finishedStartedOn,
                     finishedOn,
                     errors)))
         .build();
