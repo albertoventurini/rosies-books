@@ -3,7 +3,10 @@ package com.albertoventurini.rosiesbooks.library.persistence;
 import static com.albertoventurini.rosiesbooks.library.persistence.jooq.Tables.EDITION;
 import static com.albertoventurini.rosiesbooks.library.persistence.jooq.Tables.EDITION_AUTHOR;
 
+import com.albertoventurini.rosiesbooks.library.internal.CanonicalIsbns;
 import com.albertoventurini.rosiesbooks.library.internal.EditionId;
+import com.albertoventurini.rosiesbooks.library.internal.Isbn10;
+import com.albertoventurini.rosiesbooks.library.internal.Isbn13;
 import com.albertoventurini.rosiesbooks.library.internal.PartialPublicationDate;
 import jakarta.enterprise.context.ApplicationScoped;
 import java.time.Instant;
@@ -29,8 +32,8 @@ class EditionRepository {
     try {
       dsl.insertInto(EDITION)
           .set(EDITION.ID, edition.id().value())
-          .set(EDITION.ISBN_10, edition.isbn10())
-          .set(EDITION.ISBN_13, edition.isbn13())
+          .set(EDITION.ISBN_10, edition.isbns().isbn10().map(Isbn10::value).orElse(null))
+          .set(EDITION.ISBN_13, edition.isbns().isbn13().map(Isbn13::value).orElse(null))
           .set(EDITION.PROVIDER_NAME, edition.providerName())
           .set(EDITION.PROVIDER_EDITION_ID, edition.providerEditionId())
           .set(EDITION.TITLE, edition.title())
@@ -73,8 +76,7 @@ class EditionRepository {
             row ->
                 new Edition(
                     new EditionId(row.get(EDITION.ID)),
-                    row.get(EDITION.ISBN_10),
-                    row.get(EDITION.ISBN_13),
+                    canonicalIsbns(row.get(EDITION.ISBN_10), row.get(EDITION.ISBN_13)),
                     row.get(EDITION.PROVIDER_NAME),
                     row.get(EDITION.PROVIDER_EDITION_ID),
                     row.get(EDITION.TITLE),
@@ -99,6 +101,22 @@ class EditionRepository {
                     instant(row.get(EDITION.UPDATED_AT))));
   }
 
+  Optional<Edition> findByIsbn(Isbn10 isbn) {
+    return findByCanonicalIsbn13(isbn.toIsbn13());
+  }
+
+  Optional<Edition> findByIsbn(Isbn13 isbn) {
+    return findByCanonicalIsbn13(isbn);
+  }
+
+  private Optional<Edition> findByCanonicalIsbn13(Isbn13 isbn) {
+    return dsl.select(EDITION.ID)
+        .from(EDITION)
+        .where(EDITION.ISBN_13.eq(isbn.value()))
+        .fetchOptional(record -> new EditionId(record.value1()))
+        .flatMap(this::find);
+  }
+
   boolean delete(EditionId id) {
     return dsl.deleteFrom(EDITION).where(EDITION.ID.eq(id.value())).execute() == 1;
   }
@@ -109,5 +127,11 @@ class EditionRepository {
 
   private static Instant instant(OffsetDateTime value) {
     return value.toInstant();
+  }
+
+  private static CanonicalIsbns canonicalIsbns(String isbn10, String isbn13) {
+    return new CanonicalIsbns(
+        Optional.ofNullable(isbn10).map(Isbn10::parse),
+        Optional.ofNullable(isbn13).map(Isbn13::parse));
   }
 }

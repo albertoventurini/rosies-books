@@ -8,7 +8,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.albertoventurini.rosiesbooks.identity.api.UserId;
+import com.albertoventurini.rosiesbooks.library.internal.CanonicalIsbns;
 import com.albertoventurini.rosiesbooks.library.internal.EditionId;
+import com.albertoventurini.rosiesbooks.library.internal.Isbn10;
+import com.albertoventurini.rosiesbooks.library.internal.Isbn13;
+import com.albertoventurini.rosiesbooks.library.internal.MetadataOverride;
+import com.albertoventurini.rosiesbooks.library.internal.MetadataOverrides;
 import com.albertoventurini.rosiesbooks.library.internal.PartialPublicationDate;
 import com.albertoventurini.rosiesbooks.library.internal.UserEditionId;
 import io.quarkus.test.junit.QuarkusTest;
@@ -18,6 +23,7 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.jooq.DSLContext;
 import org.jooq.exception.DataAccessException;
@@ -64,7 +70,7 @@ class CorePersistenceTest {
     covers.save(coverId, new byte[] {1, 2, 3}, "image/png");
     Edition full =
         edition(
-            "9781234567890",
+            "9780306406157",
             "provider",
             "Case-Sensitive-ID",
             PartialPublicationDate.full(2024, 2, 29),
@@ -82,6 +88,50 @@ class CorePersistenceTest {
       coordinator.createEdition(value);
       assertEquals(date, editions.find(value.id()).orElseThrow().publicationDate());
     }
+  }
+
+  @Test
+  void derivesPersistsAndLooksUpCanonicalIsbn13FromIsbn10() {
+    Isbn10 supplied = Isbn10.parse(" 0-306-40615-2 ");
+    Edition edition =
+        editionWithIsbns(
+            new CanonicalIsbns(Optional.of(supplied), Optional.empty()),
+            null,
+            null,
+            PartialPublicationDate.unknown(),
+            null);
+
+    coordinator.createEdition(edition);
+
+    var stored =
+        dsl.select(EDITION.ISBN_10, EDITION.ISBN_13)
+            .from(EDITION)
+            .where(EDITION.ID.eq(edition.id().value()))
+            .fetchSingle();
+    assertEquals("0306406152", stored.value1());
+    assertEquals("9780306406157", stored.value2());
+    assertEquals(edition.id(), editions.findByIsbn(supplied).orElseThrow().id());
+    assertEquals(
+        edition.id(), editions.findByIsbn(Isbn13.parse("978-0-306-40615-7")).orElseThrow().id());
+
+    UserEdition linked = userEdition(edition.id());
+    coordinator.link(firstUser, linked);
+    MetadataOverrides privateIsbn =
+        new MetadataOverrides(
+            MetadataOverride.inherited(),
+            MetadataOverride.inherited(),
+            MetadataOverride.inherited(),
+            MetadataOverride.inherited(),
+            MetadataOverride.inherited(),
+            MetadataOverride.value(Isbn13.parse("9791090636071")),
+            MetadataOverride.inherited(),
+            MetadataOverride.inherited(),
+            MetadataOverride.inherited(),
+            MetadataOverride.inherited(),
+            MetadataOverride.inherited());
+    assertTrue(coordinator.saveOverrides(firstUser, linked.id(), privateIsbn));
+    assertTrue(editions.findByIsbn(Isbn13.parse("9791090636071")).isEmpty());
+    assertEquals(edition.id(), editions.findByIsbn(supplied).orElseThrow().id());
   }
 
   @Test
@@ -104,19 +154,35 @@ class CorePersistenceTest {
 
     MetadataOverrides metadataOverrides =
         new MetadataOverrides(
-            OverrideValue.overridden("Private title"),
-            OverrideValue.overridden(null),
-            OverrideValue.overridden(List.of("Second Author", "First Author")),
-            OverrideValue.inherited(),
-            OverrideValue.overridden("123456789X"),
-            OverrideValue.overridden(null),
-            OverrideValue.overridden("Private publisher"),
-            OverrideValue.overridden(PartialPublicationDate.yearMonth(2020, 7)),
-            OverrideValue.overridden(321),
-            OverrideValue.inherited(),
-            OverrideValue.overridden(null));
+            MetadataOverride.value("Private title"),
+            MetadataOverride.blank(),
+            MetadataOverride.value(List.of("Second Author", "First Author")),
+            MetadataOverride.inherited(),
+            MetadataOverride.value(Isbn10.parse("080442957X")),
+            MetadataOverride.blank(),
+            MetadataOverride.value("Private publisher"),
+            MetadataOverride.value(PartialPublicationDate.yearMonth(2020, 7)),
+            MetadataOverride.value(321),
+            MetadataOverride.inherited(),
+            MetadataOverride.blank());
     assertTrue(coordinator.saveOverrides(firstUser, linked.id(), metadataOverrides));
     assertEquals(metadataOverrides, overrides.find(firstUser, linked.id()).orElseThrow());
+    projections =
+        dsl.select(USER_EDITION.EFFECTIVE_TITLE_SEARCH, USER_EDITION.EFFECTIVE_AUTHORS_SEARCH)
+            .from(USER_EDITION)
+            .where(USER_EDITION.ID.eq(linked.id().value()))
+            .fetchSingle();
+    assertEquals("Private title", projections.value1());
+    assertEquals("Second Author First Author", projections.value2());
+
+    assertTrue(coordinator.saveOverrides(firstUser, linked.id(), inheritedOverrides()));
+    projections =
+        dsl.select(USER_EDITION.EFFECTIVE_TITLE_SEARCH, USER_EDITION.EFFECTIVE_AUTHORS_SEARCH)
+            .from(USER_EDITION)
+            .where(USER_EDITION.ID.eq(linked.id().value()))
+            .fetchSingle();
+    assertEquals(edition.title(), projections.value1());
+    assertEquals(String.join(" ", edition.authors()), projections.value2());
   }
 
   @Test
@@ -135,32 +201,106 @@ class CorePersistenceTest {
             secondUser,
             linked.id(),
             new MetadataOverrides(
-                OverrideValue.overridden("stolen"),
-                OverrideValue.inherited(),
-                OverrideValue.inherited(),
-                OverrideValue.inherited(),
-                OverrideValue.inherited(),
-                OverrideValue.inherited(),
-                OverrideValue.inherited(),
-                OverrideValue.inherited(),
-                OverrideValue.inherited(),
-                OverrideValue.inherited(),
-                OverrideValue.inherited())));
+                MetadataOverride.value("stolen"),
+                MetadataOverride.inherited(),
+                MetadataOverride.inherited(),
+                MetadataOverride.inherited(),
+                MetadataOverride.inherited(),
+                MetadataOverride.inherited(),
+                MetadataOverride.inherited(),
+                MetadataOverride.inherited(),
+                MetadataOverride.inherited(),
+                MetadataOverride.inherited(),
+                MetadataOverride.inherited())));
     assertEquals(original, overrides.find(firstUser, linked.id()).orElseThrow());
     assertFalse(userEditions.delete(secondUser, linked.id()));
     assertTrue(userEditions.find(firstUser, linked.id()).isPresent());
+    assertFalse(
+        coordinator.saveOverrides(
+            firstUser, new UserEditionId(UUID.randomUUID()), inheritedOverrides()));
+  }
+
+  @Test
+  void roundTripsExplicitBlankScalarsDatesNumbersAndAuthors() {
+    Edition edition = edition(null, null, null, PartialPublicationDate.unknown(), null);
+    coordinator.createEdition(edition);
+    UserEdition linked = userEdition(edition.id());
+    coordinator.link(firstUser, linked);
+    MetadataOverrides blank =
+        new MetadataOverrides(
+            MetadataOverride.blank(),
+            MetadataOverride.blank(),
+            MetadataOverride.blank(),
+            MetadataOverride.blank(),
+            MetadataOverride.blank(),
+            MetadataOverride.blank(),
+            MetadataOverride.blank(),
+            MetadataOverride.blank(),
+            MetadataOverride.blank(),
+            MetadataOverride.blank(),
+            MetadataOverride.blank());
+
+    assertTrue(coordinator.saveOverridesDirect(firstUser, linked.id(), blank));
+    assertEquals(blank, overrides.find(firstUser, linked.id()).orElseThrow());
+  }
+
+  @Test
+  void invalidMetadataAndLaterFailuresRollBackOverridesAndSearchProjections() {
+    Edition edition = edition(null, null, null, PartialPublicationDate.unknown(), null);
+    coordinator.createEdition(edition);
+    UserEdition linked = userEdition(edition.id());
+    coordinator.link(firstUser, linked);
+    MetadataOverrides original =
+        inheritedOverrides().withTitle(MetadataOverride.value("Original private title"));
+    assertTrue(coordinator.saveOverrides(firstUser, linked.id(), original));
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            coordinator.saveOverrides(
+                firstUser, linked.id(), inheritedOverrides().withTitle(MetadataOverride.blank())));
+    assertEquals(original, overrides.find(firstUser, linked.id()).orElseThrow());
+    assertEquals("Original private title", effectiveTitle(linked.id()));
+
+    MetadataOverrides replacement =
+        inheritedOverrides().withTitle(MetadataOverride.value("Rolled back title"));
+    assertThrows(
+        CorePersistenceTestCoordinator.DeliberateFailure.class,
+        () -> coordinator.saveOverridesThenFail(firstUser, linked.id(), replacement));
+    assertEquals(original, overrides.find(firstUser, linked.id()).orElseThrow());
+    assertEquals("Original private title", effectiveTitle(linked.id()));
+
+    dsl.execute(
+        "alter table user_edition add constraint test_projection_failure"
+            + " check (effective_title_search <> 'Blocked projection')");
+    try {
+      MetadataOverrides blocked =
+          inheritedOverrides().withTitle(MetadataOverride.value("Blocked projection"));
+      assertThrows(
+          DataAccessException.class,
+          () -> coordinator.saveOverrides(firstUser, linked.id(), blocked));
+      assertEquals(original, overrides.find(firstUser, linked.id()).orElseThrow());
+      assertEquals("Original private title", effectiveTitle(linked.id()));
+    } finally {
+      dsl.execute("alter table user_edition drop constraint test_projection_failure");
+    }
   }
 
   @Test
   void mapsIdentifierAndPerUserLinkConflictsWhileAllowingTwoOwners() {
     Edition original =
-        edition("9781111111111", "catalog", "Mixed-Case-1", PartialPublicationDate.unknown(), null);
+        edition("9780306406157", "catalog", "Mixed-Case-1", PartialPublicationDate.unknown(), null);
     coordinator.createEdition(original);
     assertThrows(
         DuplicateIsbn13Exception.class,
         () ->
             coordinator.createEdition(
-                edition(original.isbn13(), null, null, PartialPublicationDate.unknown(), null)));
+                edition(
+                    original.isbns().isbn13().orElseThrow().value(),
+                    null,
+                    null,
+                    PartialPublicationDate.unknown(),
+                    null)));
     assertThrows(
         DuplicateProviderEditionException.class,
         () ->
@@ -227,6 +367,83 @@ class CorePersistenceTest {
     assertTrue(editions.find(rolledBack.id()).isEmpty());
   }
 
+  @Test
+  void rejectsDirectInvalidCanonicalAndOverrideIsbnChecksumsAndConflictingPairs() {
+    assertInvalidCanonicalIsbns("0306406153", null, "edition_isbn_10_checksum");
+    assertInvalidCanonicalIsbns(null, "9780306406158", "edition_isbn_13_checksum");
+    assertInvalidCanonicalIsbns("0306406152", "9780804429573", "edition_isbn_pair_consistent");
+
+    Edition edition = edition(null, null, null, PartialPublicationDate.unknown(), null);
+    coordinator.createEdition(edition);
+    UserEdition linked = userEdition(edition.id());
+    coordinator.link(firstUser, linked);
+    DataAccessException invalidOverride =
+        assertThrows(
+            DataAccessException.class,
+            () ->
+                dsl.execute(
+                    """
+                    insert into user_edition_metadata_override (
+                      user_edition_id, title_is_overridden, subtitle_is_overridden,
+                      authors_is_overridden, format_is_overridden,
+                      isbn_10_is_overridden, isbn_10_value, isbn_13_is_overridden,
+                      publisher_is_overridden, publication_date_is_overridden,
+                      page_count_is_overridden, language_is_overridden,
+                      description_is_overridden)
+                    values (?, false, false, false, false, true, '0306406153', false,
+                            false, false, false, false, false)
+                    """,
+                    linked.id().value()));
+    assertTrue(
+        PostgresConstraint.isCheckViolation(
+            invalidOverride, "user_edition_metadata_override_isbn_10_checksum"));
+
+    DataAccessException invalidOverride13 =
+        assertThrows(
+            DataAccessException.class,
+            () ->
+                dsl.execute(
+                    """
+                    insert into user_edition_metadata_override (
+                      user_edition_id, title_is_overridden, subtitle_is_overridden,
+                      authors_is_overridden, format_is_overridden,
+                      isbn_10_is_overridden, isbn_13_is_overridden, isbn_13_value,
+                      publisher_is_overridden, publication_date_is_overridden,
+                      page_count_is_overridden, language_is_overridden,
+                      description_is_overridden)
+                    values (?, false, false, false, false, false, true, '9780306406158',
+                            false, false, false, false, false)
+                    """,
+                    linked.id().value()));
+    assertTrue(
+        PostgresConstraint.isCheckViolation(
+            invalidOverride13, "user_edition_metadata_override_isbn_13_checksum"));
+  }
+
+  private void assertInvalidCanonicalIsbns(String isbn10, String isbn13, String constraint) {
+    DataAccessException failure =
+        assertThrows(
+            DataAccessException.class,
+            () ->
+                dsl.insertInto(EDITION)
+                    .set(EDITION.ID, UUID.randomUUID())
+                    .set(EDITION.ISBN_10, isbn10)
+                    .set(EDITION.ISBN_13, isbn13)
+                    .set(EDITION.TITLE, "Invalid ISBN")
+                    .set(EDITION.METADATA_ORIGIN, MetadataOrigin.MANUAL.name())
+                    .set(EDITION.CREATED_AT, CREATED.atOffset(ZoneOffset.UTC))
+                    .set(EDITION.UPDATED_AT, UPDATED.atOffset(ZoneOffset.UTC))
+                    .execute());
+    assertTrue(PostgresConstraint.isCheckViolation(failure, constraint));
+  }
+
+  private String effectiveTitle(UserEditionId id) {
+    return dsl.select(USER_EDITION.EFFECTIVE_TITLE_SEARCH)
+        .from(USER_EDITION)
+        .where(USER_EDITION.ID.eq(id.value()))
+        .fetchSingle(USER_EDITION.EFFECTIVE_TITLE_SEARCH);
+  }
+
   private void assertInvalidPublicationDate(Integer year, Integer month, Integer day) {
     assertThrows(
         DataAccessException.class,
@@ -261,10 +478,25 @@ class CorePersistenceTest {
       String providerEditionId,
       PartialPublicationDate publicationDate,
       UUID coverId) {
+    return editionWithIsbns(
+        isbn13 == null
+            ? CanonicalIsbns.none()
+            : new CanonicalIsbns(Optional.empty(), Optional.of(Isbn13.parse(isbn13))),
+        providerName,
+        providerEditionId,
+        publicationDate,
+        coverId);
+  }
+
+  private static Edition editionWithIsbns(
+      CanonicalIsbns isbns,
+      String providerName,
+      String providerEditionId,
+      PartialPublicationDate publicationDate,
+      UUID coverId) {
     return new Edition(
         new EditionId(UUID.randomUUID()),
-        "123456789X",
-        isbn13,
+        isbns,
         providerName,
         providerEditionId,
         "Canonical Title",
@@ -295,17 +527,6 @@ class CorePersistenceTest {
   }
 
   private static MetadataOverrides inheritedOverrides() {
-    return new MetadataOverrides(
-        OverrideValue.inherited(),
-        OverrideValue.inherited(),
-        OverrideValue.inherited(),
-        OverrideValue.inherited(),
-        OverrideValue.inherited(),
-        OverrideValue.inherited(),
-        OverrideValue.inherited(),
-        OverrideValue.inherited(),
-        OverrideValue.inherited(),
-        OverrideValue.inherited(),
-        OverrideValue.inherited());
+    return MetadataOverrides.none();
   }
 }

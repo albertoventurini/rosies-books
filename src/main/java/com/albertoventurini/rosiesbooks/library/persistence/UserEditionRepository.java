@@ -79,6 +79,23 @@ class UserEditionRepository {
                     instant(row.get(USER_EDITION.UPDATED_AT))));
   }
 
+  Optional<EditionId> findEditionId(UserId owner, UserEditionId id) {
+    return dsl.select(USER_EDITION.EDITION_ID)
+        .from(USER_EDITION)
+        .where(USER_EDITION.USER_ID.eq(owner.value()).and(USER_EDITION.ID.eq(id.value())))
+        .fetchOptional(record -> new EditionId(record.value1()));
+  }
+
+  boolean updateSearchProjections(
+      UserId owner, UserEditionId id, String effectiveTitle, String effectiveAuthors) {
+    return dsl.update(USER_EDITION)
+            .set(USER_EDITION.EFFECTIVE_TITLE_SEARCH, effectiveTitle)
+            .set(USER_EDITION.EFFECTIVE_AUTHORS_SEARCH, effectiveAuthors)
+            .where(USER_EDITION.USER_ID.eq(owner.value()).and(USER_EDITION.ID.eq(id.value())))
+            .execute()
+        == 1;
+  }
+
   boolean delete(UserId owner, UserEditionId id) {
     return dsl.deleteFrom(USER_EDITION)
             .where(USER_EDITION.USER_ID.eq(owner.value()).and(USER_EDITION.ID.eq(id.value())))

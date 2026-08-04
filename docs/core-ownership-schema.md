@@ -1,8 +1,9 @@
 # Core ownership schema
 
-Task 1-1 establishes the persistence boundary for shared canonical editions and private user
-libraries. It intentionally does not implement ISBN checksum/conversion rules, effective-metadata
-resolution after edits, the complete reading-state/date matrix, seeded users, or any web behavior.
+Tasks 1-1 and 1-2 establish the persistence boundary for shared canonical editions, private user
+libraries, normalized ISBN identity, and private effective metadata. The complete
+reading-state/date matrix, seeded users, manual-add workflow, and web behavior remain outside this
+contract.
 
 ## Table and feature ownership
 
@@ -29,15 +30,24 @@ same empty/false result. The database applies these lifetime rules:
 - Deleting a referenced cover sets `edition.cover_asset_id` to null. Edition deletion never deletes
   a cover automatically.
 
-Repositories join an existing caller transaction. Multi-row Edition and override writes are
-therefore atomic when invoked by a transactional use-case coordinator.
+Repositories join an existing caller transaction. Multi-row Edition writes are therefore atomic
+when invoked by a transactional use-case coordinator. The metadata override use case owns the
+transaction that replaces a complete override snapshot and ordered author rows and then refreshes
+both effective search projections. Validation or any later write failure rolls back the complete
+replacement.
 
 ## Canonical identifiers and metadata
 
-Edition identity is always an application-generated UUID. A nullable ISBN-13 must contain exactly
-13 digits and has a named unique constraint. A nullable ISBN-10 must contain ten normalized ISBN
-characters, with `X` permitted only in the last position. Checksum validation and ISBN-10/13
-conversion belong to task 1-2.
+Edition identity is always an application-generated UUID. ISBN value types accept ASCII digits
+with whitespace or hyphen separators, normalize away those separators, validate check digits, and
+uppercase a terminal ISBN-10 `X`. ISBN-13 values must use a valid 978 or 979 prefix. Supplying an
+ISBN-10 derives and persists its 978 ISBN-13; supplying both identifiers requires them to describe
+the same edition.
+
+Normalized ISBN-13 is the sole ISBN lookup and uniqueness key. Looking up with ISBN-10 first
+converts it to the same canonical key. A standalone valid 978 or 979 ISBN-13 is also accepted, but
+an ISBN-10 is not reverse-invented from an ISBN-13-only input. Named database constraints repeat
+the format, checksum, prefix, and canonical-pair consistency rules for direct writes.
 
 Provider name and provider edition ID are either both absent or both present. Provider names are
 trimmed lowercase keys; provider edition IDs are trimmed while retaining provider-defined case.
@@ -61,15 +71,24 @@ precisions map exactly to the three columns and back.
 
 ## Private overrides and search projections
 
-The optional one-to-one metadata-override row has an `is_overridden` flag for every supported
-scalar field and the ordered author list. A false flag requires its scalar value columns to be
-null. A true flag may carry a value or null; true plus null stores an explicit blank. Ordered author
-override rows are children of the metadata-override row and preserve their supplied positions.
+The domain contract gives every supported metadata field one of three immutable states: inherited,
+an overridden value, or explicit blank. It covers title, subtitle, ordered authors, format, both
+ISBNs, publisher, partial publication date, page count, language, and description. At the database
+boundary a false `is_overridden` flag plus null stores inherited, a true flag plus a value stores an
+override, and true plus null stores explicit blank. Explicitly blank authors use a true flag and no
+author rows; value overrides preserve row order. Private ISBNs are validated values but never
+participate in canonical identity or uniqueness.
+
+The pure effective-metadata resolver applies each field independently and preserves text, author
+order, and partial-date precision. Optional fields may resolve empty. Effective title must contain
+non-whitespace text, and effective authors must be nonempty with no blank names.
 
 `effective_title_search` and `effective_authors_search` are private, application-maintained
-UserEdition projections. Linking initially copies canonical title and ordered authors. Task 1-2
-will refresh them when effective overrides change. Lowercase-expression GIN trigram indexes support
-future case-insensitive partial search without consulting a provider.
+UserEdition projections. Linking initially copies canonical title and ordered authors. Each
+successful override save refreshes both from the same resolved metadata in the override
+transaction; resetting to inherited restores the canonical projections. Unknown and foreign
+UserEdition IDs both return the same non-identifying result. Lowercase-expression GIN trigram
+indexes support future case-insensitive partial search without consulting a provider.
 
 The three shelf indexes mirror their planned default order: Reading by start date, To Read by link
 creation time, and Finished by finish date, each owner-scoped and with the UserEdition ID as a
