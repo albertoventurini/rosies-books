@@ -14,7 +14,7 @@
 - The application will use Java, Quarkus, Qute, jOOQ, and PostgreSQL.
 - Persistence will use imperative JDBC and generated jOOQ schema types, not Hibernate ORM or handwritten SQL as the ordinary query mechanism.
 - Server-rendered views will use Qute checked/type-safe templates with build-time validation.
-- The production artifact will be the Quarkus JVM fast-jar packaged in a Docker image. Native-image compilation is outside this plan unless later measurements justify revisiting the decision.
+- The production artifact will be the Quarkus JVM fast-jar packaged in a Docker image. Native-image compilation is outside this plan. Startup and memory measurements are required only if a concrete deployment constraint or native-image proposal creates a decision that needs that evidence.
 - Pages will be server-rendered. JavaScript will be limited to progressive enhancement where it makes an interaction materially better.
 - Schema changes will use versioned migrations.
 - The application will be packaged as a Docker image and delivered with a Docker Compose configuration.
@@ -89,12 +89,7 @@ Tasks:
   - Configure jOOQ against the Quarkus-managed JDBC datasource and prove application transaction participation and rollback behavior.
   - Implement the chosen per-run isolated PostgreSQL integration-test setup, including its cleanup model and one repository round trip.
   - Prove binary cover data and MIME metadata can be written/read at the intended maximum size, reject data above the limit, and record the measured limit for milestone 7.
-  - Expose one documented command that runs unit and PostgreSQL-backed integration tests.
-- **0-4 — Package and document the foundation.**
-  - Package the application as a Quarkus JVM fast-jar and prove it starts without development-only IDE behavior.
-  - Record a reproducible cold-start timing and runtime-memory baseline for the packaged JVM application; use this evidence rather than adding a native-image build by default.
-  - Document prerequisites and exact commands for build, tests, database start/stop/reset, development mode, and packaged startup.
-  - Validate the runbook from a clean checkout or an equivalent clean working tree.
+  - Expose one documented command that runs unit and PostgreSQL-backed integration tests, builds the Quarkus JVM fast-jar, and exercises the packaged application without development-only IDE behavior.
 
 Exit criteria:
 
@@ -102,6 +97,7 @@ Exit criteria:
 - A checked/type-safe Qute page renders successfully against a migrated PostgreSQL database.
 - Unit and PostgreSQL-backed integration tests run through one documented command.
 - The packaged application starts without relying on development-only IDE behavior.
+- Before closing the milestone, validate the documented build, test, database, development-mode, and packaged-startup commands from a clean checkout or equivalent source-only working tree.
 
 ### Milestone 1 — Domain model, persistence, and ownership boundary
 
