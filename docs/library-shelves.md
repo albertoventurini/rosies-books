@@ -63,6 +63,6 @@ stored cover without changing the title/author projection or placeholder fallbac
 
 The shared stylesheet is mobile-first. Shelf navigation is an ordinary three-link bottom bar on
 narrow viewports and becomes a sidebar at 48 rem. The layout includes visible keyboard focus,
-safe-area padding, minimum-width protection, and text overflow handling. Task 2-2 adds an ordinary
-manual-entry link to each shelf header; book-detail, year-filter, count, layout-toggle, and shelf
+safe-area padding, minimum-width protection, and text overflow handling. The manual-entry workflow
+adds an ordinary link to each shelf header; book-detail, year-filter, count, layout-toggle, and shelf
 mutation controls remain outside this task.

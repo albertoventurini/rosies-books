@@ -2,6 +2,8 @@ package com.albertoventurini.rosiesbooks.library.web;
 
 import com.albertoventurini.rosiesbooks.identity.api.CurrentUser;
 import com.albertoventurini.rosiesbooks.identity.api.CurrentUserProvider;
+import com.albertoventurini.rosiesbooks.library.persistence.ManualBookAdditionService;
+import com.albertoventurini.rosiesbooks.library.persistence.ManualBookAdditionService.AddedBook;
 import io.quarkus.qute.TemplateInstance;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
@@ -11,10 +13,12 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import java.net.URI;
 import java.time.Clock;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.resteasy.reactive.RestForm;
 
@@ -22,14 +26,17 @@ import org.jboss.resteasy.reactive.RestForm;
 class ManualBookResource {
 
   private final CurrentUserProvider currentUsers;
+  private final ManualBookAdditionService additions;
   private final ManualBookEntryValidator validator;
 
   ManualBookResource(
       CurrentUserProvider currentUsers,
+      ManualBookAdditionService additions,
       Clock clock,
       @ConfigProperty(name = "rosies-books.default-zone", defaultValue = "Africa/Johannesburg")
           String defaultZone) {
     this.currentUsers = currentUsers;
+    this.additions = additions;
     this.validator = new ManualBookEntryValidator(clock, ZoneId.of(defaultZone));
   }
 
@@ -38,7 +45,7 @@ class ManualBookResource {
   public TemplateInstance form() {
     CurrentUser owner = requireCurrentUser();
     return ManualBookTemplates.manual(
-        new ManualBookPage(owner.displayLabel(), ManualBookForm.empty()));
+        new ManualBookPage(owner.displayLabel(), ManualBookForm.empty(UUID.randomUUID())));
   }
 
   @POST
@@ -46,6 +53,7 @@ class ManualBookResource {
   @Produces(MediaType.TEXT_HTML)
   public Response submit(
       @RestForm String intent,
+      @RestForm String requestId,
       @RestForm String title,
       @RestForm List<String> authors,
       @RestForm String subtitle,
@@ -63,6 +71,7 @@ class ManualBookResource {
     CurrentUser owner = requireCurrentUser();
     ManualBookForm submitted =
         new ManualBookForm(
+            requestId,
             title,
             authors,
             subtitle,
@@ -79,24 +88,33 @@ class ManualBookResource {
             finishedOn,
             Map.of());
 
+    UUID parsedRequestId;
+    try {
+      parsedRequestId = UUID.fromString(submitted.requestId());
+      if (!parsedRequestId.toString().equalsIgnoreCase(submitted.requestId())) {
+        throw new IllegalArgumentException("Non-canonical UUID");
+      }
+    } catch (IllegalArgumentException exception) {
+      return badRequest(
+          owner, submitted.withErrors(Map.of("form", List.of("This form request is not valid."))));
+    }
+
     String requestedIntent = intent == null ? "" : intent;
     if (requestedIntent.equals("add-author")) {
       return ok(owner, validator.prepare(submitted).addAuthor());
     }
     if (requestedIntent.startsWith("remove-author-")) {
-      return ok(owner, validator.prepare(submitted).removeAuthor(authorIndex(requestedIntent)));
+      int index = authorIndex(requestedIntent);
+      if (index >= 0 && index < submitted.authors().size()) {
+        return ok(owner, validator.prepare(submitted).removeAuthor(index));
+      }
+      return unsupportedIntent(owner, submitted);
     }
     if (requestedIntent.equals("change-state")) {
       return ok(owner, validator.prepare(submitted));
     }
-    if (requestedIntent.equals("edit")) {
-      return ok(owner, submitted);
-    }
-    if (!requestedIntent.equals("review")) {
-      return badRequest(
-          owner,
-          submitted.withErrors(
-              Map.of("form", List.of("Choose one of the available form actions."))));
+    if (!requestedIntent.equals("save")) {
+      return unsupportedIntent(owner, submitted);
     }
 
     ManualBookValidation validation = validator.validate(submitted);
@@ -104,11 +122,8 @@ class ManualBookResource {
       return badRequest(owner, validation.form());
     }
     ManualBookDraft draft = validation.draft().orElseThrow();
-    return Response.ok(
-            ManualBookTemplates.manualReview(
-                new ManualBookReviewPage(
-                    owner.displayLabel(), validation.form(), ManualBookReview.from(draft))))
-        .build();
+    AddedBook added = additions.add(owner, parsedRequestId, draft.metadata(), draft.readingState());
+    return Response.seeOther(URI.create(routeFor(added.state()))).build();
   }
 
   private CurrentUser requireCurrentUser() {
@@ -136,5 +151,20 @@ class ManualBookResource {
     } catch (NumberFormatException exception) {
       return -1;
     }
+  }
+
+  private static Response unsupportedIntent(CurrentUser owner, ManualBookForm submitted) {
+    return badRequest(
+        owner,
+        submitted.withErrors(Map.of("form", List.of("Choose one of the available form actions."))));
+  }
+
+  private static String routeFor(String state) {
+    return switch (state) {
+      case "TO_READ" -> "/to-read";
+      case "READING" -> "/reading";
+      case "FINISHED" -> "/finished";
+      default -> throw new IllegalArgumentException("Unknown persisted reading state: " + state);
+    };
   }
 }

@@ -126,7 +126,8 @@ class CoreOwnershipSchemaTest {
                 "app_user_oidc_identity_key",
                 "edition_isbn13_key",
                 "edition_provider_identity_key",
-                "user_edition_user_edition_key")));
+                "user_edition_user_edition_key",
+                "user_edition_user_request_key")));
 
     Set<String> checks =
         Set.copyOf(

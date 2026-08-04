@@ -13,6 +13,4 @@ class ShelfTemplates {
 class ManualBookTemplates {
 
   static native TemplateInstance manual(ManualBookPage page);
-
-  static native TemplateInstance manualReview(ManualBookReviewPage page);
 }

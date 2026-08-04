@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.albertoventurini.rosiesbooks.library.internal.Finished;
+import com.albertoventurini.rosiesbooks.library.internal.PartialPublicationDate;
 import com.albertoventurini.rosiesbooks.library.internal.Reading;
 import com.albertoventurini.rosiesbooks.library.internal.ToRead;
 import java.time.Clock;
@@ -46,7 +47,7 @@ class ManualBookEntryValidatorTest {
     var metadata = result.draft().orElseThrow().metadata();
     assertEquals("A title", metadata.title());
     assertEquals(List.of("First", "Second"), metadata.authors());
-    assertEquals("2024-02", ManualBookReview.publicationDate(metadata.publicationDate()));
+    assertEquals("2024-02", publicationDate(metadata.publicationDate()));
     assertEquals("0306406152", metadata.isbn10().orElseThrow().value());
     assertEquals("9780306406157", metadata.isbn13().orElseThrow().value());
     assertInstanceOf(ToRead.class, result.draft().orElseThrow().readingState());
@@ -121,9 +122,7 @@ class ManualBookEntryValidatorTest {
                       "Title", List.of("Author"), "", "", "", "", "", valid, "", "", ""));
       assertTrue(result.valid(), valid);
       assertEquals(
-          valid,
-          ManualBookReview.publicationDate(
-              result.draft().orElseThrow().metadata().publicationDate()));
+          valid, publicationDate(result.draft().orElseThrow().metadata().publicationDate()));
     }
     for (String invalid :
         List.of("24", "2024-2", "2024-02-3", "2024-02-30", "2024/02/03", "+2024")) {
@@ -243,6 +242,7 @@ class ManualBookEntryValidatorTest {
 
   private static ManualBookForm form() {
     return new ManualBookForm(
+        "00000000-0000-0000-0000-000000000001",
         "Title",
         List.of("Author"),
         "",
@@ -258,5 +258,16 @@ class ManualBookEntryValidatorTest {
         "",
         "",
         Map.of());
+  }
+
+  private static String publicationDate(Optional<PartialPublicationDate> date) {
+    PartialPublicationDate value = date.orElseThrow();
+    if (value.day() != null) {
+      return "%04d-%02d-%02d".formatted(value.year(), value.month(), value.day());
+    }
+    if (value.month() != null) {
+      return "%04d-%02d".formatted(value.year(), value.month());
+    }
+    return "%04d".formatted(value.year());
   }
 }

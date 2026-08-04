@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 record ManualBookForm(
+    String requestId,
     String title,
     List<String> authors,
     String subtitle,
@@ -23,6 +24,7 @@ record ManualBookForm(
     Map<String, List<String>> errors) {
 
   ManualBookForm {
+    requestId = value(requestId);
     title = value(title);
     authors = authors == null || authors.isEmpty() ? List.of("") : List.copyOf(authors);
     subtitle = value(subtitle);
@@ -44,9 +46,24 @@ record ManualBookForm(
     errors = Map.copyOf(copied);
   }
 
-  static ManualBookForm empty() {
+  static ManualBookForm empty(java.util.UUID requestId) {
     return new ManualBookForm(
-        "", List.of(""), "", "", "", "", "", "", "", "", "", "TO_READ", "", "", Map.of());
+        requestId.toString(),
+        "",
+        List.of(""),
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "TO_READ",
+        "",
+        "",
+        Map.of());
   }
 
   ManualBookForm withBibliography(
@@ -62,6 +79,7 @@ record ManualBookForm(
       String language,
       String description) {
     return new ManualBookForm(
+        requestId,
         title,
         authors,
         subtitle,
@@ -81,6 +99,7 @@ record ManualBookForm(
 
   ManualBookForm withState(String state, String startedOn, String finishedOn) {
     return new ManualBookForm(
+        requestId,
         title,
         authors,
         subtitle,
@@ -205,6 +224,7 @@ record ManualBookForm(
 
   ManualBookForm withErrors(Map<String, List<String>> errors) {
     return new ManualBookForm(
+        requestId,
         title,
         authors,
         subtitle,

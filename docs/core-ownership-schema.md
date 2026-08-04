@@ -77,6 +77,11 @@ immediately validated constraints: it performs no repair or coercion, so deploym
 database contains an incompatible historical row. Operators must investigate and correct such data
 deliberately before retrying the migration.
 
+Migration V7 adds nullable `user_edition.request_id` for idempotent manual additions and the named
+owner-scoped unique constraint `user_edition_user_request_key` on `(user_id, request_id)`. The
+column remains nullable so non-manual link workflows and existing rows need no synthetic request
+identity.
+
 ## Canonical identifiers and metadata
 
 Edition identity is always an application-generated UUID. ISBN value types accept ASCII digits

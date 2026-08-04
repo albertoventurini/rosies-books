@@ -18,7 +18,7 @@
         <header class="manual-header">
           <p class="eyebrow">Your library</p>
           <h1>Add a book manually</h1>
-          <p>Enter the edition details, then review them before anything is saved.</p>
+          <p>Enter the edition details and choose the shelf where it belongs.</p>
         </header>
 
         {#if page.form.errors.size > 0}
@@ -29,6 +29,7 @@
         {/if}
 
         <form class="manual-form" method="post" action="/books/new/manual" novalidate>
+          <input type="hidden" name="requestId" value="{page.form.requestId}">
           <section class="form-section" aria-labelledby="bibliographic-heading">
             <h2 id="bibliographic-heading">Book details</h2>
 
@@ -147,7 +148,7 @@
 
           <div class="form-actions">
             <a href="/reading">Cancel</a>
-            <button class="button-primary" type="submit" name="intent" value="review">Review book</button>
+            <button class="button-primary" type="submit" name="intent" value="save">Save book</button>
           </div>
         </form>
       </main>

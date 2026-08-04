@@ -404,8 +404,7 @@ h1 {
 }
 
 .manual-header > p:not(.eyebrow),
-.label-note,
-.review-subtitle {
+.label-note {
   color: var(--color-muted);
 }
 
@@ -419,8 +418,7 @@ h1 {
   gap: var(--space-8);
 }
 
-.form-section,
-.review-card {
+.form-section {
   min-width: 0;
   padding: var(--space-5);
   border: 1px solid var(--color-border);
@@ -428,8 +426,7 @@ h1 {
   background: var(--color-surface-raised);
 }
 
-.form-section h2,
-.review-card h2 {
+.form-section h2 {
   font-family: "Newsreader", Georgia, serif;
   font-size: 1.75rem;
   line-height: 1.15;
@@ -493,18 +490,12 @@ h1 {
   display: none;
 }
 
-.form-error-summary,
-.review-notice {
+.form-error-summary {
   padding: var(--space-4);
   border-left: 0.25rem solid var(--color-error);
   border-radius: 0.25rem;
   color: var(--color-ink);
   background: #f8e9e5;
-}
-
-.review-notice {
-  border-left-color: var(--color-accent);
-  background: var(--color-surface-raised);
 }
 
 .form-actions {
@@ -513,42 +504,6 @@ h1 {
   align-items: center;
   justify-content: flex-end;
   gap: var(--space-4);
-}
-
-.review-card {
-  display: grid;
-  gap: var(--space-3);
-}
-
-.review-details {
-  display: grid;
-  gap: var(--space-4);
-  margin-top: var(--space-3);
-}
-
-.review-details > div {
-  display: grid;
-  min-width: 0;
-  gap: var(--space-1);
-  padding-bottom: var(--space-3);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.review-details dt {
-  color: var(--color-muted);
-  font-size: 0.8125rem;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.review-details dd,
-.review-description {
-  overflow-wrap: anywhere;
-  white-space: pre-wrap;
-}
-
-.review-details dd span {
-  display: block;
 }
 
 .visually-hidden {
@@ -625,8 +580,7 @@ h1 {
     padding: var(--space-12);
   }
 
-  .form-section,
-  .review-card {
+  .form-section {
     padding: var(--space-8);
   }
 

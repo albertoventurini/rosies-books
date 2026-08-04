@@ -20,22 +20,3 @@ record ManualBookPage(
         form);
   }
 }
-
-record ManualBookReviewPage(
-    String productName,
-    String userDisplayLabel,
-    List<ShelfNavigationItem> navigation,
-    ManualBookForm form,
-    ManualBookReview review) {
-
-  ManualBookReviewPage(String userDisplayLabel, ManualBookForm form, ManualBookReview review) {
-    this(
-        "Rosie's books",
-        userDisplayLabel,
-        Arrays.stream(Shelf.values())
-            .map(shelf -> new ShelfNavigationItem(shelf.route(), shelf.heading(), false))
-            .toList(),
-        form,
-        review);
-  }
-}

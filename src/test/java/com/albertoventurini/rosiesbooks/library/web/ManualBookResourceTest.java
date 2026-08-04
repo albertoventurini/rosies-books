@@ -6,18 +6,25 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.emptyOrNullString;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 
 import com.albertoventurini.rosiesbooks.identity.internal.DevelopmentUser;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import java.util.List;
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 @QuarkusTest
 class ManualBookResourceTest {
+
+  private static final Pattern REQUEST_ID =
+      Pattern.compile("name=\"requestId\" value=\"([^\"]+)\"");
 
   @Inject DSLContext dsl;
 
@@ -29,21 +36,13 @@ class ManualBookResourceTest {
   }
 
   @Test
-  void bothDevelopmentUsersCanOpenTheCompleteDefaultFormWithoutJavaScript() {
+  void bothDevelopmentUsersOpenACompleteDirectSaveFormWithAnOpaqueRequestId() {
     for (DevelopmentUser user : DevelopmentUser.all()) {
-      String body =
-          given()
-              .cookie("rosies-dev-user", user.alias())
-              .when()
-              .get("/books/new/manual")
-              .then()
-              .statusCode(200)
-              .contentType("text/html; charset=UTF-8")
-              .extract()
-              .asString();
+      String body = openForm(user);
 
       for (String field :
           List.of(
+              "requestId",
               "title",
               "authors",
               "subtitle",
@@ -58,11 +57,11 @@ class ManualBookResourceTest {
               "state")) {
         assertThat(body, containsString("name=\"" + field + "\""));
       }
+      UUID.fromString(requestId(body));
       assertThat(body, containsString("value=\"TO_READ\" selected"));
-      assertThat(body, not(containsString("name=\"startedOn\"")));
-      assertThat(body, not(containsString("name=\"finishedOn\"")));
-      assertThat(body, containsString("Review book"));
-      assertThat(body, not(containsString(">Save<")));
+      assertThat(body, containsString("name=\"intent\" value=\"save\""));
+      assertThat(body, containsString("Save book"));
+      assertThat(body, not(containsString("Review book")));
       assertThat(body, not(containsString("<script")));
       assertThat(body, containsString(user.displayLabel()));
     }
@@ -74,7 +73,8 @@ class ManualBookResourceTest {
     given().when().head("/books/new/manual").then().statusCode(401).body(emptyOrNullString());
     given()
         .contentType("application/x-www-form-urlencoded")
-        .formParam("intent", "review")
+        .formParam("intent", "save")
+        .formParam("requestId", UUID.randomUUID())
         .when()
         .post("/books/new/manual")
         .then()
@@ -82,9 +82,10 @@ class ManualBookResourceTest {
   }
 
   @Test
-  void authorAndStateIntentsPreserveAllValuesAndRenderOnlyAllowedDates() {
+  void formEditingIntentsPreserveTheRequestIdAndEverySubmittedValue() {
+    String requestId = requestId(openForm(DevelopmentUser.READER_ONE));
     String added =
-        baseForm("add-author")
+        baseForm("add-author", requestId)
             .formParam("title", "A <title>")
             .formParam("authors", "First & Author")
             .formParam("subtitle", "Keep me")
@@ -94,28 +95,14 @@ class ManualBookResourceTest {
             .statusCode(200)
             .extract()
             .asString();
+    assertThat(added, containsString("name=\"requestId\" value=\"" + requestId + "\""));
     assertThat(added, containsString("value=\"A &lt;title&gt;\""));
     assertThat(added, containsString("value=\"First &amp; Author\""));
     assertThat(added, containsString("value=\"Keep me\""));
-    assertThat(count(added, "name=\"authors\""), org.hamcrest.Matchers.is(2));
-
-    String reading =
-        baseForm("change-state")
-            .formParam("title", "A title")
-            .formParam("authors", "Author")
-            .formParam("state", "READING")
-            .formParam("finishedOn", "1999-01-01")
-            .when()
-            .post("/books/new/manual")
-            .then()
-            .statusCode(200)
-            .extract()
-            .asString();
-    assertThat(reading, containsString("name=\"startedOn\""));
-    assertThat(reading, not(containsString("name=\"finishedOn\"")));
+    assertThat(count(added, "name=\"authors\""), is(2));
 
     String finished =
-        baseForm("change-state")
+        baseForm("change-state", requestId)
             .formParam("title", "A title")
             .formParam("authors", "Author")
             .formParam("state", "FINISHED")
@@ -126,14 +113,16 @@ class ManualBookResourceTest {
             .statusCode(200)
             .extract()
             .asString();
+    assertThat(finished, containsString("name=\"requestId\" value=\"" + requestId + "\""));
     assertThat(finished, containsString("name=\"startedOn\" value=\"2020-01-02\""));
     assertThat(finished, containsString("name=\"finishedOn\""));
   }
 
   @Test
-  void invalidReviewAggregatesAdjacentAccessibleErrorsAndRetainsRawInput() {
+  void invalidSaveRetainsRawValuesRequestIdAndAdjacentErrorsWithoutPersistence() {
+    String requestId = UUID.randomUUID().toString();
     String body =
-        baseForm("review")
+        baseForm("save", requestId)
             .formParam("title", " ")
             .formParam("authors", " ")
             .formParam("isbn10", "wrong")
@@ -154,55 +143,102 @@ class ManualBookResourceTest {
       assertThat(body, containsString("id=\"" + field + "-errors\""));
       assertThat(body, containsString("aria-describedby=\"" + field + "-errors\""));
     }
+    assertThat(body, containsString("name=\"requestId\" value=\"" + requestId + "\""));
     assertThat(body, containsString("value=\"2023-02-29&lt;script&gt;\""));
     assertThat(body, not(containsString("2023-02-29<script>")));
+    assertThat(dsl.fetchCount(EDITION), is(0));
+    assertThat(dsl.fetchCount(USER_EDITION), is(0));
   }
 
   @Test
-  void validReviewIsEscapedNormalizedExplicitlyNonPersistingAndCanReturnToEdit() {
-    String review =
-        baseForm("review")
-            .formParam("title", "  A <book>  ")
-            .formParam("authors", " First & Author ", " ", "Second")
-            .formParam("isbn10", "0-306-40615-2")
-            .formParam("publicationDate", "2024-02")
-            .formParam("pageCount", "321")
-            .formParam("state", "FINISHED")
-            .formParam("finishedOn", "2026-08-04")
-            .when()
-            .post("/books/new/manual")
-            .then()
-            .statusCode(200)
-            .extract()
-            .asString();
+  void missingMalformedRequestIdsAndUnsupportedIntentsAreBadRequestsWithoutPersistence() {
+    for (String requestId : List.of("", "not-a-uuid")) {
+      baseForm("save", requestId)
+          .formParam("title", "Valid")
+          .formParam("authors", "Author")
+          .formParam("state", "TO_READ")
+          .when()
+          .post("/books/new/manual")
+          .then()
+          .statusCode(400);
+    }
+    baseForm("review", UUID.randomUUID().toString())
+        .formParam("title", "Valid")
+        .formParam("authors", "Author")
+        .formParam("state", "TO_READ")
+        .when()
+        .post("/books/new/manual")
+        .then()
+        .statusCode(400);
+    baseForm("remove-author-nope", UUID.randomUUID().toString())
+        .formParam("title", "Valid")
+        .formParam("authors", "Author")
+        .formParam("state", "TO_READ")
+        .when()
+        .post("/books/new/manual")
+        .then()
+        .statusCode(400);
+    assertThat(dsl.fetchCount(EDITION), is(0));
+    assertThat(dsl.fetchCount(USER_EDITION), is(0));
+  }
 
-    assertThat(review, containsString("Review manual book"));
-    assertThat(review, containsString("Nothing has been saved"));
-    assertThat(review, containsString("A &lt;book&gt;"));
-    assertThat(review, containsString("First &amp; Author"));
-    assertThat(
-        review.indexOf("First &amp; Author"),
-        org.hamcrest.Matchers.lessThan(review.indexOf("Second")));
-    assertThat(review, containsString("0306406152"));
-    assertThat(review, containsString("9780306406157"));
-    assertThat(review, containsString("name=\"intent\" value=\"edit\""));
-    assertThat(review, not(containsString("<script")));
-    assertThat(dsl.fetchCount(EDITION), org.hamcrest.Matchers.is(0));
-    assertThat(dsl.fetchCount(USER_EDITION), org.hamcrest.Matchers.is(0));
+  @Test
+  void validSaveUsesPrgAndMakesTheBookVisibleOnExactlyItsResultingShelf() {
+    String requestId = UUID.randomUUID().toString();
+    baseForm("save", requestId)
+        .redirects()
+        .follow(false)
+        .formParam("title", "  A saved book  ")
+        .formParam("authors", " First Author ", "Second Author")
+        .formParam("isbn10", "0-306-40615-2")
+        .formParam("state", "READING")
+        .formParam("startedOn", "2026-08-01")
+        .when()
+        .post("/books/new/manual")
+        .then()
+        .statusCode(303)
+        .header("Location", "http://localhost:8081/reading");
 
-    String edit =
-        baseForm("edit")
-            .formParam("title", "A <book>")
-            .formParam("authors", "First & Author", "Second")
-            .formParam("state", "TO_READ")
-            .when()
-            .post("/books/new/manual")
-            .then()
-            .statusCode(200)
-            .extract()
-            .asString();
-    assertThat(edit, containsString("value=\"A &lt;book&gt;\""));
-    assertThat(edit, containsString("value=\"First &amp; Author\""));
+    assertThat(dsl.fetchCount(EDITION), is(1));
+    assertThat(dsl.fetchCount(USER_EDITION), is(1));
+    given()
+        .cookie("rosies-dev-user", DevelopmentUser.READER_ONE.alias())
+        .when()
+        .get("/reading")
+        .then()
+        .statusCode(200)
+        .body(containsString("A saved book"), containsString("First Author, Second Author"));
+    for (String route : List.of("/to-read", "/finished")) {
+      given()
+          .cookie("rosies-dev-user", DevelopmentUser.READER_ONE.alias())
+          .when()
+          .get(route)
+          .then()
+          .statusCode(200)
+          .body(not(containsString("A saved book")));
+    }
+  }
+
+  @Test
+  void repeatingTheSameRequestRedirectsToTheOriginalShelfAndCreatesNothingElse() {
+    String requestId = UUID.randomUUID().toString();
+    for (int attempt = 0; attempt < 2; attempt++) {
+      baseForm("save", requestId)
+          .redirects()
+          .follow(false)
+          .formParam("title", attempt == 0 ? "Original" : "Changed retry")
+          .formParam("authors", "Author")
+          .formParam("state", attempt == 0 ? "TO_READ" : "FINISHED")
+          .formParam("finishedOn", "2026-08-04")
+          .when()
+          .post("/books/new/manual")
+          .then()
+          .statusCode(303)
+          .header("Location", "http://localhost:8081/to-read");
+    }
+    assertThat(dsl.fetchCount(EDITION), is(1));
+    assertThat(dsl.fetchCount(USER_EDITION), is(1));
+    assertThat(dsl.fetchOne(EDITION).get(EDITION.TITLE), is("Original"));
   }
 
   @Test
@@ -223,15 +259,37 @@ class ManualBookResourceTest {
         .then()
         .statusCode(200)
         .body(emptyOrNullString());
-    assertThat(dsl.fetchCount(EDITION), org.hamcrest.Matchers.is(0));
-    assertThat(dsl.fetchCount(USER_EDITION), org.hamcrest.Matchers.is(0));
+    assertThat(dsl.fetchCount(EDITION), is(0));
+    assertThat(dsl.fetchCount(USER_EDITION), is(0));
   }
 
-  private static io.restassured.specification.RequestSpecification baseForm(String intent) {
+  private static String openForm(DevelopmentUser user) {
+    return given()
+        .cookie("rosies-dev-user", user.alias())
+        .when()
+        .get("/books/new/manual")
+        .then()
+        .statusCode(200)
+        .contentType("text/html; charset=UTF-8")
+        .extract()
+        .asString();
+  }
+
+  private static String requestId(String body) {
+    Matcher matcher = REQUEST_ID.matcher(body);
+    if (!matcher.find()) {
+      throw new AssertionError("No request ID in form");
+    }
+    return matcher.group(1);
+  }
+
+  private static io.restassured.specification.RequestSpecification baseForm(
+      String intent, String requestId) {
     return given()
         .cookie("rosies-dev-user", DevelopmentUser.READER_ONE.alias())
         .contentType("application/x-www-form-urlencoded")
-        .formParam("intent", intent);
+        .formParam("intent", intent)
+        .formParam("requestId", requestId);
   }
 
   private static int count(String value, String needle) {
