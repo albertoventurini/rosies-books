@@ -61,6 +61,7 @@ class UserEditionRepository {
           .set(USER_EDITION.EFFECTIVE_AUTHORS_SEARCH, authors)
           .set(USER_EDITION.CREATED_AT, atUtc(userEdition.createdAt()))
           .set(USER_EDITION.UPDATED_AT, atUtc(userEdition.updatedAt()))
+          .set(USER_EDITION.VERSION, 0L)
           .execute();
     } catch (DataAccessException failure) {
       if (PostgresConstraint.isUniqueViolation(failure, "user_edition_user_edition_key")) {
@@ -104,6 +105,33 @@ class UserEditionRepository {
             .set(USER_EDITION.FINISHED_ON, columns.finishedOn())
             .set(USER_EDITION.UPDATED_AT, atUtc(updatedAt))
             .where(USER_EDITION.USER_ID.eq(owner.id().value()).and(USER_EDITION.ID.eq(id.value())))
+            .execute()
+        == 1;
+  }
+
+  boolean updateState(
+      CurrentUser owner,
+      UserEditionId id,
+      long expectedVersion,
+      ReadingState state,
+      Instant updatedAt) {
+    Objects.requireNonNull(owner, "owner");
+    Objects.requireNonNull(id, "id");
+    Objects.requireNonNull(state, "state");
+    Objects.requireNonNull(updatedAt, "updatedAt");
+    StateColumns columns = columns(state);
+    return dsl.update(USER_EDITION)
+            .set(USER_EDITION.STATE, columns.state())
+            .set(USER_EDITION.STARTED_ON, columns.startedOn())
+            .set(USER_EDITION.FINISHED_ON, columns.finishedOn())
+            .set(USER_EDITION.UPDATED_AT, atUtc(updatedAt))
+            .set(USER_EDITION.VERSION, USER_EDITION.VERSION.plus(1L))
+            .where(
+                USER_EDITION
+                    .USER_ID
+                    .eq(owner.id().value())
+                    .and(USER_EDITION.ID.eq(id.value()))
+                    .and(USER_EDITION.VERSION.eq(expectedVersion)))
             .execute()
         == 1;
   }

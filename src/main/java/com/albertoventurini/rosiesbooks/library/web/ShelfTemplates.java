@@ -14,3 +14,9 @@ class ManualBookTemplates {
 
   static native TemplateInstance manual(ManualBookPage page);
 }
+
+@CheckedTemplate(basePath = "library/web")
+class StateChangeTemplates {
+
+  static native TemplateInstance state(StateChangePage page);
+}

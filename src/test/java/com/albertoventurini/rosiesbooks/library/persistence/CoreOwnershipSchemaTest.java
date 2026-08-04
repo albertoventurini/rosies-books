@@ -151,6 +151,7 @@ class CoreOwnershipSchemaTest {
                 "user_edition_state_check",
                 "user_edition_state_dates",
                 "user_edition_date_chronology",
+                "user_edition_version_nonnegative",
                 "user_edition_metadata_override_publication_date_value",
                 "user_edition_metadata_override_isbn_10_checksum",
                 "user_edition_metadata_override_isbn_13_checksum",
@@ -162,6 +163,7 @@ class CoreOwnershipSchemaTest {
     if (type == String.class) return "string";
     if (type == OffsetDateTime.class) return "instant";
     if (type == Integer.class) return "integer";
+    if (type == Long.class) return "bigint";
     if (type == Boolean.class) return "boolean";
     if (type == LocalDate.class) return "date";
     if (type == byte[].class) return "bytes";
@@ -174,6 +176,7 @@ class CoreOwnershipSchemaTest {
       case "text", "character varying" -> "string";
       case "timestamp with time zone" -> "instant";
       case "integer" -> "integer";
+      case "bigint" -> "bigint";
       case "boolean" -> "boolean";
       case "date" -> "date";
       case "bytea" -> "bytes";

@@ -58,6 +58,8 @@ class JooqShelfCatalog implements ShelfCatalog {
                   Boolean.TRUE.equals(
                       row.get(USER_EDITION_METADATA_OVERRIDE.AUTHORS_IS_OVERRIDDEN));
               return new ShelfBook(
+                  new com.albertoventurini.rosiesbooks.library.internal.UserEditionId(
+                      userEditionId),
                   row.get(effectiveTitle),
                   authorsOverridden
                       ? overriddenAuthors(owner, shelf, userEditionId)

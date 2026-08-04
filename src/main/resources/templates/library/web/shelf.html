@@ -15,6 +15,9 @@
         </nav>
       </aside>
       <main class="shelf-main" id="main-content">
+        {#if page.hasNotice}
+          <div class="shelf-notice" role="status" data-transient-notice>{page.notice}</div>
+        {/if}
         <header class="shelf-header">
           <p class="eyebrow">Your library</p>
           <div class="shelf-heading-row">
@@ -35,6 +38,7 @@
                 <div class="shelf-book-metadata">
                   <h2>{book.title}</h2>
                   <p>{book.authorsText}</p>
+                  <a href="/books/{book.id}/state">Change state</a>
                 </div>
               </li>
             {/for}
@@ -42,5 +46,6 @@
         {/if}
       </main>
     </div>
+    {#if page.hasNotice}<script src="/assets/shelf-notice.js" defer></script>{/if}
   {/content}
 {/include}

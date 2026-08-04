@@ -1,0 +1,78 @@
+{@com.albertoventurini.rosiesbooks.library.web.StateChangePage page}
+{#include platform/web/shell}
+  {#title}Change state · {page.productName}{/title}
+  {#content}
+    <div class="library-shell">
+      <aside class="library-sidebar">
+        <div class="library-identity">
+          <a class="product-name" href="/reading">{page.productName}</a>
+          <span class="current-user-label">{page.userDisplayLabel}</span>
+        </div>
+      </aside>
+      <main class="manual-main" id="main-content">
+        <header class="manual-header">
+          <p class="eyebrow">{page.currentState}</p>
+          <h1>Change state</h1>
+          <p class="state-book-title">{page.title}</p>
+        </header>
+
+        {#if page.conflict}
+          <div class="form-error-summary" role="alert">
+            <p>This book changed after this form was opened. Review its current state before trying again.</p>
+          </div>
+          <div class="form-actions"><a href="/books/{page.bookId}/state">Review current state</a></div>
+        {#else if page.confirmation}
+          <div class="form-warning" role="alert">
+            <h2>Confirm moving this book to To Read</h2>
+            <p>This will clear all recorded reading dates.</p>
+            {#if page.clearsStart}<p>Start date to clear: <strong>{page.startedDateFromCurrent}</strong></p>{/if}
+            {#if page.clearsFinish}<p>Finish date to clear: <strong>{page.finishedDateFromCurrent}</strong></p>{/if}
+          </div>
+          <form class="manual-form" method="post" action="/books/{page.bookId}/state">
+            <input type="hidden" name="version" value="{page.version}">
+            <input type="hidden" name="target" value="TO_READ">
+            <div class="form-actions">
+              <button class="button-secondary" type="submit" name="intent" value="cancel">Cancel</button>
+              <button class="button-primary" type="submit" name="intent" value="confirm">Confirm change</button>
+            </div>
+          </form>
+        {#else}
+          {#if page.hasErrors}
+            <div class="form-error-summary" role="alert">
+              <p>Check the highlighted fields and try again.</p>
+              {#for error in page.errorsFor('form')}<p>{error}</p>{/for}
+            </div>
+          {/if}
+          <nav class="state-targets" aria-label="Destination shelf">
+            {#for option in page.targets}
+              <a href="/books/{page.bookId}/state?target={option.value}"{#if option.selected} aria-current="page"{/if}>{option.label}</a>
+            {/for}
+          </nav>
+          <form class="manual-form" method="post" action="/books/{page.bookId}/state" novalidate>
+            <input type="hidden" name="version" value="{page.version}">
+            <input type="hidden" name="target" value="{page.target}">
+            <div class="field-errors" id="target-errors">{#for error in page.errorsFor('target')}<p>{error}</p>{/for}</div>
+            {#if page.toFinished}
+              {#if page.acceptsStartDate}
+                <div class="form-field">
+                  <label for="startedOn">Start date <span class="label-note">optional</span></label>
+                  <input id="startedOn" type="date" name="startedOn" value="{page.startedOn}" aria-describedby="startedOn-errors"{#if page.hasError('startedOn')} aria-invalid="true"{/if}>
+                  <div class="field-errors" id="startedOn-errors">{#for error in page.errorsFor('startedOn')}<p>{error}</p>{/for}</div>
+                </div>
+              {/if}
+              <div class="form-field">
+                <label for="finishedOn">Finish date <span aria-hidden="true">*</span></label>
+                <input id="finishedOn" type="date" name="finishedOn" value="{page.finishedOn}" required aria-describedby="finishedOn-errors"{#if page.hasError('finishedOn')} aria-invalid="true"{/if}>
+                <div class="field-errors" id="finishedOn-errors">{#for error in page.errorsFor('finishedOn')}<p>{error}</p>{/for}</div>
+              </div>
+            {/if}
+            <div class="form-actions">
+              <button class="button-secondary" type="submit" name="intent" value="cancel">Cancel</button>
+              <button class="button-primary" type="submit" name="intent" value="change">Continue</button>
+            </div>
+          </form>
+        {/if}
+      </main>
+    </div>
+  {/content}
+{/include}

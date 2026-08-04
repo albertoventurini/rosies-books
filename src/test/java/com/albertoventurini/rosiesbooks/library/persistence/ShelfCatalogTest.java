@@ -51,10 +51,19 @@ class ShelfCatalogTest {
     overrideMetadata(reading, "My Private Title", List.of("Second", "First"));
 
     assertEquals(
-        List.of(new ShelfBook("My Private Title", List.of("Second", "First"))),
+        List.of(
+            new ShelfBook(
+                new com.albertoventurini.rosiesbooks.library.internal.UserEditionId(reading),
+                "My Private Title",
+                List.of("Second", "First"))),
         shelves.find(firstUser, Shelf.READING));
+    UUID otherId = new UUID(2, 4);
     assertEquals(
-        List.of(new ShelfBook("Other user's private title", List.of("Other Author"))),
+        List.of(
+            new ShelfBook(
+                new com.albertoventurini.rosiesbooks.library.internal.UserEditionId(otherId),
+                "Other user's private title",
+                List.of("Other Author"))),
         shelves.find(secondUser, Shelf.READING));
   }
 
