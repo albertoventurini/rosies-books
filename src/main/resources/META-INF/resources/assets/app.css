@@ -50,6 +50,7 @@ html {
 
 body,
 h1,
+h2,
 p {
   margin: 0;
 }
@@ -93,11 +94,7 @@ a {
 }
 
 .site-shell {
-  display: grid;
   min-height: 100vh;
-  align-content: center;
-  gap: var(--space-6);
-  padding: var(--space-8) var(--space-5);
   background: var(--color-surface);
 }
 
@@ -105,11 +102,13 @@ a {
 .page-content {
   width: min(100%, 40rem);
   margin-inline: auto;
+  padding-inline: var(--space-5);
 }
 
 .site-header {
   display: grid;
   gap: var(--space-2);
+  padding-top: var(--space-8);
 }
 
 .eyebrow {
@@ -129,6 +128,8 @@ h1 {
 }
 
 .page-content {
+  padding-top: var(--space-6);
+  padding-bottom: var(--space-8);
   color: var(--color-muted);
   font-size: 1rem;
 }
@@ -140,8 +141,274 @@ h1 {
   overflow-wrap: anywhere;
 }
 
+.library-shell {
+  min-height: 100vh;
+  min-width: 0;
+  background: var(--color-surface);
+}
+
+.library-sidebar {
+  padding: max(var(--space-5), env(safe-area-inset-top)) var(--space-5) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.library-identity {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.product-name {
+  min-width: 0;
+  color: var(--color-ink);
+  font-family: "Newsreader", Georgia, serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.current-user-label {
+  min-width: 0;
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+
+.shelf-navigation {
+  position: fixed;
+  z-index: 2;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding: var(--space-2) max(var(--space-2), env(safe-area-inset-right))
+    max(var(--space-2), env(safe-area-inset-bottom))
+    max(var(--space-2), env(safe-area-inset-left));
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface-raised);
+}
+
+.shelf-navigation-link {
+  min-width: 0;
+  padding: var(--space-3) var(--space-1);
+  border-radius: 0.375rem;
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.shelf-navigation-link[aria-current="page"] {
+  color: var(--color-surface-raised);
+  background: var(--color-accent);
+}
+
+.shelf-main {
+  width: min(100%, 48rem);
+  min-width: 0;
+  margin-inline: auto;
+  padding: var(--space-8) var(--space-5)
+    calc(6rem + max(var(--space-4), env(safe-area-inset-bottom)));
+}
+
+.shelf-header {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-8);
+}
+
+.shelf-header h1 {
+  font-size: clamp(2.75rem, 13vw, 4.5rem);
+}
+
+.shelf-empty {
+  padding: var(--space-8) var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  color: var(--color-muted);
+  background: var(--color-surface-raised);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.shelf-list {
+  display: grid;
+  gap: var(--space-6);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.shelf-book {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 5rem minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-5);
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.book-placeholder {
+  display: flex;
+  width: 5rem;
+  aspect-ratio: 2 / 3;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-2);
+  border-radius: 0.1875rem 0.375rem 0.375rem 0.1875rem;
+  box-shadow: inset 0.1875rem 0 rgb(0 0 0 / 12%), 0 0.25rem 0.75rem rgb(34 31 26 / 14%);
+  color: var(--placeholder-ink);
+  background: var(--placeholder-background);
+  overflow: hidden;
+}
+
+.book-placeholder-title,
+.book-placeholder-authors {
+  display: -webkit-box;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+}
+
+.book-placeholder-title {
+  font-family: "Newsreader", Georgia, serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.05;
+  -webkit-line-clamp: 5;
+}
+
+.book-placeholder-authors {
+  font-size: 0.5rem;
+  font-weight: 600;
+  line-height: 1.2;
+  -webkit-line-clamp: 3;
+}
+
+.placeholder-theme-1 {
+  --placeholder-background: #7b3f32;
+  --placeholder-ink: #fff5df;
+}
+
+.placeholder-theme-2 {
+  --placeholder-background: #315c57;
+  --placeholder-ink: #f4ebd8;
+}
+
+.placeholder-theme-3 {
+  --placeholder-background: #d1a24a;
+  --placeholder-ink: #2e271b;
+}
+
+.placeholder-theme-4 {
+  --placeholder-background: #4d506b;
+  --placeholder-ink: #f7eee0;
+}
+
+.placeholder-theme-5 {
+  --placeholder-background: #a4624f;
+  --placeholder-ink: #fff7e8;
+}
+
+.placeholder-theme-6 {
+  --placeholder-background: #738454;
+  --placeholder-ink: #1f2719;
+}
+
+.shelf-book-metadata {
+  min-width: 0;
+}
+
+.shelf-book-metadata h2 {
+  color: var(--color-ink);
+  font-family: "Newsreader", Georgia, serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.shelf-book-metadata p {
+  margin-top: var(--space-2);
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
 @media (min-width: 48rem) {
-  .site-shell {
+  .site-header,
+  .page-content {
+    padding-inline: var(--space-12);
+  }
+
+  .site-header {
+    padding-top: var(--space-12);
+  }
+
+  .library-shell {
+    display: grid;
+    grid-template-columns: 16rem minmax(0, 1fr);
+  }
+
+  .library-sidebar {
+    position: sticky;
+    top: 0;
+    display: flex;
+    height: 100vh;
+    min-width: 0;
+    flex-direction: column;
+    padding: var(--space-12) var(--space-6);
+    border-right: 1px solid var(--color-border);
+    border-bottom: 0;
+    background: var(--color-canvas);
+  }
+
+  .library-identity {
+    display: grid;
+    justify-content: stretch;
+  }
+
+  .current-user-label {
+    text-align: left;
+  }
+
+  .shelf-navigation {
+    position: static;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-2);
+    margin-top: var(--space-12);
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  .shelf-navigation-link {
+    padding: var(--space-3) var(--space-4);
+    font-size: 0.9375rem;
+    text-align: left;
+  }
+
+  .shelf-main {
     padding: var(--space-12);
+  }
+
+  .shelf-book {
+    grid-template-columns: 6rem minmax(0, 1fr);
+  }
+
+  .book-placeholder {
+    width: 6rem;
   }
 }

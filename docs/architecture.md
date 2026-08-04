@@ -15,8 +15,9 @@ another.
 
 Each feature root has an `@AppModule` declaration in its `package-info.java`. Only the feature's
 `api` namespace is available to another feature. `identity.api.CurrentUser`, which contains the
-stable `UserId`, is the intentional narrow identity-to-library value: every owner-scoped library
-persistence and use-case operation requires it. `CurrentUserProvider` is the replaceable contract
+stable `UserId` and a validated, non-sensitive display label, is the intentional narrow
+identity-to-library value: every owner-scoped library persistence and use-case operation requires
+it, while authorization uses only the `UserId`. `CurrentUserProvider` is the replaceable contract
 for resolving that value for the current request; an empty result always means unauthenticated and
 must never cause a caller to substitute a default user. Neither contract exposes identity
 persistence, HTTP, cookies, sessions, REST, or OIDC types. Other API namespaces remain empty until

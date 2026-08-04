@@ -20,7 +20,7 @@ public enum DevelopmentUser {
   private final String displayLabel;
 
   DevelopmentUser(String id, String alias, String displayLabel) {
-    this.currentUser = new CurrentUser(new UserId(UUID.fromString(id)));
+    this.currentUser = new CurrentUser(new UserId(UUID.fromString(id)), displayLabel);
     this.alias = alias;
     this.displayLabel = displayLabel;
   }

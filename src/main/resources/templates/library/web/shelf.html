@@ -1,0 +1,43 @@
+{@com.albertoventurini.rosiesbooks.library.web.ShelfPage page}
+{#include platform/web/shell}
+  {#title}{page.heading} · {page.productName}{/title}
+  {#content}
+    <div class="library-shell">
+      <aside class="library-sidebar">
+        <div class="library-identity">
+          <a class="product-name" href="/reading">{page.productName}</a>
+          <span class="current-user-label">{page.userDisplayLabel}</span>
+        </div>
+        <nav class="shelf-navigation" aria-label="Library shelves">
+          {#for item in page.navigation}
+            <a href="{item.route}"{#if item.active} aria-current="page"{/if} class="shelf-navigation-link">{item.label}</a>
+          {/for}
+        </nav>
+      </aside>
+      <main class="shelf-main" id="main-content">
+        <header class="shelf-header">
+          <p class="eyebrow">Your library</p>
+          <h1>{page.heading}</h1>
+        </header>
+        {#if page.books.empty}
+          <p class="shelf-empty">{page.emptyMessage}</p>
+        {#else}
+          <ol class="shelf-list">
+            {#for book in page.books}
+              <li class="shelf-book">
+                <div class="book-placeholder {book.placeholder.themeClass}" aria-hidden="true">
+                  <span class="book-placeholder-title">{book.placeholder.title}</span>
+                  <span class="book-placeholder-authors">{book.placeholder.authorsText}</span>
+                </div>
+                <div class="shelf-book-metadata">
+                  <h2>{book.title}</h2>
+                  <p>{book.authorsText}</p>
+                </div>
+              </li>
+            {/for}
+          </ol>
+        {/if}
+      </main>
+    </div>
+  {/content}
+{/include}

@@ -1,8 +1,8 @@
 # Web foundation
 
-Task 0-2 establishes the shared server-rendered web boundary. The root page is intentionally a
-temporary foundation endpoint; the user-scoped library shell replaces it in task 2-1. Database
-migrations, identity, library screens, and product workflows are not part of this foundation.
+Task 0-2 established the shared server-rendered web boundary. Task 2-1 replaced its temporary root
+page with a redirect to the user-scoped library shell. The shared error page, static assets, local
+fonts, and health behavior documented here remain platform-owned.
 
 ## Checked templates and shell
 
@@ -19,9 +19,9 @@ supplies its document title and body through the named `title` and `content` blo
 {/include}
 ```
 
-Both the foundation page and unexpected-error page use this shell. Page data is passed through
-immutable, package-private view models and checked template methods. Qute escapes dynamic text;
-templates must not mark user or provider content as raw HTML.
+The unexpected-error page, development selector, and library shelves use this shell. Page data is
+passed through immutable, package-private view models and checked template methods. Qute escapes
+dynamic text; templates must not mark user or provider content as raw HTML.
 
 ## Static assets and fonts
 
@@ -78,12 +78,16 @@ responses such as an unknown-route 404 retain their framework handling.
 
 ## Local and packaged verification
 
-Start development mode, then smoke-test the same server-rendered route and probes:
+Start development mode, select a development user, then smoke-test the library routes and probes:
 
 ```shell
 ./mvnw quarkus:dev
-curl -i http://localhost:8080/
-curl -I http://localhost:8080/
+curl -i http://localhost:8080/dev/users
+curl -i -c /tmp/rosies-books-cookies -d alias=reader-one http://localhost:8080/dev/users
+curl -i -b /tmp/rosies-books-cookies http://localhost:8080/
+curl -I -b /tmp/rosies-books-cookies http://localhost:8080/reading
+curl -i -b /tmp/rosies-books-cookies http://localhost:8080/to-read
+curl -i -b /tmp/rosies-books-cookies http://localhost:8080/finished
 curl -i http://localhost:8080/assets/app.css
 curl -i http://localhost:8080/q/health/started
 curl -i http://localhost:8080/q/health/live

@@ -1,9 +1,9 @@
 package com.albertoventurini.rosiesbooks.platform.web;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.emptyOrNullString;
+import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 
@@ -14,32 +14,27 @@ import org.junit.jupiter.api.Test;
 class WebFoundationTest {
 
   @Test
-  void rendersTheFoundationPageInTheSharedShell() {
+  void redirectsTheRootToTheLibrary() {
     given()
+        .redirects()
+        .follow(false)
         .when()
         .get("/")
         .then()
-        .statusCode(200)
-        .contentType("text/html; charset=UTF-8")
-        .body(containsString("<title>Rosie&#39;s books</title>"))
-        .body(
-            containsString(
-                "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"))
-        .body(containsString("<link rel=\"stylesheet\" href=\"/assets/app.css\">"))
-        .body(containsString("<header class=\"site-header\">"))
-        .body(containsString("<main class=\"page-content\" id=\"main-content\">"))
-        .body(containsString("<h1>Rosie&#39;s books</h1>"))
-        .body(containsString("A quiet, private place to keep track of your reading."));
+        .statusCode(303)
+        .header("Location", endsWith("/reading"));
   }
 
   @Test
   void headIsSafeAndBodyless() {
     given()
+        .redirects()
+        .follow(false)
         .when()
         .head("/")
         .then()
-        .statusCode(200)
-        .contentType("text/html; charset=UTF-8")
+        .statusCode(303)
+        .header("Location", endsWith("/reading"))
         .body(emptyOrNullString());
   }
 
@@ -53,18 +48,6 @@ class WebFoundationTest {
         .contentType("text/css")
         .body(containsString("--color-surface: #f3ede2"))
         .body(containsString("@font-face"));
-  }
-
-  @Test
-  void escapesUntrustedViewModelText() {
-    String html =
-        WebTemplates.foundation(
-                new FoundationPage(
-                    "<script>alert('title')</script>", "<img src=x onerror=private>"))
-            .render();
-
-    assertThat(html, containsString("&lt;script&gt;alert(&#39;title&#39;)&lt;/script&gt;"));
-    assertThat(html, containsString("&lt;img src=x onerror=private&gt;"));
   }
 
   @Test

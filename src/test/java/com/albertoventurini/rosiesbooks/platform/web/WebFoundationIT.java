@@ -2,6 +2,7 @@ package com.albertoventurini.rosiesbooks.platform.web;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 
@@ -12,14 +13,15 @@ import org.junit.jupiter.api.Test;
 class WebFoundationIT {
 
   @Test
-  void servesTheFoundationPageFromThePackagedApplication() {
+  void redirectsThePackagedApplicationRootToTheLibrary() {
     given()
+        .redirects()
+        .follow(false)
         .when()
         .get("/")
         .then()
-        .statusCode(200)
-        .contentType("text/html; charset=UTF-8")
-        .body(containsString("<h1>Rosie&#39;s books</h1>"));
+        .statusCode(303)
+        .header("Location", endsWith("/reading"));
   }
 
   @Test
