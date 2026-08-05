@@ -314,13 +314,17 @@ h1 {
 }
 
 .shelf-book {
+  min-width: 0;
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.shelf-book-card {
   display: grid;
   min-width: 0;
   grid-template-columns: 5rem minmax(0, 1fr);
   align-items: center;
   gap: var(--space-5);
-  padding-bottom: var(--space-6);
-  border-bottom: 1px solid var(--color-border);
 }
 
 .book-placeholder {
@@ -410,6 +414,24 @@ h1 {
   color: var(--color-muted);
   font-size: 0.875rem;
   overflow-wrap: anywhere;
+}
+
+.shelf-book-metadata .shelf-book-context {
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+}
+
+.shelf-book-state {
+  color: var(--color-ink);
+  font-weight: 600;
+}
+
+.shelf-book-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-top: var(--space-3);
+  font-size: 0.875rem;
 }
 
 .manual-main {
@@ -616,7 +638,7 @@ h1 {
     gap: var(--space-5);
   }
 
-  .shelf-book {
+  .shelf-book-card {
     grid-template-columns: 6rem minmax(0, 1fr);
   }
 

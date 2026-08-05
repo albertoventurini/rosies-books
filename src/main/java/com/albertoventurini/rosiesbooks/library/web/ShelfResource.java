@@ -12,16 +12,29 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 @Path("/")
 class ShelfResource {
 
   private final CurrentUserProvider currentUsers;
   private final ShelfCatalog shelves;
+  private final Clock clock;
+  private final ZoneId zone;
 
-  ShelfResource(CurrentUserProvider currentUsers, ShelfCatalog shelves) {
+  ShelfResource(
+      CurrentUserProvider currentUsers,
+      ShelfCatalog shelves,
+      Clock clock,
+      @ConfigProperty(name = "rosies-books.default-zone", defaultValue = "Africa/Johannesburg")
+          String defaultZone) {
     this.currentUsers = currentUsers;
     this.shelves = shelves;
+    this.clock = clock;
+    this.zone = ZoneId.of(defaultZone);
   }
 
   @GET
@@ -63,6 +76,12 @@ class ShelfResource {
           default -> null;
         };
     return ShelfTemplates.shelf(
-        ShelfPage.from(owner.displayLabel(), shelf, shelves.find(owner, shelf), notice));
+        ShelfPage.from(
+            owner.displayLabel(),
+            shelf,
+            shelves.find(owner, shelf),
+            notice,
+            LocalDate.now(clock.withZone(zone)),
+            zone));
   }
 }

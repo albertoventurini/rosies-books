@@ -16,6 +16,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
@@ -145,6 +146,10 @@ class ShelfResourceTest {
     assertThat(body, not(containsString(DevelopmentUser.OIDC_ISSUER)));
     assertThat(body, not(containsString("style=")));
     assertThat(body, containsString("placeholder-theme-"));
+    assertThat(body, containsString("class=\"shelf-book-card\""));
+    assertThat(body, containsString("<span class=\"shelf-book-state\">Reading</span>"));
+    assertThat(body, containsString("Started 1 Jul 2026"));
+    assertThat(body, containsString("href=\"/books/" + older + "/delete\""));
   }
 
   @Test
@@ -192,9 +197,12 @@ class ShelfResourceTest {
         LocalDate.of(2026, 1, 1),
         Instant.parse("2026-01-01T00:00:00Z"));
 
-    assertBookOrder("/reading", "Newer reading", "Older reading");
-    assertBookOrder("/to-read", "Newer to read", "Older to read");
+    String reading = assertBookOrder("/reading", "Newer reading", "Older reading");
+    assertThat(reading, containsString("Reading</span> · Started 1 Feb 2026"));
+    String toRead = assertBookOrder("/to-read", "Newer to read", "Older to read");
+    assertThat(toRead, containsString("To Read</span> · Added "));
     String finished = assertBookOrder("/finished", "Finished in 2026", "Finished in 2024");
+    assertThat(finished, containsString("Finished</span> · Finished 1 Jan 2026"));
     assertThat(finished, not(containsString("name=\"year\"")));
   }
 
@@ -202,7 +210,12 @@ class ShelfResourceTest {
   void escapesTheCurrentUserDisplayLabelInTheCheckedTemplate() {
     String html =
         ShelfTemplates.shelf(
-                ShelfPage.from("<img src=x onerror=private>", Shelf.READING, List.of()))
+                ShelfPage.from(
+                    "<img src=x onerror=private>",
+                    Shelf.READING,
+                    List.of(),
+                    LocalDate.of(2026, 8, 4),
+                    ZoneId.of("Africa/Johannesburg")))
             .render();
 
     assertThat(html, containsString("&lt;img src=x onerror=private&gt;"));

@@ -7,12 +7,18 @@ import static com.albertoventurini.rosiesbooks.library.persistence.jooq.Tables.U
 import static com.albertoventurini.rosiesbooks.library.persistence.jooq.Tables.USER_EDITION_METADATA_OVERRIDE;
 
 import com.albertoventurini.rosiesbooks.identity.api.CurrentUser;
+import com.albertoventurini.rosiesbooks.library.internal.Finished;
+import com.albertoventurini.rosiesbooks.library.internal.Reading;
+import com.albertoventurini.rosiesbooks.library.internal.ReadingState;
+import com.albertoventurini.rosiesbooks.library.internal.ToRead;
 import com.albertoventurini.rosiesbooks.library.shelves.Shelf;
 import com.albertoventurini.rosiesbooks.library.shelves.ShelfBook;
 import com.albertoventurini.rosiesbooks.library.shelves.ShelfCatalog;
 import jakarta.enterprise.context.ApplicationScoped;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import org.jooq.DSLContext;
 import org.jooq.Field;
@@ -39,7 +45,13 @@ class JooqShelfCatalog implements ShelfCatalog {
             .otherwise(EDITION.TITLE);
 
     return dsl.select(
-            USER_EDITION.ID, effectiveTitle, USER_EDITION_METADATA_OVERRIDE.AUTHORS_IS_OVERRIDDEN)
+            USER_EDITION.ID,
+            effectiveTitle,
+            USER_EDITION_METADATA_OVERRIDE.AUTHORS_IS_OVERRIDDEN,
+            USER_EDITION.STATE,
+            USER_EDITION.STARTED_ON,
+            USER_EDITION.FINISHED_ON,
+            USER_EDITION.CREATED_AT)
         .from(USER_EDITION)
         .join(EDITION)
         .on(EDITION.ID.eq(USER_EDITION.EDITION_ID))
@@ -63,8 +75,23 @@ class JooqShelfCatalog implements ShelfCatalog {
                   row.get(effectiveTitle),
                   authorsOverridden
                       ? overriddenAuthors(owner, shelf, userEditionId)
-                      : canonicalAuthors(owner, shelf, userEditionId));
+                      : canonicalAuthors(owner, shelf, userEditionId),
+                  readingState(
+                      row.get(USER_EDITION.STATE),
+                      row.get(USER_EDITION.STARTED_ON),
+                      row.get(USER_EDITION.FINISHED_ON)),
+                  row.get(USER_EDITION.CREATED_AT).toInstant());
             });
+  }
+
+  private static ReadingState readingState(
+      String state, LocalDate startedOn, LocalDate finishedOn) {
+    return switch (state) {
+      case "TO_READ" -> new ToRead();
+      case "READING" -> new Reading(startedOn);
+      case "FINISHED" -> new Finished(Optional.ofNullable(startedOn), finishedOn);
+      default -> throw new IllegalStateException("Unsupported persisted reading state: " + state);
+    };
   }
 
   private List<String> canonicalAuthors(CurrentUser owner, Shelf shelf, UUID userEditionId) {

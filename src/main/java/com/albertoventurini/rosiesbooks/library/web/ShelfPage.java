@@ -2,6 +2,8 @@ package com.albertoventurini.rosiesbooks.library.web;
 
 import com.albertoventurini.rosiesbooks.library.shelves.Shelf;
 import com.albertoventurini.rosiesbooks.library.shelves.ShelfBook;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.List;
 
@@ -20,7 +22,12 @@ record ShelfPage(
   }
 
   static ShelfPage from(
-      String userDisplayLabel, Shelf activeShelf, List<ShelfBook> books, String notice) {
+      String userDisplayLabel,
+      Shelf activeShelf,
+      List<ShelfBook> books,
+      String notice,
+      LocalDate today,
+      ZoneId zone) {
     return new ShelfPage(
         "Rosie's books",
         userDisplayLabel,
@@ -31,12 +38,17 @@ record ShelfPage(
                 shelf ->
                     new ShelfNavigationItem(shelf.route(), shelf.heading(), shelf == activeShelf))
             .toList(),
-        books.stream().map(ShelfBookView::from).toList(),
+        books.stream().map(book -> ShelfBookView.from(book, today, zone)).toList(),
         notice);
   }
 
-  static ShelfPage from(String userDisplayLabel, Shelf activeShelf, List<ShelfBook> books) {
-    return from(userDisplayLabel, activeShelf, books, null);
+  static ShelfPage from(
+      String userDisplayLabel,
+      Shelf activeShelf,
+      List<ShelfBook> books,
+      LocalDate today,
+      ZoneId zone) {
+    return from(userDisplayLabel, activeShelf, books, null, today, zone);
   }
 
   public boolean hasNotice() {
@@ -46,14 +58,27 @@ record ShelfPage(
 
 record ShelfNavigationItem(String route, String label, boolean active) {}
 
-record ShelfBookView(String id, String title, String authorsText, BookPlaceholder placeholder) {
+record ShelfBookView(
+    String id,
+    String title,
+    String authorsText,
+    BookPlaceholder placeholder,
+    String stateLabel,
+    String contextLine,
+    String stateUrl,
+    String deleteUrl) {
 
-  static ShelfBookView from(ShelfBook book) {
+  static ShelfBookView from(ShelfBook book, LocalDate today, ZoneId zone) {
     BookPlaceholder placeholder = BookPlaceholder.from(book.title(), book.authors());
+    String id = book.userEditionId().value().toString();
     return new ShelfBookView(
-        book.userEditionId().value().toString(),
+        id,
         book.title(),
         String.join(", ", book.authors()),
-        placeholder);
+        placeholder,
+        ShelfDatePresentation.stateLabel(book.readingState()),
+        ShelfDatePresentation.contextLine(book.readingState(), book.createdAt(), today, zone),
+        "/books/" + id + "/state",
+        "/books/" + id + "/delete");
   }
 }

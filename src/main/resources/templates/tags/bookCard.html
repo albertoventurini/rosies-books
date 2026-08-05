@@ -1,0 +1,16 @@
+{@com.albertoventurini.rosiesbooks.library.web.ShelfBookView book}
+<article class="shelf-book-card">
+  <div class="book-placeholder {book.placeholder.themeClass}" aria-hidden="true">
+    <span class="book-placeholder-title">{book.placeholder.title}</span>
+    <span class="book-placeholder-authors">{book.placeholder.authorsText}</span>
+  </div>
+  <div class="shelf-book-metadata">
+    <h2>{book.title}</h2>
+    <p>{book.authorsText}</p>
+    <p class="shelf-book-context"><span class="shelf-book-state">{book.stateLabel}</span> · {book.contextLine}</p>
+    <div class="shelf-book-actions">
+      <a href="{book.stateUrl}">Change shelf</a>
+      <a href="{book.deleteUrl}">Delete</a>
+    </div>
+  </div>
+</article>

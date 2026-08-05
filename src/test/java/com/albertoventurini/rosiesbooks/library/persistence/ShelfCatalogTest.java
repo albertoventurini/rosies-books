@@ -7,6 +7,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.albertoventurini.rosiesbooks.identity.api.CurrentUser;
 import com.albertoventurini.rosiesbooks.identity.internal.DevelopmentUser;
+import com.albertoventurini.rosiesbooks.library.internal.Finished;
+import com.albertoventurini.rosiesbooks.library.internal.Reading;
+import com.albertoventurini.rosiesbooks.library.internal.ToRead;
+import com.albertoventurini.rosiesbooks.library.internal.UserEditionId;
 import com.albertoventurini.rosiesbooks.library.shelves.Shelf;
 import com.albertoventurini.rosiesbooks.library.shelves.ShelfBook;
 import com.albertoventurini.rosiesbooks.library.shelves.ShelfCatalog;
@@ -17,6 +21,7 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeEach;
@@ -55,7 +60,10 @@ class ShelfCatalogTest {
             new ShelfBook(
                 new com.albertoventurini.rosiesbooks.library.internal.UserEditionId(reading),
                 "My Private Title",
-                List.of("Second", "First"))),
+                List.of("Second", "First"),
+                new com.albertoventurini.rosiesbooks.library.internal.Reading(
+                    LocalDate.of(2026, 1, 2)),
+                BASE_TIME.plusSeconds(1))),
         shelves.find(firstUser, Shelf.READING));
     UUID otherId = new UUID(2, 4);
     assertEquals(
@@ -63,7 +71,10 @@ class ShelfCatalogTest {
             new ShelfBook(
                 new com.albertoventurini.rosiesbooks.library.internal.UserEditionId(otherId),
                 "Other user's private title",
-                List.of("Other Author"))),
+                List.of("Other Author"),
+                new com.albertoventurini.rosiesbooks.library.internal.Reading(
+                    LocalDate.of(2026, 1, 2)),
+                BASE_TIME.plusSeconds(1))),
         shelves.find(secondUser, Shelf.READING));
   }
 
@@ -84,6 +95,38 @@ class ShelfCatalogTest {
     assertTitles(Shelf.READING, "Tie reading first", "Tie reading second", "Older reading");
     assertTitles(Shelf.TO_READ, "Tie to read first", "Tie to read second", "Older to read");
     assertTitles(Shelf.FINISHED, "Tie finished first", "Tie finished second", "Older finished");
+  }
+
+  @Test
+  void projectsEachValidStateAndTheUserEditionCreationInstant() {
+    UUID reading = addBook(firstUser, "READING", "Reading projection", List.of("A"), 51);
+    UUID toRead = addBook(firstUser, "TO_READ", "To Read projection", List.of("B"), 52);
+    UUID finished = addBook(firstUser, "FINISHED", "Finished projection", List.of("C"), 53);
+
+    assertEquals(
+        new ShelfBook(
+            new UserEditionId(reading),
+            "Reading projection",
+            List.of("A"),
+            new Reading(LocalDate.of(2026, 1, 2)),
+            BASE_TIME.plusSeconds(1)),
+        shelves.find(firstUser, Shelf.READING).getFirst());
+    assertEquals(
+        new ShelfBook(
+            new UserEditionId(toRead),
+            "To Read projection",
+            List.of("B"),
+            new ToRead(),
+            BASE_TIME.plusSeconds(1)),
+        shelves.find(firstUser, Shelf.TO_READ).getFirst());
+    assertEquals(
+        new ShelfBook(
+            new UserEditionId(finished),
+            "Finished projection",
+            List.of("C"),
+            new Finished(Optional.empty(), LocalDate.of(2026, 1, 2)),
+            BASE_TIME.plusSeconds(1)),
+        shelves.find(firstUser, Shelf.FINISHED).getFirst());
   }
 
   @Test

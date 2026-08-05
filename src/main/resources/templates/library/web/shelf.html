@@ -31,16 +31,7 @@
           <ol class="shelf-list">
             {#for book in page.books}
               <li class="shelf-book">
-                <div class="book-placeholder {book.placeholder.themeClass}" aria-hidden="true">
-                  <span class="book-placeholder-title">{book.placeholder.title}</span>
-                  <span class="book-placeholder-authors">{book.placeholder.authorsText}</span>
-                </div>
-                <div class="shelf-book-metadata">
-                  <h2>{book.title}</h2>
-                  <p>{book.authorsText}</p>
-                  <a href="/books/{book.id}/state">Change shelf</a>
-                  <a href="/books/{book.id}/delete">Delete</a>
-                </div>
+                {#bookCard book=book /}
               </li>
             {/for}
           </ol>

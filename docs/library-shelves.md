@@ -35,11 +35,13 @@ copy, and persisted reading state. The jOOQ shelf adapter requires `CurrentUser`
 every query. Its base row query and its ordered-author queries all constrain both `user_id` and
 `state`; no unowned lookup or default owner exists.
 
-Only the shelf projection leaves persistence: the owned user-edition ID, effective title, and the
-ordered effective authors. The ID is used only to link to the state-change workflow. A private
-title override replaces the canonical title. When authors are overridden, the private sequence
-ordered by `position` replaces the canonical sequence; otherwise canonical authors are ordered by
-their `position`. Canonical edition IDs and user IDs remain internal.
+Only the shelf projection leaves persistence: the owned user-edition ID, effective title, ordered
+effective authors, validated reading state, and the user-edition creation instant. The state holds
+the applicable start or finish date under the existing domain invariants. The ID is used only for
+owner-scoped shelf-change and deletion links. A private title override replaces the canonical
+title. When authors are overridden, the private sequence ordered by `position` replaces the
+canonical sequence; otherwise canonical authors are ordered by their `position`. Canonical edition
+IDs and user IDs remain internal.
 
 Default ordering is:
 
@@ -49,27 +51,40 @@ Default ordering is:
 | To Read | `created_at DESC, id ASC` |
 | Finished | `finished_on DESC, id ASC` |
 
-Finished currently renders all matching records across every year. Browser-local year controls
-and annual counts are intentionally deferred to task 3-3.
+Every shelf uses the same checked Qute cover-card component and dedicated view model. Cards show a
+written state and context line: Reading shows its start date, Finished shows its finish date, and
+To Read shows an approximate, non-editable age derived from the internal creation instant. Dates
+use the unambiguous English `d MMM uuuu` form.
+
+The To Read age is computed once per request from an injected clock and
+`rosies-books.default-zone`; the JVM ambient timezone is not used. Creation instants are converted
+to calendar dates in that zone, then grouped with fixed floor-based thresholds: today, days below
+one week, whole weeks below 30 days, approximate 30-day months below 365 days, and approximate
+365-day years thereafter. A future timestamp caused by clock skew is displayed as added today.
+These fixed inputs and boundaries make the deliberately approximate wording reproducible.
+
+Finished currently renders all matching records across every year. Browser-local year controls,
+annual counts, and selected-year empty states are intentionally deferred to task 3-3.
 
 ## Typographic placeholders
 
-Every shelf row in this manual-entry slice uses a typographic placeholder. The effective title and
+Every shelf card currently uses a typographic placeholder. The effective title and
 the exact ordered author list are hashed with Java's stable `String` and `List` hash contracts via
 `Objects.hash`. The nonnegative remainder selects one of six checked-in theme class names. User
 text is never emitted into a `style` attribute; it appears only as Qute-escaped text, while CSS
 handles wrapping, clamping, and overflow.
 
-Stored cover selection and delivery are not part of this slice. Later shelf/cover work can choose a
-stored cover without changing the title/author projection or placeholder fallback contract.
+Stored cover selection and delivery remain part of task 7-4. That work can replace the cover area
+inside the shared card while retaining the deterministic placeholder fallback.
 
 ## Responsive shell
 
 The shared stylesheet is mobile-first. Shelf navigation is an ordinary three-link bottom bar on
 narrow viewports and becomes a sidebar at 48 rem. The layout includes visible keyboard focus,
 safe-area padding, minimum-width protection, and text overflow handling. The manual-entry workflow
-adds an ordinary link to each shelf header; book-detail, year-filter, count, layout-toggle, and shelf
-mutation controls remain outside this task.
+adds an ordinary link to each shelf header. The current cards retain ordinary Change shelf and
+Delete links; book detail, quick finish, year filter, annual count, and layout toggle remain assigned
+to their later tasks.
 
 ## State changes, dates, and confirmation
 
