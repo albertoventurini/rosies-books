@@ -5,7 +5,7 @@
     <span class="book-placeholder-authors">{book.placeholder.authorsText}</span>
   </div>
   <div class="shelf-book-metadata">
-    <h2>{book.title}</h2>
+    <h2><a href="/books/{book.id}">{book.title}</a></h2>
     <p>{book.authorsText}</p>
     <p class="shelf-book-context"><span class="shelf-book-state">{book.stateLabel}</span> · {book.contextLine}</p>
     <div class="shelf-book-actions">

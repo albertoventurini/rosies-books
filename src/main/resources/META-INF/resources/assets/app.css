@@ -354,6 +354,35 @@ h1 {
   gap: var(--space-5);
 }
 
+.book-detail {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.book-detail-header {
+  display: grid;
+  grid-template-columns: minmax(7rem, 10rem) minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-6);
+}
+
+.book-detail-cover,
+.book-detail-placeholder {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+}
+
+.book-detail-header h1 { font-size: clamp(2.5rem, 10vw, 4rem); }
+.book-detail-subtitle, .book-detail-authors { margin-top: var(--space-2); color: var(--color-muted); overflow-wrap: anywhere; }
+.book-detail-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.book-detail-facts { display: grid; grid-template-columns: minmax(7rem, 1fr) minmax(0, 2fr); gap: var(--space-2) var(--space-4); padding: var(--space-5); background: var(--color-surface-raised); border: 1px solid var(--color-border); border-radius: .5rem; }
+.book-detail-facts dt { color: var(--color-muted); font-weight: 600; }
+.book-detail-facts dd { min-width: 0; color: var(--color-ink); overflow-wrap: anywhere; }
+.book-detail-section { display: grid; gap: var(--space-2); }
+.book-detail-section h2 { font-family: "Newsreader", Georgia, serif; font-size: 1.5rem; font-weight: 500; color: var(--color-ink); }
+.preserved-text { color: var(--color-ink); white-space: pre-wrap; overflow-wrap: anywhere; }
+
 .book-placeholder {
   display: flex;
   width: 5rem;

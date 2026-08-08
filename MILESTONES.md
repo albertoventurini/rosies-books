@@ -227,11 +227,13 @@ Tasks:
   - Never reveal canonical/provider provenance through cover presentation where the PRD does not call for it.
   - Verify all three states, stored cover and placeholder, missing/long optionals, escaped private content, not-found behavior, and cross-user lookup denial.
 - **4-2 — Implement private notes and metadata editing.**
+  - Expose editing through an ordinary `Edit details` link from the owned book detail page. Render a prefilled edit form that reuses the manual-entry form's field layout, controls, validation presentation, and shared form/view-model logic where semantics overlap.
   - Add plain-text private-note editing with documented length/newline rules, clear success/error feedback, and submitted-value preservation on validation or persistence failure.
   - Add private UserEdition overrides for every supported scalar field without mutating canonical Edition data.
   - Support ordered multiple-author overrides and inherited, explicit-value, and permitted explicit-blank semantics.
   - Add per-field and full-author-list reset actions that return to the not-overridden state and immediately follow subsequent canonical changes.
   - Prevent any combined edit from leaving the effective title or author list empty.
+  - Clearly distinguish inherited, overridden, reset, and permitted explicit-blank values without making canonical/provider provenance visible.
   - Test note round trips/escaping, every field and override state, author add/remove/reorder, canonical immutability, reset behavior, combined validation, and transactional rollback.
 - **4-3 — Implement detail-page dates and state actions.**
   - Allow only date edits permitted by the current state, including adding a previously unknown start date to a Finished book.
@@ -247,6 +249,7 @@ Tasks:
 Exit criteria:
 
 - Every supported field can be viewed and privately overridden under its validation rules.
+- The detail page leads to a prefilled edit form whose familiar manual-entry layout and validation behavior are reused wherever the create and edit semantics overlap.
 - Resetting an override restores the canonical value.
 - Notes and overrides never leak between the two seeded users.
 - Detail actions update the existing UserEdition and keep the shelf/count views consistent.

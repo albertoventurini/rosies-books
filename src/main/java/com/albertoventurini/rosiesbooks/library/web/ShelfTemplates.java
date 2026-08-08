@@ -26,3 +26,9 @@ class BookDeletionTemplates {
 
   static native TemplateInstance delete(BookDeletionPage page);
 }
+
+@CheckedTemplate(basePath = "library/web")
+class BookDetailTemplates {
+
+  static native TemplateInstance detail(BookDetailPage page);
+}

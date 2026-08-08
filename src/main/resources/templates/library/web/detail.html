@@ -1,0 +1,48 @@
+{@com.albertoventurini.rosiesbooks.library.web.BookDetailPage page}
+{#include platform/web/shell}
+  {#title}{page.title} · Rosie's books{/title}
+  {#content}
+    <div class="library-shell">
+      <aside class="library-sidebar">
+        <div class="library-identity"><a class="product-name" href="/reading">Rosie's books</a></div>
+      </aside>
+      <main class="shelf-main book-detail" id="main-content">
+        <p><a href="{page.shelfUrl}">← Back to shelf</a></p>
+        <header class="book-detail-header">
+          {#if page.hasCover}
+            <img class="book-detail-cover" src="{page.coverUrl}" alt="Cover of {page.title}">
+          {#else}
+            <div class="book-detail-placeholder book-placeholder {page.placeholder.themeClass}" aria-hidden="true">
+              <span class="book-placeholder-title">{page.placeholder.title}</span>
+              <span class="book-placeholder-authors">{page.placeholder.authorsText}</span>
+            </div>
+          {/if}
+          <div>
+            <p class="eyebrow">{page.stateLabel}</p>
+            <h1>{page.title}</h1>
+            {#if page.hasSubtitle}<p class="book-detail-subtitle">{page.subtitle}</p>{/if}
+            <p class="book-detail-authors">{#for author in page.authors}{author}{#if !author_isLast}, {/if}{/for}</p>
+          </div>
+        </header>
+        <div class="book-detail-actions">
+          <a class="button-link" href="{page.stateUrl}">Change shelf</a>
+          <a class="button-secondary" href="{page.deleteUrl}">Delete</a>
+        </div>
+        <dl class="book-detail-facts">
+          <dt>Shelf</dt><dd>{page.stateLabel}</dd>
+          {#if page.hasStartedOn}<dt>Started</dt><dd>{page.startedOn}</dd>{/if}
+          {#if page.hasFinishedOn}<dt>Finished</dt><dd>{page.finishedOn}</dd>{/if}
+          {#if page.hasFormat}<dt>Format</dt><dd>{page.format}</dd>{/if}
+          {#if page.hasPublisher}<dt>Publisher</dt><dd>{page.publisher}</dd>{/if}
+          {#if page.hasPublicationDate}<dt>Published</dt><dd>{page.publicationDate}</dd>{/if}
+          {#if page.hasPageCount}<dt>Length</dt><dd>{page.pageCount}</dd>{/if}
+          {#if page.hasLanguage}<dt>Language</dt><dd>{page.language}</dd>{/if}
+          {#if page.hasIsbn10}<dt>ISBN-10</dt><dd>{page.isbn10}</dd>{/if}
+          {#if page.hasIsbn13}<dt>ISBN-13</dt><dd>{page.isbn13}</dd>{/if}
+        </dl>
+        {#if page.hasDescription}<section class="book-detail-section"><h2>Description</h2><p class="preserved-text">{page.description}</p></section>{/if}
+        {#if page.hasNotes}<section class="book-detail-section"><h2>Private notes</h2><p class="preserved-text">{page.notes}</p></section>{/if}
+      </main>
+    </div>
+  {/content}
+{/include}

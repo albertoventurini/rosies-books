@@ -151,6 +151,7 @@ class ShelfResourceTest {
     assertThat(body, containsString("First &lt;author&gt;, Second &amp; author"));
     assertThat(body, not(containsString("Other user's secret title")));
     assertThat(body, containsString("href=\"/books/" + older + "/state\""));
+    assertThat(body, containsString("href=\"/books/" + older + "\""));
     for (DevelopmentUser user : DevelopmentUser.all()) {
       assertThat(body, not(containsString(user.currentUser().id().value().toString())));
       assertThat(body, not(containsString(user.email())));

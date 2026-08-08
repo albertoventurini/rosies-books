@@ -17,6 +17,8 @@ The browser routes are:
 | `POST` | `/books/{userEditionId}/state` | Validate, confirm, cancel, or apply a shelf change |
 | `GET`, `HEAD` | `/books/{userEditionId}/delete` | Permanent-deletion confirmation for an owned book |
 | `POST` | `/books/{userEditionId}/delete` | Cancel or permanently delete an owned book |
+| `GET`, `HEAD` | `/books/{userEditionId}` | Detail page for an owned book |
+| `GET`, `HEAD` | `/books/{userEditionId}/cover` | Stored cover bytes for an owned book |
 
 Shelf routes return `401 Unauthorized` when `CurrentUserProvider` cannot resolve the request.
 They never fall back to a development identity. In development and tests, selecting a user still
@@ -27,6 +29,25 @@ takes the browser to `/reading`.
 authorization decision, and a normalized, nonblank display label intended for escaped UI output.
 Identity adapters are responsible for supplying a non-sensitive label. The label is never used as
 an ownership key.
+
+## Book detail and covers
+
+Shelf-card titles are ordinary HTML links to the detail page, so opening a book requires no
+JavaScript. The owner-scoped detail projection loads the linked canonical edition and applies the
+owner's effective metadata overrides, including ordered author overrides. It also returns the
+private reading state and dates, private notes, and whether a cover is available. Provider names,
+identifiers, origins, and other provenance are not part of this projection or the page.
+
+Both routes first resolve the request through `CurrentUserProvider`; development and tests use the
+selected-user cookie only inside that adapter. The browser never supplies an owner identifier.
+Malformed UUIDs, unknown records, other users' records, and coverless books return the same
+non-identifying `404`; an unresolved current user returns `401`.
+
+The detail page preserves line breaks in escaped plain-text descriptions and private notes, shows
+only dates valid for the current state, and provides ordinary shelf, state-change, and deletion
+links. It uses the deterministic typographic placeholder when no stored cover is linked. A stored
+cover is delivered separately as its original `image/*` MIME type with `Cache-Control: no-store`;
+it is neither embedded in HTML nor fetched from a provider.
 
 ## Shelf projection and ordering
 
