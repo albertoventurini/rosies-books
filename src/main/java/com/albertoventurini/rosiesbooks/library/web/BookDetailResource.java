@@ -9,6 +9,7 @@ import io.quarkus.qute.TemplateInstance;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.CacheControl;
@@ -29,11 +30,11 @@ class BookDetailResource {
 
   @GET
   @Produces(MediaType.TEXT_HTML)
-  public TemplateInstance detail(@PathParam("id") String rawId) {
+  public TemplateInstance detail(@PathParam("id") String rawId, @QueryParam("notice") String notice) {
     CurrentUser owner = requireCurrentUser();
     UserEditionId id = parse(rawId);
     return BookDetailTemplates.detail(
-        BookDetailPage.from(id, details.find(owner, id).orElseThrow(BookDetailResource::notFound)));
+        BookDetailPage.from(id, details.find(owner, id).orElseThrow(BookDetailResource::notFound), notice));
   }
 
   @GET

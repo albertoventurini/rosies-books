@@ -8,6 +8,7 @@
       </aside>
       <main class="shelf-main book-detail" id="main-content">
         <p><a href="{page.shelfUrl}">← Back to shelf</a></p>
+        {#if page.hasNotice}<div class="shelf-notice" role="status">{page.notice}</div>{/if}
         <header class="book-detail-header">
           {#if page.hasCover}
             <img class="book-detail-cover" src="{page.coverUrl}" alt="Cover of {page.title}">
@@ -25,6 +26,7 @@
           </div>
         </header>
         <div class="book-detail-actions">
+          <a class="button-link" href="{page.editUrl}">Edit details</a>
           <a class="button-link" href="{page.stateUrl}">Change shelf</a>
           <a class="button-secondary" href="{page.deleteUrl}">Delete</a>
         </div>

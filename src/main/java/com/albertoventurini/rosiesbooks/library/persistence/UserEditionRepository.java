@@ -146,6 +146,14 @@ class UserEditionRepository {
         == 1;
   }
 
+  boolean updatePrivateNotes(CurrentUser owner, UserEditionId id, String privateNotes) {
+    return dsl.update(USER_EDITION)
+            .set(USER_EDITION.PRIVATE_NOTES, privateNotes)
+            .where(USER_EDITION.USER_ID.eq(owner.id().value()).and(USER_EDITION.ID.eq(id.value())))
+            .execute()
+        == 1;
+  }
+
   boolean delete(CurrentUser owner, UserEditionId id) {
     return dsl.deleteFrom(USER_EDITION)
             .where(USER_EDITION.USER_ID.eq(owner.id().value()).and(USER_EDITION.ID.eq(id.value())))

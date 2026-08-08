@@ -10,7 +10,7 @@ import jakarta.transaction.Transactional;
 import java.util.Optional;
 
 @ApplicationScoped
-class MetadataOverrideService {
+public class MetadataOverrideService {
 
   private final EditionRepository editions;
   private final UserEditionRepository userEditions;
@@ -27,6 +27,12 @@ class MetadataOverrideService {
 
   @Transactional
   boolean save(CurrentUser owner, UserEditionId id, MetadataOverrides proposed) {
+    String notes = userEditions.find(owner, id).map(UserEdition::privateNotes).orElse(null);
+    return save(owner, id, proposed, notes);
+  }
+
+  @Transactional
+  public boolean save(CurrentUser owner, UserEditionId id, MetadataOverrides proposed, String notes) {
     Optional<Edition> canonical = userEditions.findEditionId(owner, id).flatMap(editions::find);
     if (canonical.isEmpty()) {
       return false;
@@ -40,6 +46,9 @@ class MetadataOverrideService {
     if (!userEditions.updateSearchProjections(
         owner, id, effective.title(), String.join(" ", effective.authors()))) {
       throw new IllegalStateException("Search projection update failed");
+    }
+    if (!userEditions.updatePrivateNotes(owner, id, notes)) {
+      throw new IllegalStateException("Private notes update failed");
     }
     return true;
   }

@@ -334,6 +334,8 @@ The user can:
 
 No rich-text editor, rating control, sharing action, or social metadata is present.
 
+Private notes are plain text, limited to 10,000 characters. CRLF and CR line endings are normalized to LF, line breaks are preserved, and notes containing only whitespace are cleared.
+
 ### 8.13 State transitions
 
 All state changes update the existing UserEdition and its dates. They do not create additional per-book records.

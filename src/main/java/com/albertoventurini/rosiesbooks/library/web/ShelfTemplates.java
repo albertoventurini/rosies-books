@@ -32,3 +32,8 @@ class BookDetailTemplates {
 
   static native TemplateInstance detail(BookDetailPage page);
 }
+
+@CheckedTemplate(basePath = "library/web")
+class BookEditTemplates {
+  static native TemplateInstance edit(BookEditPage page);
+}

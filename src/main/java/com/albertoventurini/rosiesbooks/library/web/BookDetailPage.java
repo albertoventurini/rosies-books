@@ -27,12 +27,18 @@ record BookDetailPage(
     String isbn10,
     String isbn13,
     String shelfUrl,
+    String notice,
     String stateUrl,
+    String editUrl,
     String deleteUrl,
     String coverUrl,
     BookPlaceholder placeholder) {
 
   static BookDetailPage from(UserEditionId id, BookDetail book) {
+    return from(id, book, null);
+  }
+
+  static BookDetailPage from(UserEditionId id, BookDetail book, String noticeCode) {
     var metadata = book.metadata();
     String startedOn = book.state() instanceof Reading reading ? date(reading.startedOn()) : null;
     if (book.state() instanceof Finished finished) {
@@ -58,7 +64,9 @@ record BookDetailPage(
         metadata.isbn10().map(value -> value.value()).orElse(null),
         metadata.isbn13().map(value -> value.value()).orElse(null),
         book.shelf().route(),
+        "details-updated".equals(noticeCode) ? "Details updated." : null,
         route + "/state",
+        route + "/edit",
         route + "/delete",
         book.hasCover() ? route + "/cover" : null,
         BookPlaceholder.from(metadata.title(), metadata.authors()));
@@ -115,6 +123,8 @@ record BookDetailPage(
   public boolean hasCover() {
     return coverUrl != null;
   }
+
+  public boolean hasNotice() { return notice != null; }
 
   private static String date(LocalDate value) {
     return value.format(DateTimeFormatter.ofPattern("d MMM uuuu", Locale.ENGLISH));

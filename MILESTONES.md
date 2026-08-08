@@ -233,7 +233,7 @@ Tasks:
   - Support ordered multiple-author overrides and inherited, explicit-value, and permitted explicit-blank semantics.
   - Add per-field and full-author-list reset actions that return to the not-overridden state and immediately follow subsequent canonical changes.
   - Prevent any combined edit from leaving the effective title or author list empty.
-  - Clearly distinguish inherited, overridden, reset, and permitted explicit-blank values without making canonical/provider provenance visible.
+  - Approved exception: the edit form does not label values as inherited or overridden. A private override instead exposes a Reset action; reset restores inheritance without revealing canonical/provider provenance.
   - Test note round trips/escaping, every field and override state, author add/remove/reorder, canonical immutability, reset behavior, combined validation, and transactional rollback.
 - **4-3 — Implement detail-page dates and state actions.**
   - Allow only date edits permitted by the current state, including adding a previously unknown start date to a Finished book.
