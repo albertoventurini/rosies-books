@@ -151,6 +151,33 @@ class StateChangeResourceTest {
   }
 
   @Test
+  void cancellationFromBookDetailsReturnsToThoseDetails() {
+    UUID id =
+        addBook(DevelopmentUser.READER_ONE, "READING", LocalDate.of(2026, 2, 3), null, "Context");
+
+    given()
+        .cookie("rosies-dev-user", DevelopmentUser.READER_ONE.alias())
+        .get("/books/" + id)
+        .then()
+        .statusCode(200)
+        .body(containsString("href=\"/books/" + id + "/state?returnTo=details\""));
+
+    given()
+        .cookie("rosies-dev-user", DevelopmentUser.READER_ONE.alias())
+        .queryParam("returnTo", "details")
+        .get("/books/" + id + "/state")
+        .then()
+        .statusCode(200)
+        .body(containsString("name=\"returnTo\" value=\"details\""));
+
+    post(id, "cancel", "0", "TO_READ", null, null, "details")
+        .then()
+        .statusCode(303)
+        .header("Location", org.hamcrest.Matchers.endsWith("/books/" + id));
+    assertState(id, "READING", LocalDate.of(2026, 2, 3), null, 0);
+  }
+
+  @Test
   void staleAndRepeatedFormsConflictWithoutFurtherMutation() {
     UUID id = addBook(DevelopmentUser.READER_ONE, "TO_READ", null, null, "Concurrency");
     change(id, 0, "READING", null, null).statusCode(303);
@@ -227,8 +254,26 @@ class StateChangeResourceTest {
 
   private Response post(
       UUID id, String intent, String version, String target, String started, String finished) {
+    return post(id, intent, version, target, started, finished, null);
+  }
+
+  private Response post(
+      UUID id,
+      String intent,
+      String version,
+      String target,
+      String started,
+      String finished,
+      String returnTo) {
     return postAs(
-        DevelopmentUser.READER_ONE, id.toString(), intent, version, target, started, finished);
+        DevelopmentUser.READER_ONE,
+        id.toString(),
+        intent,
+        version,
+        target,
+        started,
+        finished,
+        returnTo);
   }
 
   private Response postAs(
@@ -239,6 +284,18 @@ class StateChangeResourceTest {
       String target,
       String started,
       String finished) {
+    return postAs(user, id, intent, version, target, started, finished, null);
+  }
+
+  private Response postAs(
+      DevelopmentUser user,
+      String id,
+      String intent,
+      String version,
+      String target,
+      String started,
+      String finished,
+      String returnTo) {
     RequestSpecification request =
         given()
             .redirects()
@@ -248,6 +305,7 @@ class StateChangeResourceTest {
             .formParam("intent", intent)
             .formParam("version", version)
             .formParam("target", target);
+    if (returnTo != null) request.formParam("returnTo", returnTo);
     if (started != null) {
       request.formParam(
           target.equals("READING") ? "readingStartedOn" : "finishedStartedOn", started);

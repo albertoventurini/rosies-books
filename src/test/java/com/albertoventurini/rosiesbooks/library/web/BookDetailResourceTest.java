@@ -68,7 +68,7 @@ class BookDetailResourceTest {
         .body(containsString("Detail title"))
         .body(containsString("class=\"book-detail-placeholder"))
         .body(containsString("href=\"/to-read\""))
-        .body(containsString("href=\"/books/" + book + "/state\""))
+        .body(containsString("href=\"/books/" + book + "/state?returnTo=details\""))
         .body(containsString("href=\"/books/" + book + "/delete\""))
         .body(not(containsString("/cover\"")));
 

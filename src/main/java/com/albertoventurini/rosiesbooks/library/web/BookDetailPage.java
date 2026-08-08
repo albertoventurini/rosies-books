@@ -65,7 +65,7 @@ record BookDetailPage(
         metadata.isbn13().map(value -> value.value()).orElse(null),
         book.shelf().route(),
         "details-updated".equals(noticeCode) ? "Details updated." : null,
-        route + "/state",
+        route + "/state?returnTo=details",
         route + "/edit",
         route + "/delete",
         book.hasCover() ? route + "/cover" : null,

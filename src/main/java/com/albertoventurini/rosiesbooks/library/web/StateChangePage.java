@@ -15,6 +15,7 @@ record StateChangePage(
     String title,
     String currentState,
     String currentShelfRoute,
+    boolean returnToDetails,
     long version,
     String target,
     String readingStartedOn,
@@ -40,7 +41,8 @@ record StateChangePage(
       String readingStartedOn,
       String finishedStartedOn,
       String finishedOn,
-      Map<String, List<String>> errors) {
+      Map<String, List<String>> errors,
+      boolean returnToDetails) {
     return create(
         userLabel,
         book,
@@ -49,18 +51,20 @@ record StateChangePage(
         finishedStartedOn,
         finishedOn,
         errors,
+        returnToDetails,
         false,
         false);
   }
 
-  static StateChangePage confirmation(String userLabel, BookState book) {
+  static StateChangePage confirmation(String userLabel, BookState book, boolean returnToDetails) {
     String finish =
         book.state() instanceof Finished finished ? finished.finishedOn().toString() : "";
-    return create(userLabel, book, "TO_READ", "", "", finish, Map.of(), true, false);
+    return create(
+        userLabel, book, "TO_READ", "", "", finish, Map.of(), returnToDetails, true, false);
   }
 
-  static StateChangePage conflict(String userLabel, BookState book) {
-    return create(userLabel, book, "", "", "", "", Map.of(), false, true);
+  static StateChangePage conflict(String userLabel, BookState book, boolean returnToDetails) {
+    return create(userLabel, book, "", "", "", "", Map.of(), returnToDetails, false, true);
   }
 
   private static StateChangePage create(
@@ -71,6 +75,7 @@ record StateChangePage(
       String finishedStartedOn,
       String finishedOn,
       Map<String, List<String>> errors,
+      boolean returnToDetails,
       boolean confirmation,
       boolean conflict) {
     return new StateChangePage(
@@ -80,6 +85,7 @@ record StateChangePage(
         book.title(),
         label(book.state()),
         route(book.state()),
+        returnToDetails,
         book.version(),
         target,
         readingStartedOn == null ? "" : readingStartedOn,

@@ -57,7 +57,10 @@ class StateChangeResource {
 
   @GET
   @Produces(MediaType.TEXT_HTML)
-  public TemplateInstance form(@PathParam("id") String rawId, @QueryParam("target") String target) {
+  public TemplateInstance form(
+      @PathParam("id") String rawId,
+      @QueryParam("target") String target,
+      @QueryParam("returnTo") String returnTo) {
     CurrentUser owner = requireCurrentUser();
     BookState book = find(owner, rawId);
     String selected = validTarget(book, target) ? target : defaultTarget(book);
@@ -65,7 +68,14 @@ class StateChangeResource {
     String finish = today().toString();
     return StateChangeTemplates.state(
         StateChangePage.form(
-            owner.displayLabel(), book, selected, readingStart, "", finish, Map.of()));
+            owner.displayLabel(),
+            book,
+            selected,
+            readingStart,
+            "",
+            finish,
+            Map.of(),
+            returnsToDetails(returnTo)));
   }
 
   @POST
@@ -78,7 +88,8 @@ class StateChangeResource {
       @RestForm String target,
       @RestForm String readingStartedOn,
       @RestForm String finishedStartedOn,
-      @RestForm String finishedOn) {
+      @RestForm String finishedOn,
+      @RestForm String returnTo) {
     CurrentUser owner = requireCurrentUser();
     BookState book = find(owner, rawId);
     Map<String, List<String>> errors = new LinkedHashMap<>();
@@ -86,11 +97,15 @@ class StateChangeResource {
     String action = intent == null ? "" : intent;
 
     if (action.equals("cancel") && parsedVersion != null && validTarget(book, target)) {
-      return redirect(book.state(), "state-change-cancelled");
+      return returnsToDetails(returnTo)
+          ? Response.seeOther(URI.create("/books/" + book.id().value())).build()
+          : redirect(book.state(), "state-change-cancelled");
     }
     if (parsedVersion != null && parsedVersion != book.version()) {
       return Response.status(Response.Status.CONFLICT)
-          .entity(StateChangeTemplates.state(StateChangePage.conflict(owner.displayLabel(), book)))
+          .entity(
+              StateChangeTemplates.state(
+                  StateChangePage.conflict(owner.displayLabel(), book, returnsToDetails(returnTo))))
           .build();
     }
     if (!action.equals("change") && !action.equals("confirm")) {
@@ -107,7 +122,14 @@ class StateChangeResource {
     }
     if (!errors.isEmpty()) {
       return badRequest(
-          owner, book, target, readingStartedOn, finishedStartedOn, finishedOn, errors);
+          owner,
+          book,
+          target,
+          readingStartedOn,
+          finishedStartedOn,
+          finishedOn,
+          errors,
+          returnsToDetails(returnTo));
     }
 
     ChangeResult result;
@@ -128,7 +150,8 @@ class StateChangeResource {
           readingStartedOn,
           finishedStartedOn,
           finishedOn,
-          Map.of("finishedOn", List.of(exception.getMessage())));
+          Map.of("finishedOn", List.of(exception.getMessage())),
+          returnsToDetails(returnTo));
     }
 
     return switch (result.status()) {
@@ -136,13 +159,15 @@ class StateChangeResource {
       case CONFIRMATION_REQUIRED ->
           Response.ok(
                   StateChangeTemplates.state(
-                      StateChangePage.confirmation(owner.displayLabel(), result.current())))
+                      StateChangePage.confirmation(
+                          owner.displayLabel(), result.current(), returnsToDetails(returnTo))))
               .build();
       case CONFLICT ->
           Response.status(Response.Status.CONFLICT)
               .entity(
                   StateChangeTemplates.state(
-                      StateChangePage.conflict(owner.displayLabel(), result.current())))
+                      StateChangePage.conflict(
+                          owner.displayLabel(), result.current(), returnsToDetails(returnTo))))
               .build();
       case NOT_FOUND -> throw notFound();
     };
@@ -277,7 +302,8 @@ class StateChangeResource {
       String readingStartedOn,
       String finishedStartedOn,
       String finishedOn,
-      Map<String, List<String>> errors) {
+      Map<String, List<String>> errors,
+      boolean returnToDetails) {
     return Response.status(Response.Status.BAD_REQUEST)
         .entity(
             StateChangeTemplates.state(
@@ -288,7 +314,8 @@ class StateChangeResource {
                     readingStartedOn,
                     finishedStartedOn,
                     finishedOn,
-                    errors)))
+                    errors,
+                    returnToDetails)))
         .build();
   }
 
@@ -300,6 +327,10 @@ class StateChangeResource {
 
   private static boolean blank(String value) {
     return value == null || value.isBlank();
+  }
+
+  private static boolean returnsToDetails(String returnTo) {
+    return "details".equals(returnTo);
   }
 
   private static WebApplicationException notFound() {

@@ -31,6 +31,7 @@
           <form class="manual-form" method="post" action="/books/{page.bookId}/state">
             <input type="hidden" name="version" value="{page.version}">
             <input type="hidden" name="target" value="TO_READ">
+            {#if page.returnToDetails}<input type="hidden" name="returnTo" value="details">{/if}
             <div class="form-actions">
               <button class="button-secondary" type="submit" name="intent" value="cancel">Cancel</button>
               <button class="button-primary" type="submit" name="intent" value="confirm">Confirm shelf change</button>
@@ -45,6 +46,7 @@
           {/if}
           <form class="manual-form" method="post" action="/books/{page.bookId}/state" novalidate>
             <input type="hidden" name="version" value="{page.version}">
+            {#if page.returnToDetails}<input type="hidden" name="returnTo" value="details">{/if}
             <div class="form-field state-target-field">
               <label for="target">Destination shelf</label>
               <select id="target" name="target" aria-describedby="target-errors" data-shelf-target{#if page.hasError('target')} aria-invalid="true"{/if}>
