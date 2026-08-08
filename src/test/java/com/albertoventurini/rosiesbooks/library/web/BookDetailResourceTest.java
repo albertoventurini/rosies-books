@@ -71,6 +71,14 @@ class BookDetailResourceTest {
         .body(containsString("href=\"/books/" + book + "/state\""))
         .body(containsString("href=\"/books/" + book + "/delete\""))
         .body(not(containsString("/cover\"")));
+
+    given()
+        .cookie("rosies-dev-user", DevelopmentUser.READER_ONE.alias())
+        .when()
+        .get("/books/" + book + "/edit")
+        .then()
+        .statusCode(200)
+        .body(containsString("<aside class=\"library-sidebar\">"));
   }
 
   @Test

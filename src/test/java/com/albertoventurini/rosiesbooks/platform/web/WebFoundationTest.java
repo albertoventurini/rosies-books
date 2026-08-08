@@ -47,7 +47,8 @@ class WebFoundationTest {
         .statusCode(200)
         .contentType("text/css")
         .body(containsString("--color-surface: #f3ede2"))
-        .body(containsString("@font-face"));
+        .body(containsString("@font-face"))
+        .body(containsString(".book-detail {\n  display: grid;\n  align-content: start;"));
   }
 
   @Test

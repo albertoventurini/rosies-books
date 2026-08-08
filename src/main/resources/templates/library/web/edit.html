@@ -2,7 +2,14 @@
 {#include platform/web/shell}
   {#title}Edit details · {page.productName}{/title}
   {#content}
-    <div class="library-shell"><main class="manual-main" id="main-content">
+    <div class="library-shell">
+      <aside class="library-sidebar">
+        <div class="library-identity">
+          <a class="product-name" href="/reading">{page.productName}</a>
+          <span class="current-user-label">{page.userDisplayLabel}</span>
+        </div>
+      </aside>
+      <main class="manual-main" id="main-content">
       <header class="manual-header"><p class="eyebrow">Your library</p><h1>Edit details</h1></header>
       {#if page.form.errors.size > 0}<div class="form-error-summary" role="alert"><p>Check the highlighted fields and try again.</p>{#for error in page.form.errorsFor('form')}<p>{error}</p>{/for}</div>{/if}
       <form class="manual-form" method="post" action="{page.actionUrl}" novalidate>
@@ -19,6 +26,7 @@
         <section class="form-section"><h2>Private notes</h2><div class="form-field"><label for="notes">Notes</label><textarea id="notes" name="notes" rows="7" maxlength="10000" aria-describedby="notes-errors"{#if page.form.hasError('notes')} aria-invalid="true"{/if}>{page.form.notes}</textarea><div class="field-errors" id="notes-errors">{#for error in page.form.errorsFor('notes')}<p>{error}</p>{/for}</div></div></section>
         <div class="form-actions"><a href="{page.detailUrl}">Cancel</a><button class="button-primary" type="submit" name="intent" value="save">Save details</button></div>
       </form>
-    </main></div>
+      </main>
+    </div>
   {/content}
 {/include}
