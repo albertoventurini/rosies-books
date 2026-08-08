@@ -93,7 +93,20 @@ class ShelfResourceTest {
   void marksOnlyTheCurrentNavigationLinkAndShowsShelfSpecificEmptyStates() {
     assertActiveAndEmpty("/reading", "Reading", "No books are currently being read.");
     assertActiveAndEmpty("/to-read", "To Read", "There are no books waiting to be read.");
-    assertActiveAndEmpty("/finished", "Finished", "No books have been finished yet.");
+    String finished =
+        given()
+            .cookie("rosies-dev-user", DevelopmentUser.READER_ONE.alias())
+            .when()
+            .get("/finished")
+            .then()
+            .statusCode(200)
+            .extract()
+            .asString();
+    assertThat(finished, containsString("0 books read in 2026"));
+    assertThat(finished, containsString("No books finished in 2026."));
+    assertThat(finished, containsString("href=\"/finished?year=2026\""));
+    assertThat(finished, containsString("aria-current=\"true\""));
+    assertThat(finished, containsString("Add book manually"));
   }
 
   @Test
@@ -153,7 +166,7 @@ class ShelfResourceTest {
   }
 
   @Test
-  void appliesEveryShelfOrderAndKeepsFinishedAsAnAllYearsView() {
+  void filtersFinishedByYearAndRendersOrdinaryYearLinksAndMatchingCounts() {
     addBook(
         DevelopmentUser.READER_ONE,
         "READING",
@@ -196,14 +209,57 @@ class ShelfResourceTest {
         List.of("Author"),
         LocalDate.of(2026, 1, 1),
         Instant.parse("2026-01-01T00:00:00Z"));
+    addBook(
+        DevelopmentUser.READER_ONE,
+        "FINISHED",
+        "Finished later in 2026",
+        List.of("Author"),
+        LocalDate.of(2026, 2, 1),
+        Instant.parse("2026-02-01T00:00:00Z"));
 
     String reading = assertBookOrder("/reading", "Newer reading", "Older reading");
     assertThat(reading, containsString("Reading</span> · Started 1 Feb 2026"));
     String toRead = assertBookOrder("/to-read", "Newer to read", "Older to read");
     assertThat(toRead, containsString("To Read</span> · Added "));
-    String finished = assertBookOrder("/finished", "Finished in 2026", "Finished in 2024");
+    String finished =
+        assertBookOrder("/finished?year=2026", "Finished later in 2026", "Finished in 2026");
     assertThat(finished, containsString("Finished</span> · Finished 1 Jan 2026"));
-    assertThat(finished, not(containsString("name=\"year\"")));
+    assertThat(finished, not(containsString("Finished in 2024")));
+    assertThat(finished, containsString("2 books read in 2026"));
+    assertThat(finished, containsString("href=\"/finished?year=2024\""));
+
+    String older = assertBookOrder("/finished?year=2024", "Finished in 2024");
+    assertThat(older, containsString("1 book read in 2024"));
+    assertThat(older, not(containsString("Finished in 2026")));
+    assertThat(older, not(containsString("<script")));
+
+    assertThat(reading, not(containsString("books read in")));
+    assertThat(reading, not(containsString("/finished?year=")));
+    assertThat(toRead, not(containsString("books read in")));
+    assertThat(toRead, not(containsString("/finished?year=")));
+  }
+
+  @Test
+  void rejectsMalformedAndUnavailableFinishedYearsWithoutLeakingAnotherOwnersYears() {
+    addBook(
+        DevelopmentUser.READER_TWO,
+        "FINISHED",
+        "Other user's old finish",
+        List.of("Secret"),
+        LocalDate.of(2024, 1, 1),
+        Instant.parse("2024-01-01T00:00:00Z"));
+
+    for (String year : List.of("not-a-year", "2024", "2026-01")) {
+      given()
+          .cookie("rosies-dev-user", DevelopmentUser.READER_ONE.alias())
+          .queryParam("year", year)
+          .when()
+          .get("/finished")
+          .then()
+          .statusCode(400)
+          .body(not(containsString("Other user's old finish")))
+          .body(not(containsString("2024 books")));
+    }
   }
 
   @Test
@@ -240,7 +296,7 @@ class ShelfResourceTest {
     assertThat(body, not(containsString("type=\"module\"")));
   }
 
-  private String assertBookOrder(String route, String first, String second) {
+  private String assertBookOrder(String route, String... expected) {
     String body =
         given()
             .cookie("rosies-dev-user", DevelopmentUser.READER_ONE.alias())
@@ -250,7 +306,11 @@ class ShelfResourceTest {
             .statusCode(200)
             .extract()
             .asString();
-    assertThat(body.indexOf(first), org.hamcrest.Matchers.lessThan(body.indexOf(second)));
+    for (int index = 1; index < expected.length; index++) {
+      assertThat(
+          body.indexOf(expected[index - 1]),
+          org.hamcrest.Matchers.lessThan(body.indexOf(expected[index])));
+    }
     return body;
   }
 

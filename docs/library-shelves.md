@@ -12,7 +12,7 @@ The browser routes are:
 | `GET`, `HEAD` | `/` | `303 See Other` to `/reading` |
 | `GET`, `HEAD` | `/reading` | Current user's Reading shelf |
 | `GET`, `HEAD` | `/to-read` | Current user's To Read shelf |
-| `GET`, `HEAD` | `/finished` | Current user's Finished shelf |
+| `GET`, `HEAD` | `/finished[?year=YYYY]` | Current user's Finished shelf for one year |
 | `GET`, `HEAD` | `/books/{userEditionId}/state` | Shelf-change form for an owned book |
 | `POST` | `/books/{userEditionId}/state` | Validate, confirm, cancel, or apply a shelf change |
 | `GET`, `HEAD` | `/books/{userEditionId}/delete` | Permanent-deletion confirmation for an owned book |
@@ -63,8 +63,25 @@ one week, whole weeks below 30 days, approximate 30-day months below 365 days, a
 365-day years thereafter. A future timestamp caused by clock skew is displayed as added today.
 These fixed inputs and boundaries make the deliberately approximate wording reproducible.
 
-Finished currently renders all matching records across every year. Browser-local year controls,
-annual counts, and selected-year empty states are intentionally deferred to task 3-3.
+Finished uses the separate `findFinished(CurrentUser, Year selectedYear, Year currentYear)` query
+contract. Its immutable projection contains the selected year, descending available years, and the
+books for that year. Available years come only from the owner's records currently in Finished, with
+the current year always included. The adapter filters by owner, Finished state, and the selected
+year's inclusive/exclusive `LocalDate` range in PostgreSQL. A syntactically valid but unavailable
+explicit year produces no projection and the web adapter returns `400 Bad Request`, just as it does
+for a malformed year.
+
+When `year` is omitted, the web adapter derives the current year from its injected clock and
+`rosies-books.default-zone` after resolving the current user, then passes that year explicitly to
+persistence. The JVM ambient timezone and browser timezone are not used, and no JavaScript is
+required: descending year choices are ordinary `/finished?year=YYYY` links. The checked template
+marks the selected year accessibly, reports a singular or plural annual count from the exact list
+used to render cards, and keeps year navigation and manual book entry available for an empty year.
+Reading and To Read continue through the generic shelf query and render no annual controls.
+
+Timezone resolution deliberately remains outside persistence. A future user-timezone preference
+can replace the configured `ZoneId` after user resolution without changing the URL contract, shelf
+filtering, annual count, or stored date-only values.
 
 ## Typographic placeholders
 

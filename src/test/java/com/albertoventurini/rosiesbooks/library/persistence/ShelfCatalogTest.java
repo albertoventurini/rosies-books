@@ -19,6 +19,7 @@ import jakarta.inject.Inject;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.Year;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
@@ -94,7 +95,17 @@ class ShelfCatalogTest {
 
     assertTitles(Shelf.READING, "Tie reading first", "Tie reading second", "Older reading");
     assertTitles(Shelf.TO_READ, "Tie to read first", "Tie to read second", "Older to read");
-    assertTitles(Shelf.FINISHED, "Tie finished first", "Tie finished second", "Older finished");
+    assertEquals(
+        List.of("Tie finished first", "Tie finished second", "Older finished"),
+        shelves.findFinished(firstUser, Year.of(2026), Year.of(2026)).orElseThrow().books().stream()
+            .map(ShelfBook::title)
+            .toList());
+    assertEquals(
+        List.of(Year.of(2026)),
+        shelves
+            .findFinished(firstUser, Year.of(2026), Year.of(2026))
+            .orElseThrow()
+            .availableYears());
   }
 
   @Test
@@ -126,16 +137,33 @@ class ShelfCatalogTest {
             List.of("C"),
             new Finished(Optional.empty(), LocalDate.of(2026, 1, 2)),
             BASE_TIME.plusSeconds(1)),
-        shelves.find(firstUser, Shelf.FINISHED).getFirst());
+        shelves
+            .findFinished(firstUser, Year.of(2026), Year.of(2026))
+            .orElseThrow()
+            .books()
+            .getFirst());
   }
 
   @Test
-  void returnsEmptyShelvesAndAllFinishedYears() {
+  void returnsSelectedFinishedYearAndDescendingOwnerScopedAvailableYears() {
     assertEquals(List.of(), shelves.find(firstUser, Shelf.READING));
     addBook(firstUser, "FINISHED", "Finished in 2026", List.of("A"), 41);
     addBook(firstUser, "FINISHED", "Finished in 2024", List.of("B"), 42);
+    addBook(firstUser, "READING", "Not finished", List.of("C"), 43);
+    addBook(firstUser, "TO_READ", "Also not finished", List.of("C"), 45);
+    addBook(
+        secondUser, "FINISHED", "Other user's 2025", List.of("D"), 44, LocalDate.of(2025, 1, 1));
 
-    assertTitles(Shelf.FINISHED, "Finished in 2026", "Finished in 2024");
+    var finished = shelves.findFinished(firstUser, Year.of(2024), Year.of(2025)).orElseThrow();
+    assertEquals(Year.of(2024), finished.selectedYear());
+    assertEquals(List.of(Year.of(2026), Year.of(2025), Year.of(2024)), finished.availableYears());
+    assertEquals(
+        List.of("Finished in 2024"), finished.books().stream().map(ShelfBook::title).toList());
+    assertEquals(
+        List.of(),
+        shelves.findFinished(firstUser, Year.of(2025), Year.of(2025)).orElseThrow().books());
+    assertEquals(
+        java.util.Optional.empty(), shelves.findFinished(firstUser, Year.of(2023), Year.of(2025)));
   }
 
   private void assertTitles(Shelf shelf, String... expected) {
@@ -145,6 +173,20 @@ class ShelfCatalogTest {
 
   private UUID addBook(
       CurrentUser owner, String state, String title, List<String> authors, int sequence) {
+    LocalDate date = LocalDate.of(2026, 1, title.startsWith("Older") ? 1 : 2);
+    if (state.equals("FINISHED") && title.endsWith("2024")) {
+      date = LocalDate.of(2024, 6, 1);
+    }
+    return addBook(owner, state, title, authors, sequence, date);
+  }
+
+  private UUID addBook(
+      CurrentUser owner,
+      String state,
+      String title,
+      List<String> authors,
+      int sequence,
+      LocalDate date) {
     UUID editionId = new UUID(1, sequence);
     UUID userEditionId = new UUID(2, sequence);
     OffsetDateTime timestamp =
@@ -162,10 +204,6 @@ class ShelfCatalogTest {
           .set(EDITION_AUTHOR.POSITION, position)
           .set(EDITION_AUTHOR.NAME, authors.get(position))
           .execute();
-    }
-    LocalDate date = LocalDate.of(2026, 1, title.startsWith("Older") ? 1 : 2);
-    if (state.equals("FINISHED") && title.endsWith("2024")) {
-      date = LocalDate.of(2024, 6, 1);
     }
     dsl.insertInto(USER_EDITION)
         .set(USER_EDITION.ID, userEditionId)

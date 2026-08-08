@@ -188,11 +188,15 @@ The section shows editions the user intends to read but is not actively reading.
 The section shows user editions whose current state is Finished.
 
 - A year filter is available only in this section.
-- The default selected year is the current year according to the user's browser-local date.
+- The default selected year is the current year according to the configured application timezone.
+- Year selection uses ordinary links and does not require browser-timezone JavaScript.
 - Available years are derived from the finish dates of books currently in Finished, with the current year always available.
 - A card is included when the edition is currently in Finished and its finish date falls in the selected year.
 - Default ordering is by finish date, newest first.
 - Empty years show a concise empty state and retain the ability to change the year or add a book.
+- Timezone resolution happens before querying the shelf. A future per-user timezone preference can
+  replace the configured timezone without changing URLs, filtering, counts, or stored date-only
+  values.
 
 ### 8.4 Annual finished-book count
 

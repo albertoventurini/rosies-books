@@ -198,11 +198,11 @@ Tasks:
   - Keep the user on a consistent shelf/detail state after success or failure.
   - Verify success, invalid dates, cancellation, stale/repeated submission, rollback, shelf consistency, and cross-user denial.
 - **3-3 — Implement the Finished year view.**
-  - Define and validate explicit browser-local date/year request context wherever server timezone inference could select the wrong calendar day or year.
-  - Provide and document deterministic no-JavaScript fallback behavior.
-  - Derive available years from the current user's Finished records, always include the browser-local current year, and select a deterministic default.
+  - Derive the default year from the configured application timezone after resolving the current user, keeping timezone resolution outside persistence and ready for a future per-user preference.
+  - Parse and validate optional year query parameters, and provide deterministic no-JavaScript selection through ordinary links.
+  - Derive available years from the current user's Finished records, always include the configured-zone current year, and reject unavailable selections.
   - Produce the selected-year count from the same filtered result set used to render visible books.
-  - Test opposing timezones, year boundaries, sparse/no records, invalid selections, empty years, count-equals-visible-items, and cross-user isolation.
+  - Test the configured-zone New Year boundary, sparse/no records, invalid selections, empty years, count-equals-visible-items, and cross-user isolation.
 - **3-4 — Verify the complete shelf experience.**
   - Scale navigation, shelf controls, cover cards, and empty states from the supported narrow-mobile width through desktop without clipping or horizontal page scrolling.
   - Add browser assertions or screenshots at the documented breakpoint set.

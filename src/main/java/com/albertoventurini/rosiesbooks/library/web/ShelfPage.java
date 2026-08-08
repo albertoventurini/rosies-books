@@ -1,8 +1,10 @@
 package com.albertoventurini.rosiesbooks.library.web;
 
+import com.albertoventurini.rosiesbooks.library.shelves.FinishedShelf;
 import com.albertoventurini.rosiesbooks.library.shelves.Shelf;
 import com.albertoventurini.rosiesbooks.library.shelves.ShelfBook;
 import java.time.LocalDate;
+import java.time.Year;
 import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.List;
@@ -14,7 +16,8 @@ record ShelfPage(
     String emptyMessage,
     List<ShelfNavigationItem> navigation,
     List<ShelfBookView> books,
-    String notice) {
+    String notice,
+    FinishedYearView finishedYear) {
 
   ShelfPage {
     navigation = List.copyOf(navigation);
@@ -39,7 +42,8 @@ record ShelfPage(
                     new ShelfNavigationItem(shelf.route(), shelf.heading(), shelf == activeShelf))
             .toList(),
         books.stream().map(book -> ShelfBookView.from(book, today, zone)).toList(),
-        notice);
+        notice,
+        null);
   }
 
   static ShelfPage from(
@@ -54,9 +58,59 @@ record ShelfPage(
   public boolean hasNotice() {
     return notice != null;
   }
+
+  static ShelfPage finished(
+      String userDisplayLabel,
+      FinishedShelf finished,
+      String notice,
+      LocalDate today,
+      ZoneId zone) {
+    List<ShelfBookView> books =
+        finished.books().stream().map(book -> ShelfBookView.from(book, today, zone)).toList();
+    Year selectedYear = finished.selectedYear();
+    return new ShelfPage(
+        "Rosie's books",
+        userDisplayLabel,
+        Shelf.FINISHED.heading(),
+        "No books finished in " + selectedYear + ".",
+        Arrays.stream(Shelf.values())
+            .map(
+                shelf ->
+                    new ShelfNavigationItem(
+                        shelf.route(), shelf.heading(), shelf == Shelf.FINISHED))
+            .toList(),
+        books,
+        notice,
+        new FinishedYearView(
+            selectedYear.toString(),
+            finished.availableYears().stream()
+                .map(
+                    year ->
+                        new FinishedYearOption(
+                            year.toString(), "/finished?year=" + year, year.equals(selectedYear)))
+                .toList(),
+            books.size()));
+  }
+
+  public boolean hasFinishedYear() {
+    return finishedYear != null;
+  }
 }
 
 record ShelfNavigationItem(String route, String label, boolean active) {}
+
+record FinishedYearView(String selectedYear, List<FinishedYearOption> options, int bookCount) {
+
+  FinishedYearView {
+    options = List.copyOf(options);
+  }
+
+  public String countText() {
+    return bookCount + (bookCount == 1 ? " book read in " : " books read in ") + selectedYear;
+  }
+}
+
+record FinishedYearOption(String label, String route, boolean selected) {}
 
 record ShelfBookView(
     String id,

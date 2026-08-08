@@ -14,7 +14,9 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.time.Clock;
 import java.time.LocalDate;
+import java.time.Year;
 import java.time.ZoneId;
+import java.time.format.DateTimeParseException;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 @Path("/")
@@ -54,34 +56,71 @@ class ShelfResource {
   @GET
   @Path("finished")
   @Produces(MediaType.TEXT_HTML)
-  public TemplateInstance finished(@QueryParam("notice") String notice) {
-    return render(Shelf.FINISHED, notice);
+  public TemplateInstance finished(
+      @QueryParam("year") String requestedYear, @QueryParam("notice") String notice) {
+    CurrentUser owner = requireCurrentUser();
+    Year currentYear = currentYear();
+    Year selectedYear = parseYear(requestedYear, currentYear);
+    var finished =
+        shelves
+            .findFinished(owner, selectedYear, currentYear)
+            .orElseThrow(ShelfResource::badRequest);
+    return ShelfTemplates.shelf(
+        ShelfPage.finished(
+            owner.displayLabel(),
+            finished,
+            notice(notice),
+            LocalDate.now(clock.withZone(zone)),
+            zone));
   }
 
   private TemplateInstance render(Shelf shelf, String noticeCode) {
-    CurrentUser owner =
-        currentUsers
-            .currentUser()
-            .orElseThrow(
-                () ->
-                    new WebApplicationException(
-                        Response.status(Response.Status.UNAUTHORIZED).build()));
-    String notice =
-        switch (noticeCode == null ? "" : noticeCode) {
-          case "book-added" -> "The book was added successfully.";
-          case "state-changed" -> "The book was moved successfully.";
-          case "state-change-cancelled" -> "The shelf change was cancelled.";
-          case "book-deleted" -> "The book was deleted permanently.";
-          case "book-deletion-cancelled" -> "The book deletion was cancelled.";
-          default -> null;
-        };
+    CurrentUser owner = requireCurrentUser();
     return ShelfTemplates.shelf(
         ShelfPage.from(
             owner.displayLabel(),
             shelf,
             shelves.find(owner, shelf),
-            notice,
+            notice(noticeCode),
             LocalDate.now(clock.withZone(zone)),
             zone));
+  }
+
+  Year currentYear() {
+    return Year.now(clock.withZone(zone));
+  }
+
+  private CurrentUser requireCurrentUser() {
+    return currentUsers
+        .currentUser()
+        .orElseThrow(
+            () ->
+                new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build()));
+  }
+
+  private static Year parseYear(String requestedYear, Year defaultYear) {
+    if (requestedYear == null) {
+      return defaultYear;
+    }
+    try {
+      return Year.parse(requestedYear);
+    } catch (DateTimeParseException exception) {
+      throw badRequest();
+    }
+  }
+
+  private static WebApplicationException badRequest() {
+    return new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
+  }
+
+  private static String notice(String noticeCode) {
+    return switch (noticeCode == null ? "" : noticeCode) {
+      case "book-added" -> "The book was added successfully.";
+      case "state-changed" -> "The book was moved successfully.";
+      case "state-change-cancelled" -> "The shelf change was cancelled.";
+      case "book-deleted" -> "The book was deleted permanently.";
+      case "book-deletion-cancelled" -> "The book deletion was cancelled.";
+      default -> null;
+    };
   }
 }
