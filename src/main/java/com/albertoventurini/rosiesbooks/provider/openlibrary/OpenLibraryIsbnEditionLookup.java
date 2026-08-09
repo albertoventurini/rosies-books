@@ -116,8 +116,7 @@ public class OpenLibraryIsbnEditionLookup implements IsbnEditionLookup {
       LOG.warn("Open Library ISBN lookup failed", failure);
       return;
     }
-    LOG.warnf(
-        "open_library_isbn_lookup_failed exception_class=%s", failure.getClass().getName());
+    LOG.warnf("open_library_isbn_lookup_failed exception_class=%s", failure.getClass().getName());
   }
 
   private HttpResponse<String> send(String path) throws IOException, InterruptedException {

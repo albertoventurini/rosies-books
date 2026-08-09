@@ -32,7 +32,8 @@ public class MetadataOverrideService {
   }
 
   @Transactional
-  public boolean save(CurrentUser owner, UserEditionId id, MetadataOverrides proposed, String notes) {
+  public boolean save(
+      CurrentUser owner, UserEditionId id, MetadataOverrides proposed, String notes) {
     Optional<Edition> canonical = userEditions.findEditionId(owner, id).flatMap(editions::find);
     if (canonical.isEmpty()) {
       return false;

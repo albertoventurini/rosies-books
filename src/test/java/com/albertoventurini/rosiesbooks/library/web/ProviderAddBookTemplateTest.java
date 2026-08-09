@@ -12,7 +12,8 @@ class ProviderAddBookTemplateTest {
 
   @Test
   void keepsTheFoundEditionAndShelfSelectionOnOnePage() throws IOException {
-    String template = Files.readString(Path.of("src/main/resources/templates/library/web/add.html"));
+    String template =
+        Files.readString(Path.of("src/main/resources/templates/library/web/add.html"));
 
     assertTrue(template.contains("action=\"/books/new/add\""));
     assertTrue(template.contains("name=\"state\""));

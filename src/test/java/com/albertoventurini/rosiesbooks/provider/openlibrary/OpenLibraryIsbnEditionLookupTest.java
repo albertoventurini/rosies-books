@@ -56,14 +56,15 @@ class OpenLibraryIsbnEditionLookupTest {
     server.createContext("/search.json", exchange -> respond(exchange, 200, privateResponse));
 
     assertInstanceOf(
-        IsbnLookupResult.MalformedResponse.class,
-        lookup().lookup(new Isbn13("9780306406157")));
+        IsbnLookupResult.MalformedResponse.class, lookup().lookup(new Isbn13("9780306406157")));
 
     assertEquals(1, records.size());
     assertEquals(
-        "open_library_isbn_lookup_failed exception_class=com.fasterxml.jackson.core.JsonParseException",
+        "open_library_isbn_lookup_failed"
+            + " exception_class=com.fasterxml.jackson.core.JsonParseException",
         records.getFirst().getMessage());
-    org.junit.jupiter.api.Assertions.assertFalse(records.getFirst().getMessage().contains(privateResponse));
+    org.junit.jupiter.api.Assertions.assertFalse(
+        records.getFirst().getMessage().contains(privateResponse));
   }
 
   @Test
@@ -72,8 +73,7 @@ class OpenLibraryIsbnEditionLookupTest {
     server.createContext("/search.json", exchange -> respond(exchange, 200, providerResponse));
 
     assertInstanceOf(
-        IsbnLookupResult.MalformedResponse.class,
-        lookup(true).lookup(new Isbn13("9780306406157")));
+        IsbnLookupResult.MalformedResponse.class, lookup(true).lookup(new Isbn13("9780306406157")));
 
     assertEquals(1, records.size());
     assertEquals("Open Library ISBN lookup failed", records.getFirst().getMessage());
@@ -134,14 +134,12 @@ class OpenLibraryIsbnEditionLookupTest {
             respond(
                 exchange,
                 200,
-                "{\"docs\":[{\"cover_edition_key\":\"OL32025351M\",\"title\":\"Year of Yes\",\"author_name\":[\"Shonda Rhimes\"]}]}"));
+                "{\"docs\":[{\"cover_edition_key\":\"OL32025351M\",\"title\":\"Year of"
+                    + " Yes\",\"author_name\":[\"Shonda Rhimes\"]}]}"));
     server.createContext(
         "/books/OL32025351M.json",
         exchange ->
-            respond(
-                exchange,
-                200,
-                "{\"title\":\"Year of Yes\",\"isbn_13\":[\"9781471157325\"]}"));
+            respond(exchange, 200, "{\"title\":\"Year of Yes\",\"isbn_13\":[\"9781471157325\"]}"));
 
     IsbnLookupResult.Found found =
         assertInstanceOf(

@@ -8,8 +8,8 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Clock;
 import java.time.Duration;
-import java.util.UUID;
 import java.util.Base64;
+import java.util.UUID;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -67,9 +67,11 @@ class ProviderReviewToken {
       if (payload.expiresAt() < clock.millis()
           || payload.lookupIsbn() == null
           || (payload.edition() == null && payload.localEditionId() == null)
-          || (payload.edition() != null && payload.localEditionId() != null)) return java.util.Optional.empty();
+          || (payload.edition() != null && payload.localEditionId() != null))
+        return java.util.Optional.empty();
       return java.util.Optional.of(
-          new AcceptedProviderReview(payload.lookupIsbn(), payload.edition(), payload.localEditionId()));
+          new AcceptedProviderReview(
+              payload.lookupIsbn(), payload.edition(), payload.localEditionId()));
     } catch (RuntimeException | java.io.IOException exception) {
       return java.util.Optional.empty();
     }

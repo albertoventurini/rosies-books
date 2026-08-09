@@ -44,5 +44,6 @@ record ProviderAddBookPage(
     return "/books/new/manual?isbn=" + URLEncoder.encode(submittedIsbn, StandardCharsets.UTF_8);
   }
 
-  record Result(SelectedEdition edition, String reviewToken, ManualBookForm form, String localCoverUrl) {}
+  record Result(
+      SelectedEdition edition, String reviewToken, ManualBookForm form, String localCoverUrl) {}
 }

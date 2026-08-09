@@ -27,13 +27,21 @@ public class JooqEditableBookCatalog implements EditableBookCatalog {
 
   @Override
   public Optional<EditableBook> find(CurrentUser owner, UserEditionId id) {
-    return userEditions.find(owner, id)
-        .flatMap(book -> editions.find(book.editionId())
-        .map(edition -> {
-          MetadataOverrides selected = overrides.find(owner, id).orElse(MetadataOverrides.none());
-          return new EditableBook(edition.metadata(),
-              EffectiveMetadataResolver.resolve(edition.metadata(), selected),
-              selected, book.privateNotes());
-        }));
+    return userEditions
+        .find(owner, id)
+        .flatMap(
+            book ->
+                editions
+                    .find(book.editionId())
+                    .map(
+                        edition -> {
+                          MetadataOverrides selected =
+                              overrides.find(owner, id).orElse(MetadataOverrides.none());
+                          return new EditableBook(
+                              edition.metadata(),
+                              EffectiveMetadataResolver.resolve(edition.metadata(), selected),
+                              selected,
+                              book.privateNotes());
+                        }));
   }
 }
