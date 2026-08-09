@@ -29,7 +29,7 @@ Two people will use the initial deployment. Each person has a separate account a
 
 - Let an allowlisted user sign in quickly with Google.
 - Show the user's library in three clear sections: Reading, To Read, and Finished.
-- Find a concrete edition by an exact, valid ISBN through the selected external book provider.
+- Find a concrete edition by an exact, valid ISBN through the selected external book provider, entered manually or scanned from a book barcode on supported devices.
 - Capture an edition manually when no valid ISBN is available or lookup has no suitable result.
 - Store detailed edition metadata and a durable local copy of its cover.
 - Let a user freely correct metadata without changing the shared canonical edition.
@@ -217,6 +217,8 @@ The section shows user editions whose current state is Finished.
 ### 8.6 Add a book through provider ISBN lookup
 
 The Add Book flow is distinct from private-library search.
+
+The user can type an ISBN or, on a supported device after an explicit request, scan an EAN-13 book barcode with the camera. Scanning is a progressive enhancement: camera frames remain on the device, a recognized value populates the ordinary ISBN field for review, and typed entry remains available when permission is denied, scanning is unavailable, or the result is invalid.
 
 1. The user enters a valid ISBN; ISBN-10 is normalized to its ISBN-13 equivalent before lookup.
 2. The application performs an exact ISBN lookup with the selected external provider.

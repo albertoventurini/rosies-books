@@ -281,30 +281,36 @@ Exit criteria:
 - A no-result private query is never sent to an external provider.
 - The selected layout remains consistent across shelves and later sessions for that user.
 
-### Milestone 6 — Responsive PWA and resilience
+### Milestone 6 — Production deployment foundation, responsive PWA, and resilience
 
-**Outcome:** The provider-independent application is installable, robust, and usable across the supported mobile and desktop browsers without promising offline data behavior.
+**Outcome:** The provider-independent application has a deployable production-oriented image and is installable, robust, and usable across the supported mobile and desktop browsers without promising offline data behavior.
 
 Tasks:
 
-- **6-1 — Complete responsive provider-independent flows.**
+- **6-1 — Build the production image and Compose topology.**
+  - Produce a reproducible minimal JVM fast-jar application image with a pinned Java runtime base, immutable application files, and a non-root runtime user where practical; no native-image build is required.
+  - Add application and PostgreSQL Compose services with persistent storage, health checks, restart policy, dependency readiness, explicit networks/ports, and configuration inputs.
+  - Provide a safe example environment containing every required variable with non-secret placeholders and descriptions, plus startup validation for missing or unsafe values.
+  - Add repeatable image build/start/readiness smoke checks and a repository/example secret-pattern check with documented intentional test-fixture matches.
+- **6-2 — Complete responsive provider-independent flows.**
   - Complete every milestone 2–5 flow at documented narrow-mobile, intermediate, and desktop widths, including long metadata, validation messages, confirmations, and destructive-operation responses.
   - Standardize provider-independent empty, enhancement-loading, validation, connectivity, not-found, unauthorized, conflict, and unexpected-error states.
   - Escape all user text and render descriptions as plain/untrusted content.
   - Add representative browser assertions or screenshots for every flow and viewport, with no clipping or horizontal page scrolling.
-- **6-2 — Package Rosie's books as an online PWA.**
+- **6-3 — Package Rosie's books as an online PWA.**
   - Add the web app manifest, all required icon sizes, theme/background metadata, standalone display mode, start URL, and mobile safe-area behavior under the Rosie's books name.
   - Decide and record whether a service worker is needed.
   - If used, cache only versioned public static assets, bypass private/authenticated pages and mutations, and define/test cache update behavior; if omitted, record why installability and resilience still hold.
   - Present an accurate online-required state after load-time or submission-time connectivity loss, preserve safe form input where practical, never queue mutations, and make no offline-data claim.
   - Verify manifest/icon responses, installability, cache boundaries/updates, disconnection, recovery, and ordinary browser-tab operation.
-- **6-3 — Verify PWA resilience and fallback behavior.**
+- **6-4 — Verify PWA resilience and fallback behavior.**
   - Run every essential provider-independent navigation, search, form, state change, preference, and destructive confirmation with progressive enhancement disabled and implement any required server-rendered fallback.
   - Add a repeatable critical add/view/search/edit/transition/delete browser journey at representative narrow-mobile and desktop widths in both normal-JavaScript and no-JavaScript modes.
   - Confirm private data is not presented as available offline and no mutation is cached or replayed as an offline data store.
 
 Exit criteria:
 
+- `docker compose up` can start the documented production-oriented topology after required configuration is supplied.
 - Rosie's books is installable and fully usable in a normal browser tab.
 - It makes no claim that private data or mutations work offline.
 - Essential provider-independent workflows work with JavaScript enhancements unavailable.
@@ -349,6 +355,12 @@ The spike is complete only when task 7-1 is committed and the adapter contract c
   - Make all cover failures non-fatal, record only a non-sensitive outcome, render the local placeholder, and support a later successful refetch if that behavior is retained.
   - Serve stored covers through an ownership-aware or appropriately content-addressed route with correct MIME type, cache headers, responsive image markup, and lazy loading; never hotlink a normal library page.
   - Test valid, slow, oversized, decompression-risk, invalid-content, local/private/redirect/alternate-scheme/unapproved-host, duplicate-content, authorization, cache, placeholder, and offline-from-provider cases.
+- **7-5 — Add camera-assisted ISBN barcode scanning.**
+  - Add an explicit, optional camera-scanning action to the existing ISBN Add Book form. Detect only EAN-13 values and place a recognized value in the ordinary ISBN field for user review before the existing lookup flow runs.
+  - Keep camera frames entirely in the browser: do not upload frames, persist image data, add a camera-upload endpoint, or log barcode values beyond the existing safe request handling.
+  - Require an ordinary typed ISBN and manual-entry fallback. Handle unsupported browsers, denied/revoked permissions, unavailable cameras, malformed/non-ISBN barcodes, cancellation, navigation, and repeated scans without blocking or changing the normal add flow.
+  - Stop and release the camera stream after a successful scan, cancellation, page navigation, or loss of page visibility.
+  - Verify supported-browser scanning with a deterministic browser harness, field population and existing ISBN validation/lookup hand-off, no-JavaScript typed fallback, permission/error/cancellation states, stream cleanup, narrow-mobile layout, and that no camera data reaches the server.
 
 Exit criteria:
 
@@ -356,6 +368,7 @@ Exit criteria:
 - Retrying or re-selecting an existing edition cannot duplicate the user's link.
 - No normal library page hotlinks a provider cover.
 - Missing, slow, oversized, or invalid covers cannot prevent the book from being saved.
+- On supported devices, scanning a valid book barcode populates the existing ISBN add flow without removing the typed/manual path.
 
 ### Milestone 8 — OIDC authentication and account lifecycle
 
@@ -399,27 +412,22 @@ Exit criteria:
 
 ### Milestone 9 — Release packaging, operations documentation, and acceptance
 
-**Outcome:** Rosie's books is deliverable as a production-oriented Docker Compose service with documented operation and evidence that the in-scope PRD release criteria pass.
+**Outcome:** Rosie's books has release-ready operating documentation and evidence that the in-scope PRD release criteria pass against the production topology introduced in milestone 6.
 
 Tasks:
 
-- **9-1 — Build the production image and Compose topology.**
-  - Produce a reproducible minimal JVM fast-jar application image with a pinned Java runtime base, immutable application files, and a non-root runtime user where practical; no native-image build is required.
-  - Add application and PostgreSQL Compose services with persistent storage, health checks, restart policy, dependency readiness, explicit networks/ports, and configuration inputs.
-  - Provide a safe example environment containing every required variable with non-secret placeholders and descriptions, plus startup validation for missing or unsafe values.
-  - Add repeatable image build/start/readiness smoke checks and a repository/example secret-pattern check with documented intentional test-fixture matches.
-- **9-2 — Write and validate the operations runbook.**
+- **9-1 — Write and validate the operations runbook.**
   - Document when/how migrations run, single-runner expectations, failure behavior, forward-fix policy, and database/application rollback compatibility.
   - Document operation behind an HTTPS reverse proxy, including trusted forwarded headers, external scheme/URL handling, secure-cookie assumptions, OIDC callback construction, request/body limits, and local-cover caching.
   - Document every allowlist, OIDC, book-provider, cover-limit, database, logging, health, session, and PWA configuration value with required/optional status, default, secret handling, and restart impact.
   - Document exact PostgreSQL backup/restore procedures.
   - Validate a clean install, one representative upgrade, trusted and spoofed forwarding, and restoration of representative users, editions, overrides, notes, and covers with source/restored data checks.
-- **9-3 — Verify production security, observability, and performance.**
+- **9-2 — Verify production security, observability, and performance.**
   - Scan tracked files, built artifacts, example configuration, and captured logs for credentials, tokens, cookies, and deployment-specific allowlists.
   - Exercise authentication outcomes, provider latency/failures, validation categories, readiness changes, and unexpected errors.
   - Confirm structured fields and correlation are operationally useful while notes, tokens, cookies, credentials, and unnecessary search content are absent.
   - Define the representative two-user data fixture and request mix, measure database-backed shelf responses against the 500 ms p95 target in the packaged topology, and record method, environment, results, and any required query/configuration fix.
-- **9-4 — Execute the release checklist.**
+- **9-3 — Execute the release checklist.**
   - From a clean database, run migrations and the complete unit, integration, request, security, and browser suites against the release candidate.
   - Repeat the designated smoke tests against the packaged Compose service and record the exact commands and results.
   - Map every in-scope `PRD.md` acceptance criterion to automated evidence or a precise manual check, explicitly marking accessibility clauses deferred, and execute the checklist.
