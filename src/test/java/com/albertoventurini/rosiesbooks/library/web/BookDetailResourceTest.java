@@ -67,9 +67,14 @@ class BookDetailResourceTest {
         .statusCode(200)
         .body(containsString("Detail title"))
         .body(containsString("class=\"book-detail-placeholder"))
+        .body(containsString("aria-label=\"Library shelves\""))
         .body(containsString("href=\"/to-read\""))
+        .body(containsString("href=\"/reading\""))
+        .body(containsString("href=\"/finished\""))
         .body(containsString("href=\"/books/" + book + "/state?returnTo=details\""))
         .body(containsString("href=\"/books/" + book + "/delete\""))
+        .body(not(containsString("← Back to shelf")))
+        .body(not(containsString("<p class=\"eyebrow\">To Read</p>")))
         .body(not(containsString("/cover\"")));
 
     given()

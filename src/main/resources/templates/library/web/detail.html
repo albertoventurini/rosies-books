@@ -5,9 +5,13 @@
     <div class="library-shell">
       <aside class="library-sidebar">
         <div class="library-identity"><a class="product-name" href="/reading">Rosie's books</a></div>
+        <nav class="shelf-navigation" aria-label="Library shelves">
+          {#for item in page.navigation}
+            <a href="{item.route}"{#if item.active} aria-current="page"{/if} class="shelf-navigation-link">{item.label}</a>
+          {/for}
+        </nav>
       </aside>
       <main class="shelf-main book-detail" id="main-content">
-        <p><a href="{page.shelfUrl}">← Back to shelf</a></p>
         {#if page.hasNotice}<div class="shelf-notice" role="status">{page.notice}</div>{/if}
         <header class="book-detail-header">
           <div class="book-detail-cover-area">
@@ -26,7 +30,6 @@
             {/if}
           </div>
           <div>
-            <p class="eyebrow">{page.stateLabel}</p>
             <h1>{page.title}</h1>
             {#if page.hasSubtitle}<p class="book-detail-subtitle">{page.subtitle}</p>{/if}
             <p class="book-detail-authors">{#for author in page.authors}{author}{#if !author_isLast}, {/if}{/for}</p>

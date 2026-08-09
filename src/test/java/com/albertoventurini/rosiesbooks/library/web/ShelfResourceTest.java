@@ -61,9 +61,7 @@ class ShelfResourceTest {
             .then()
             .statusCode(200)
             .contentType("text/html; charset=UTF-8")
-            .body(
-                containsString(
-                    "<span class=\"current-user-label\">" + user.displayLabel() + "</span>"))
+            .body(not(containsString("current-user-label")))
             .body(containsString("href=\"/reading\""))
             .body(containsString("href=\"/to-read\""))
             .body(containsString("href=\"/finished\""))

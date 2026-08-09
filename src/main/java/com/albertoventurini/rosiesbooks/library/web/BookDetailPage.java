@@ -5,8 +5,10 @@ import com.albertoventurini.rosiesbooks.library.internal.Finished;
 import com.albertoventurini.rosiesbooks.library.internal.PartialPublicationDate;
 import com.albertoventurini.rosiesbooks.library.internal.Reading;
 import com.albertoventurini.rosiesbooks.library.internal.UserEditionId;
+import com.albertoventurini.rosiesbooks.library.shelves.Shelf;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -26,7 +28,7 @@ record BookDetailPage(
     String language,
     String isbn10,
     String isbn13,
-    String shelfUrl,
+    List<ShelfNavigationItem> navigation,
     String notice,
     String stateUrl,
     String editUrl,
@@ -65,7 +67,12 @@ record BookDetailPage(
         metadata.language().orElse(null),
         metadata.isbn10().map(value -> value.value()).orElse(null),
         metadata.isbn13().map(value -> value.value()).orElse(null),
-        book.shelf().route(),
+        Arrays.stream(Shelf.values())
+            .map(
+                shelf ->
+                    new ShelfNavigationItem(
+                        shelf.route(), shelf.heading(), shelf == book.shelf()))
+            .toList(),
         "details-updated".equals(noticeCode) ? "Details updated." : null,
         route + "/state?returnTo=details",
         route + "/edit",

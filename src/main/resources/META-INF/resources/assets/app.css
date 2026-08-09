@@ -21,6 +21,7 @@
   --color-ink: #221f1a;
   --color-muted: #6b6257;
   --color-accent: #7c4a2d;
+  --color-current: #25423f;
   --color-border: #dfd6c6;
   --color-focus: #25423f;
   --color-error: #8b2f2f;
@@ -175,14 +176,6 @@ h1 {
   overflow-wrap: anywhere;
 }
 
-.current-user-label {
-  min-width: 0;
-  color: var(--color-muted);
-  font-size: 0.8125rem;
-  overflow-wrap: anywhere;
-  text-align: right;
-}
-
 .shelf-navigation {
   position: fixed;
   z-index: 2;
@@ -212,7 +205,7 @@ h1 {
 
 .shelf-navigation-link[aria-current="page"] {
   color: var(--color-surface-raised);
-  background: var(--color-accent);
+  background: var(--color-current);
 }
 
 .shelf-main {
@@ -258,9 +251,9 @@ h1 {
 }
 
 .finished-year-link[aria-current="true"] {
-  border-color: var(--color-accent);
+  border-color: var(--color-current);
   color: var(--color-surface-raised);
-  background: var(--color-accent);
+  background: var(--color-current);
 }
 
 .finished-year-count {
@@ -690,10 +683,6 @@ h1 {
   .library-identity {
     display: grid;
     justify-content: stretch;
-  }
-
-  .current-user-label {
-    text-align: left;
   }
 
   .shelf-navigation {

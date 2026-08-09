@@ -1,15 +1,37 @@
 package com.albertoventurini.rosiesbooks.library.web;
 
+import com.albertoventurini.rosiesbooks.library.shelves.Shelf;
 import com.albertoventurini.rosiesbooks.provider.api.SelectedEdition;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 record ProviderAddBookPage(
-    String userDisplayLabel, String submittedIsbn, String message, Optional<Result> result) {
+    String productName,
+    List<ShelfNavigationItem> navigation,
+    String userDisplayLabel,
+    String submittedIsbn,
+    String message,
+    Optional<Result> result) {
   ProviderAddBookPage {
+    navigation = List.copyOf(navigation);
     submittedIsbn = submittedIsbn == null ? "" : submittedIsbn;
     result = result == null ? Optional.empty() : result;
+  }
+
+  ProviderAddBookPage(
+      String userDisplayLabel, String submittedIsbn, String message, Optional<Result> result) {
+    this(
+        "Rosie's books",
+        Arrays.stream(Shelf.values())
+            .map(shelf -> new ShelfNavigationItem(shelf.route(), shelf.heading(), false))
+            .toList(),
+        userDisplayLabel,
+        submittedIsbn,
+        message,
+        result);
   }
 
   static ProviderAddBookPage empty(String userDisplayLabel) {

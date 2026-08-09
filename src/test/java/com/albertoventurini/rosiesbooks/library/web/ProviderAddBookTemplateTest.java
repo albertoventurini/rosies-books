@@ -1,5 +1,6 @@
 package com.albertoventurini.rosiesbooks.library.web;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -16,6 +17,10 @@ class ProviderAddBookTemplateTest {
         Files.readString(Path.of("src/main/resources/templates/library/web/add.html"));
 
     assertTrue(template.contains("action=\"/books/new/add\""));
+    assertTrue(template.contains("aria-label=\"Library shelves\""));
+    assertTrue(template.contains("{#for item in page.navigation}"));
+    assertTrue(template.contains("href=\"{item.route}\""));
+    assertTrue(template.contains(">{item.label}</a>"));
     assertTrue(template.contains("name=\"state\""));
     assertTrue(template.contains(">Add book</button>"));
     assertTrue(template.contains("class=\"isbn-result-cover\""));
@@ -30,5 +35,11 @@ class ProviderAddBookTemplateTest {
     assertFalse(template.contains(">Update date fields<"));
     assertFalse(template.contains(">Provider result<"));
     assertFalse(template.contains("Review this edition"));
+
+    assertEquals(
+        java.util.List.of("/reading", "/to-read", "/finished"),
+        ProviderAddBookPage.empty("Reader").navigation().stream()
+            .map(ShelfNavigationItem::route)
+            .toList());
   }
 }

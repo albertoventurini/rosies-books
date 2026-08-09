@@ -1,8 +1,19 @@
 {@com.albertoventurini.rosiesbooks.library.web.ProviderAddBookPage page}
 {#include platform/web/shell}
-  {#title}Add a book · Rosie's books{/title}
+  {#title}Add a book · {page.productName}{/title}
   {#content}
-    <main class="manual-main" id="main-content">
+    <div class="library-shell">
+      <aside class="library-sidebar">
+        <div class="library-identity">
+          <a class="product-name" href="/reading">{page.productName}</a>
+        </div>
+        <nav class="shelf-navigation" aria-label="Library shelves">
+          {#for item in page.navigation}
+            <a href="{item.route}"{#if item.active} aria-current="page"{/if} class="shelf-navigation-link">{item.label}</a>
+          {/for}
+        </nav>
+      </aside>
+      <main class="manual-main" id="main-content">
       <header class="manual-header"><p class="eyebrow">Your library</p><h1>Add a book</h1><p>Look up one exact edition by ISBN, or enter its details yourself.</p></header>
       {#if page.message}<div class="form-error-summary" role="alert"><p>{page.message}</p></div>{/if}
       <form class="manual-form" method="post" action="/books/new/lookup" novalidate>
@@ -38,7 +49,8 @@
           </form>
         </section>
       {/if}
-    </main>
+      </main>
+    </div>
     <script src="/assets/state-change.js" defer></script>
   {/content}
 {/include}
