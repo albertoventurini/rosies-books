@@ -2,6 +2,7 @@ package com.albertoventurini.rosiesbooks.identity.persistence;
 
 import static com.albertoventurini.rosiesbooks.identity.persistence.jooq.Tables.APP_USER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -72,6 +73,28 @@ class UserPersistenceTest {
             CREATED,
             UPDATED);
     assertThrows(DataAccessException.class, () -> repository.create(invalid));
+  }
+
+  @Test
+  void findsByDurableIssuerAndSubjectAndUpdatesAnAllowedChangedEmail() {
+    User user = user("same-email-durable-subject");
+    createdUserIds.add(user.id().value());
+    repository.create(user);
+
+    assertEquals(user, repository.findByOidcIdentity(user.oidcIssuer(), user.oidcSubject()).orElseThrow());
+    assertFalse(
+        repository.createIfAbsent(
+            new User(
+                new UserId(UUID.randomUUID()),
+                user.oidcIssuer(),
+                user.oidcSubject(),
+                "other@example.com",
+                CREATED,
+                UPDATED)));
+
+    repository.updateEmail(user.id(), "changed@example.com", UPDATED);
+    assertEquals("changed@example.com", repository.find(user.id()).orElseThrow().email());
+    assertTrue(repository.findByOidcIdentity("https://other-issuer.example", user.oidcSubject()).isEmpty());
   }
 
   private static User user(String subject) {

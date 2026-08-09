@@ -14,6 +14,17 @@ public class ProductionIdentityProfile implements QuarkusTestProfile {
   }
 
   @Override
+  public Map<String, String> getConfigOverrides() {
+    return Map.of(
+        "quarkus.oidc.enabled", "false",
+        "quarkus.oidc.client-id", "production-test-client",
+        "quarkus.oidc.credentials.secret", "production-test-secret",
+        "quarkus.oidc.authentication.state-secret", "production-test-state-secret",
+        "rosies-books.oidc.allowed-emails", "reader@example.com",
+        "rosies-books.review-token.secret", "production-test-review-token-secret");
+  }
+
+  @Override
   public List<TestResourceEntry> testResources() {
     return List.of(new TestResourceEntry(ProductionDatabase.class));
   }
