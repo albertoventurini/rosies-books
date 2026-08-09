@@ -1,4 +1,4 @@
-/** Owns provider-neutral search contracts and provider adapters. */
+/** Owns provider-neutral exact ISBN lookup contracts and provider adapters. */
 @AppModule(
     name = "provider",
     allowedDependencies = {"platform.api"})

@@ -29,8 +29,8 @@ Two people will use the initial deployment. Each person has a separate account a
 
 - Let an allowlisted user sign in quickly with Google.
 - Show the user's library in three clear sections: Reading, To Read, and Finished.
-- Find editions using partial title or author searches against an external book provider.
-- Capture an edition manually when search has no suitable result.
+- Find a concrete edition by an exact, valid ISBN through the selected external book provider.
+- Capture an edition manually when no valid ISBN is available or lookup has no suitable result.
 - Store detailed edition metadata and a durable local copy of its cover.
 - Let a user freely correct metadata without changing the shared canonical edition.
 - Track one current state and one set of relevant dates for each book in the user's library.
@@ -214,17 +214,16 @@ The section shows user editions whose current state is Finished.
 - Search never returns another user's user-edition, notes, overrides, dates, or activity.
 - A no-results state offers the Add Book action but does not automatically send a private-library query to the external provider.
 
-### 8.6 Add a book through provider search
+### 8.6 Add a book through provider ISBN lookup
 
 The Add Book flow is distinct from private-library search.
 
-1. The user enters a partial title, author name, or combination.
-2. The application queries an abstract external book provider.
-3. Results show enough edition-level detail to distinguish publications, including cover when available.
-4. The user selects one result and can review its full normalized metadata.
-5. The application detects whether the canonical edition is already linked to the user's library.
-6. If already linked, it opens the existing user edition instead of creating a duplicate.
-7. Otherwise, the user chooses To Read, Reading, or Finished and confirms the addition.
+1. The user enters a valid ISBN; ISBN-10 is normalized to its ISBN-13 equivalent before lookup.
+2. The application performs an exact ISBN lookup with the selected external provider.
+3. The returned concrete edition can be reviewed with its normalized metadata and available cover.
+4. The application detects whether the canonical edition is already linked to the user's library.
+5. If already linked, it opens the existing user edition instead of creating a duplicate.
+6. Otherwise, the user chooses To Read, Reading, or Finished and confirms the addition.
 
 Date rules during addition:
 
@@ -236,11 +235,9 @@ The user can edit the dates before saving. Date values are date-only values and 
 
 ### 8.7 External book-provider abstraction
 
-No specific provider is mandated by this PRD. The adapter contract must support:
+Open Library is the selected provider for low-volume, server-side exact ISBN lookup. The adapter contract supports:
 
-- Partial title search
-- Partial author search
-- Search-result pagination or bounded result loading
+- Exact lookup by normalized ISBN-13
 - Provider edition identifiers
 - Title, subtitle, and multiple authors
 - ISBN-10 and ISBN-13 when available
@@ -249,14 +246,12 @@ No specific provider is mandated by this PRD. The adapter contract must support:
 - Page count
 - Language
 - Description
-- Cover retrieval
+- An optional trusted cover reference
 - Clear handling of missing fields, rate limiting, timeouts, and provider errors
 
-Provider selection will be made during technical planning based on metadata quality, edition specificity, cover availability, licensing, reliability, and operating limits.
+Provider lookup is an enhancement to data entry, not a runtime dependency for an existing library. When an edition is accepted, normalized metadata and the cover are copied into the application's database. Canonical data must not be overwritten automatically in a way that unexpectedly changes an existing user's effective metadata.
 
-Provider search is an enhancement to data entry, not a runtime dependency for an existing library. When an edition is selected, normalized metadata and the cover are copied into the application's database. Canonical data must not be overwritten automatically in a way that unexpectedly changes an existing user's effective metadata; later provider data may fill missing canonical fields under a controlled rule.
-
-If provider search is unavailable or returns no suitable result, the user can proceed directly to manual entry.
+If there is no valid ISBN, lookup is unavailable, or no suitable edition is found, the user can proceed directly to manual entry. Title/author lookup, work search, and edition selection are deferred.
 
 ### 8.8 Edition identity and duplicate handling
 
@@ -565,8 +560,8 @@ The initial release is acceptable when all the following are demonstrably true:
 3. Each primary section displays the correct user editions with the agreed default ordering.
 4. The Finished section defaults to the current year and accurately counts books currently Finished in that year.
 5. No year filter appears in Reading or To Read.
-6. Provider search accepts partial title and author input and returns distinguishable edition results when the provider has matches.
-7. Selecting a provider result copies its normalized metadata and available cover into the database.
+6. Provider lookup accepts a valid ISBN and returns only an edition verified to contain that ISBN.
+7. Accepting a provider edition copies its normalized metadata and available cover into the database.
 8. Existing library pages and covers continue to work without the provider being available.
 9. A no-match or provider-error flow allows manual creation with title and at least one author.
 10. Adding an edition already in the current user's library opens the existing user edition and creates no duplicate.

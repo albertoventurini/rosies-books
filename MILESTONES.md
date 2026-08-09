@@ -317,23 +317,21 @@ Exit criteria:
 #### 7A. Provider research spike
 
 - **7-1 — Select the provider and define its boundary.**
-  - Define an evaluation matrix covering edition-level identity, title/author metadata, identifier quality, publication-date precision, format/publisher/page/language/description coverage, cover availability and permitted use, pagination, rate limits, authentication, reliability, and operating constraints.
-  - Evaluate viable providers with representative title, author, ambiguous-edition, missing-ISBN, and missing-cover queries; record dated evidence and limitations without credentials.
-  - Commit a decision record naming the selected provider, rejected alternatives, rationale, cover-use constraints, configuration/credentials, and risks requiring operational monitoring.
-  - Define application-owned search, result, selected-edition, pagination, and error types plus normalization rules, with architecture/compile checks preventing provider types from leaking into domain or web code.
+  - Select Open Library for low-volume server-side exact ISBN lookup and record its operating and cover-use constraints.
+  - Define application-owned ISBN-lookup, selected-edition, and error types plus normalization rules, with architecture/compile checks preventing provider types from leaking into domain or web code.
   - Define deterministic identity/deduplication behavior for normalized ISBN-13, provider edition ID, missing identifiers, and conflicts, explicitly prohibiting fuzzy merging of manual editions.
-  - Define bounded connection/request timeouts, retryable/non-retryable failures, retry count/backoff, result limits/pagination, rate-limit handling, and configuration validation with safe defaults.
+  - Define bounded connection/request timeouts, retryable/non-retryable failures, retry count/backoff, rate-limit handling, and configuration validation with safe defaults.
   - Commit provider fixtures, adapter contract tests, identity decision-table tests, and operating-policy/configuration tests.
 
 The spike is complete only when task 7-1 is committed and the adapter contract can represent the selected provider's useful edition data without leaking provider-specific types into the domain or web layers.
 
 #### 7B. Provider integration and cover persistence
 
-- **7-2 — Implement provider search and edition selection.**
-  - Implement partial title, author, and combined searches plus result limits/pagination behind the provider-neutral adapter, normalizing missing/malformed fields and provider errors.
+- **7-2 — Implement provider ISBN add and review.**
+  - Implement exact ISBN lookup and review behind the provider-neutral adapter, normalizing missing/malformed fields and provider errors.
   - Build separate Add Book loading, results, no-match, timeout, rate-limit, and unavailable states without coupling them to private-library search.
-  - Preserve the query across retry and manual fallback, pre-fill the manual title where practical, and never automatically retry a non-retryable error or duplicate a provider call.
-  - Show normalized title, ordered authors, identifiers, publication precision, format, and other available disambiguating fields without depending on a cover.
+  - Preserve the ISBN across retry and manual fallback, and never automatically retry a non-retryable error or duplicate a provider call.
+  - Show normalized title, ordered authors, identifiers, publication precision, format, and other available fields without depending on a cover.
   - Add a tamper-resistant review step for one result that displays accepted metadata and captures every valid initial state/date combination.
   - Verify the adapter contract, representative/malformed fixtures, retries and provider failures, query preservation, similar/missing/long metadata, tampering, and responsive/no-JavaScript flows.
 - **7-3 — Persist provider books safely.**
