@@ -12,7 +12,17 @@ public record ShelfBook(
     String title,
     List<String> authors,
     ReadingState readingState,
-    Instant createdAt) {
+    Instant createdAt,
+    String coverHash) {
+
+  public ShelfBook(
+      UserEditionId userEditionId,
+      String title,
+      List<String> authors,
+      ReadingState readingState,
+      Instant createdAt) {
+    this(userEditionId, title, authors, readingState, createdAt, null);
+  }
 
   public ShelfBook {
     Objects.requireNonNull(userEditionId, "userEditionId");

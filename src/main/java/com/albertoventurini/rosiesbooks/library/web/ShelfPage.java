@@ -120,7 +120,8 @@ record ShelfBookView(
     String stateLabel,
     String contextLine,
     String stateUrl,
-    String deleteUrl) {
+    String deleteUrl,
+    String coverUrl) {
 
   static ShelfBookView from(ShelfBook book, LocalDate today, ZoneId zone) {
     BookPlaceholder placeholder = BookPlaceholder.from(book.title(), book.authors());
@@ -133,6 +134,11 @@ record ShelfBookView(
         ShelfDatePresentation.stateLabel(book.readingState()),
         ShelfDatePresentation.contextLine(book.readingState(), book.createdAt(), today, zone),
         "/books/" + id + "/state",
-        "/books/" + id + "/delete");
+        "/books/" + id + "/delete",
+        book.coverHash() == null ? null : "/covers/" + book.coverHash());
+  }
+
+  public boolean hasCover() {
+    return coverUrl != null;
   }
 }

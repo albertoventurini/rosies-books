@@ -354,6 +354,12 @@ h1 {
   gap: var(--space-5);
 }
 
+.shelf-book-cover {
+  width: 5rem;
+  height: auto;
+  display: block;
+}
+
 .book-detail {
   display: grid;
   align-content: start;
@@ -366,6 +372,9 @@ h1 {
   align-items: start;
   gap: var(--space-6);
 }
+
+.book-detail-cover-area { display: grid; gap: var(--space-2); align-content: start; }
+.cover-refresh { margin: 0; }
 
 .isbn-result-header {
   display: grid;
@@ -396,8 +405,9 @@ h1 {
 .book-detail-placeholder {
   width: 100%;
   aspect-ratio: 2 / 3;
-  object-fit: cover;
 }
+
+.book-detail-cover { height: auto; display: block; }
 
 .book-detail-header h1 { font-size: clamp(2.5rem, 10vw, 4rem); }
 .book-detail-subtitle, .book-detail-authors { margin-top: var(--space-2); color: var(--color-muted); overflow-wrap: anywhere; }
@@ -727,4 +737,6 @@ h1 {
   .book-placeholder {
     width: 6rem;
   }
+
+  .shelf-book-cover { width: 6rem; }
 }

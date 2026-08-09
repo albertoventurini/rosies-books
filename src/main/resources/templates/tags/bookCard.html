@@ -1,9 +1,11 @@
 {@com.albertoventurini.rosiesbooks.library.web.ShelfBookView book}
 <article class="shelf-book-card">
-  <div class="book-placeholder {book.placeholder.themeClass}" aria-hidden="true">
-    <span class="book-placeholder-title">{book.placeholder.title}</span>
-    <span class="book-placeholder-authors">{book.placeholder.authorsText}</span>
-  </div>
+  {#if book.hasCover}<img class="shelf-book-cover" src="{book.coverUrl}" alt="Cover of {book.title}" width="160" height="240" loading="lazy">{#else}
+    <div class="book-placeholder {book.placeholder.themeClass}" aria-hidden="true">
+      <span class="book-placeholder-title">{book.placeholder.title}</span>
+      <span class="book-placeholder-authors">{book.placeholder.authorsText}</span>
+    </div>
+  {/if}
   <div class="shelf-book-metadata">
     <h2><a href="/books/{book.id}">{book.title}</a></h2>
     <p>{book.authorsText}</p>

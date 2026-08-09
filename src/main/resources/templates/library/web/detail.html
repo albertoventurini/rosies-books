@@ -10,14 +10,21 @@
         <p><a href="{page.shelfUrl}">← Back to shelf</a></p>
         {#if page.hasNotice}<div class="shelf-notice" role="status">{page.notice}</div>{/if}
         <header class="book-detail-header">
-          {#if page.hasCover}
-            <img class="book-detail-cover" src="{page.coverUrl}" alt="Cover of {page.title}">
-          {#else}
-            <div class="book-detail-placeholder book-placeholder {page.placeholder.themeClass}" aria-hidden="true">
-              <span class="book-placeholder-title">{page.placeholder.title}</span>
-              <span class="book-placeholder-authors">{page.placeholder.authorsText}</span>
-            </div>
-          {/if}
+          <div class="book-detail-cover-area">
+            {#if page.hasCover}
+              <img class="book-detail-cover" src="{page.coverUrl}" alt="Cover of {page.title}" width="320" height="480">
+            {#else}
+              <div class="book-detail-placeholder book-placeholder {page.placeholder.themeClass}" aria-hidden="true">
+                <span class="book-placeholder-title">{page.placeholder.title}</span>
+                <span class="book-placeholder-authors">{page.placeholder.authorsText}</span>
+              </div>
+            {/if}
+            {#if page.canRefreshCover}
+              <form class="cover-refresh" method="post" action="{page.coverRefreshUrl}">
+                <button class="button-link" type="submit">Refresh cover</button>
+              </form>
+            {/if}
+          </div>
           <div>
             <p class="eyebrow">{page.stateLabel}</p>
             <h1>{page.title}</h1>

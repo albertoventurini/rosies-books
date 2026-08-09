@@ -32,6 +32,8 @@ record BookDetailPage(
     String editUrl,
     String deleteUrl,
     String coverUrl,
+    String coverRefreshUrl,
+    boolean coverFetchFailed,
     BookPlaceholder placeholder) {
 
   static BookDetailPage from(UserEditionId id, BookDetail book) {
@@ -68,7 +70,9 @@ record BookDetailPage(
         route + "/state?returnTo=details",
         route + "/edit",
         route + "/delete",
-        book.hasCover() ? route + "/cover" : null,
+        book.coverHash() == null ? null : "/covers/" + book.coverHash(),
+        route + "/cover/refresh",
+        book.coverFetchFailed(),
         BookPlaceholder.from(metadata.title(), metadata.authors()));
   }
 
@@ -124,7 +128,13 @@ record BookDetailPage(
     return coverUrl != null;
   }
 
-  public boolean hasNotice() { return notice != null; }
+  public boolean canRefreshCover() {
+    return coverFetchFailed;
+  }
+
+  public boolean hasNotice() {
+    return notice != null;
+  }
 
   private static String date(LocalDate value) {
     return value.format(DateTimeFormatter.ofPattern("d MMM uuuu", Locale.ENGLISH));

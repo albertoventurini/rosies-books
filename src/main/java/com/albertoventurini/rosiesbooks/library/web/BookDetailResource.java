@@ -3,16 +3,16 @@ package com.albertoventurini.rosiesbooks.library.web;
 import com.albertoventurini.rosiesbooks.identity.api.CurrentUser;
 import com.albertoventurini.rosiesbooks.identity.api.CurrentUserProvider;
 import com.albertoventurini.rosiesbooks.library.api.BookDetailCatalog;
-import com.albertoventurini.rosiesbooks.library.api.BookDetailCatalog.StoredCover;
 import com.albertoventurini.rosiesbooks.library.internal.UserEditionId;
+import com.albertoventurini.rosiesbooks.library.persistence.ProviderCoverPersistenceService;
 import io.quarkus.qute.TemplateInstance;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.CacheControl;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.util.UUID;
@@ -22,30 +22,39 @@ class BookDetailResource {
 
   private final CurrentUserProvider currentUsers;
   private final BookDetailCatalog details;
+  private final ProviderCoverPersistenceService covers;
 
-  BookDetailResource(CurrentUserProvider currentUsers, BookDetailCatalog details) {
+  BookDetailResource(
+      CurrentUserProvider currentUsers,
+      BookDetailCatalog details,
+      ProviderCoverPersistenceService covers) {
     this.currentUsers = currentUsers;
     this.details = details;
+    this.covers = covers;
+  }
+
+  @POST
+  @Path("cover/refresh")
+  public Response refreshCover(@PathParam("id") String rawId) {
+    CurrentUser owner = requireCurrentUser();
+    UserEditionId id = parse(rawId);
+    try {
+      covers.retryFailed(owner, id);
+    } catch (RuntimeException ignored) {
+      // Refresh is best effort; the book remains usable with its placeholder.
+    }
+    return Response.seeOther(java.net.URI.create("/books/" + id.value())).build();
   }
 
   @GET
   @Produces(MediaType.TEXT_HTML)
-  public TemplateInstance detail(@PathParam("id") String rawId, @QueryParam("notice") String notice) {
+  public TemplateInstance detail(
+      @PathParam("id") String rawId, @QueryParam("notice") String notice) {
     CurrentUser owner = requireCurrentUser();
     UserEditionId id = parse(rawId);
     return BookDetailTemplates.detail(
-        BookDetailPage.from(id, details.find(owner, id).orElseThrow(BookDetailResource::notFound), notice));
-  }
-
-  @GET
-  @Path("cover")
-  public Response cover(@PathParam("id") String rawId) {
-    CurrentUser owner = requireCurrentUser();
-    StoredCover cover =
-        details.findCover(owner, parse(rawId)).orElseThrow(BookDetailResource::notFound);
-    CacheControl cacheControl = new CacheControl();
-    cacheControl.setNoStore(true);
-    return Response.ok(cover.content(), cover.mimeType()).cacheControl(cacheControl).build();
+        BookDetailPage.from(
+            id, details.find(owner, id).orElseThrow(BookDetailResource::notFound), notice));
   }
 
   private CurrentUser requireCurrentUser() {

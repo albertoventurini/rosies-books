@@ -56,6 +56,8 @@ public class JooqBookDetailCatalog implements BookDetailCatalog {
             EDITION.LANGUAGE,
             EDITION.DESCRIPTION,
             EDITION.COVER_ASSET_ID,
+            EDITION.COVER_LAST_OUTCOME,
+            COVER_ASSET.SHA256,
             USER_EDITION.STATE,
             USER_EDITION.STARTED_ON,
             USER_EDITION.FINISHED_ON,
@@ -63,6 +65,8 @@ public class JooqBookDetailCatalog implements BookDetailCatalog {
         .from(USER_EDITION)
         .join(EDITION)
         .on(EDITION.ID.eq(USER_EDITION.EDITION_ID))
+        .leftJoin(COVER_ASSET)
+        .on(COVER_ASSET.ID.eq(EDITION.COVER_ASSET_ID))
         .where(USER_EDITION.ID.eq(id.value()).and(USER_EDITION.USER_ID.eq(owner.id().value())))
         .fetchOptional(
             row -> {
@@ -92,7 +96,8 @@ public class JooqBookDetailCatalog implements BookDetailCatalog {
                   state,
                   row.get(USER_EDITION.PRIVATE_NOTES),
                   shelf(row.get(USER_EDITION.STATE)),
-                  row.get(EDITION.COVER_ASSET_ID) != null);
+                  row.get(COVER_ASSET.SHA256),
+                  "FAILED".equals(row.get(EDITION.COVER_LAST_OUTCOME)));
             });
   }
 

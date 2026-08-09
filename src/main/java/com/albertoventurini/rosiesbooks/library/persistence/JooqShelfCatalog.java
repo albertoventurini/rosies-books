@@ -1,5 +1,6 @@
 package com.albertoventurini.rosiesbooks.library.persistence;
 
+import static com.albertoventurini.rosiesbooks.library.persistence.jooq.Tables.COVER_ASSET;
 import static com.albertoventurini.rosiesbooks.library.persistence.jooq.Tables.EDITION;
 import static com.albertoventurini.rosiesbooks.library.persistence.jooq.Tables.EDITION_AUTHOR;
 import static com.albertoventurini.rosiesbooks.library.persistence.jooq.Tables.USER_EDITION;
@@ -97,10 +98,13 @@ class JooqShelfCatalog implements ShelfCatalog {
             USER_EDITION.STATE,
             USER_EDITION.STARTED_ON,
             USER_EDITION.FINISHED_ON,
-            USER_EDITION.CREATED_AT)
+            USER_EDITION.CREATED_AT,
+            COVER_ASSET.SHA256)
         .from(USER_EDITION)
         .join(EDITION)
         .on(EDITION.ID.eq(USER_EDITION.EDITION_ID))
+        .leftJoin(COVER_ASSET)
+        .on(COVER_ASSET.ID.eq(EDITION.COVER_ASSET_ID))
         .leftJoin(USER_EDITION_METADATA_OVERRIDE)
         .on(USER_EDITION_METADATA_OVERRIDE.USER_EDITION_ID.eq(USER_EDITION.ID))
         .where(
@@ -127,7 +131,8 @@ class JooqShelfCatalog implements ShelfCatalog {
                       row.get(USER_EDITION.STATE),
                       row.get(USER_EDITION.STARTED_ON),
                       row.get(USER_EDITION.FINISHED_ON)),
-                  row.get(USER_EDITION.CREATED_AT).toInstant());
+                  row.get(USER_EDITION.CREATED_AT).toInstant(),
+                  row.get(COVER_ASSET.SHA256));
             });
   }
 

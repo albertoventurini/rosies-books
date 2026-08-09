@@ -19,7 +19,8 @@ public interface BookDetailCatalog {
       ReadingState state,
       String privateNotes,
       Shelf shelf,
-      boolean hasCover) {}
+      String coverHash,
+      boolean coverFetchFailed) {}
 
   record StoredCover(byte[] content, String mimeType) {
     public StoredCover {
