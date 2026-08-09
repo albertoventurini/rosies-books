@@ -4,7 +4,7 @@ Rosie's Books uses Open Library for low-volume, server-side lookup of a single c
 
 The adapter searches with the ISBN constraint, retrieves the candidate edition record, and accepts it only if that edition's ISBN-10 or ISBN-13 normalizes to the requested ISBN-13. Open Library JSON, URLs, DTOs, and HTTP details are confined to `provider.openlibrary`. The public boundary exposes provider-neutral edition data, outcome categories, and a constrained HTTPS cover reference only.
 
-Policy: connect timeout is two seconds, each request has a five-second timeout, and this process issues at most three requests per second. Transport and 5xx failures get one 250–500 ms jittered retry. A 429 is returned with `Retry-After` when supplied; malformed responses, 4xx failures, and not-found results are not retried. Logs contain only safe outcome category, latency, and correlation data; no ISBN, body, cover URL, or contact is logged.
+Policy: connect timeout is two seconds, each request has a five-second timeout, and this process issues at most three requests per second. Transport and 5xx failures get one 250–500 ms jittered retry. A 429 is returned with `Retry-After` when supplied; malformed responses, 4xx failures, and not-found results are not retried. Caught lookup exceptions are logged server-side. Development logs include full exception details by default; production logs only the exception class. Set `PROVIDER_OPEN_LIBRARY_LOG_FULL_EXCEPTION_DETAILS` to override either profile.
 
 Accepted covers will be fetched once and stored locally in task 7-4; ordinary library pages never hotlink them. Cover-rights details remain an operational uncertainty to monitor. One accepted-cover fetch at this two-user volume is not crawling or bulk access.
 

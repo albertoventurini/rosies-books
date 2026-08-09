@@ -26,16 +26,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
+import org.jboss.logging.Logger;
 
 /** Open Library HTTP/JSON adapter; provider representations remain in this package. */
 @ApplicationScoped
 public class OpenLibraryIsbnEditionLookup implements IsbnEditionLookup {
+  private static final Logger LOG = Logger.getLogger(OpenLibraryIsbnEditionLookup.class);
   private final HttpClient client;
   private final ObjectMapper json;
   private final URI baseUrl;
   private final Duration requestTimeout;
   private final String userAgent;
   private final long minimumSpacingMillis;
+  private final boolean logFullExceptionDetails;
   private long nextAllowedRequestMillis;
 
   @Inject
@@ -46,7 +49,8 @@ public class OpenLibraryIsbnEditionLookup implements IsbnEditionLookup {
         config.baseUrl(),
         config.requestTimeout(),
         config.operatorContact().orElse("development"),
-        config.requestsPerSecond());
+        config.requestsPerSecond(),
+        config.logFullExceptionDetails());
   }
 
   OpenLibraryIsbnEditionLookup(
@@ -56,6 +60,17 @@ public class OpenLibraryIsbnEditionLookup implements IsbnEditionLookup {
       Duration requestTimeout,
       String contact,
       int requestsPerSecond) {
+    this(client, json, baseUrl, requestTimeout, contact, requestsPerSecond, false);
+  }
+
+  OpenLibraryIsbnEditionLookup(
+      HttpClient client,
+      ObjectMapper json,
+      URI baseUrl,
+      Duration requestTimeout,
+      String contact,
+      int requestsPerSecond,
+      boolean logFullExceptionDetails) {
     if (contact == null || contact.isBlank())
       throw new IllegalArgumentException("operator contact is required");
     if (requestsPerSecond < 1 || requestsPerSecond > 3)
@@ -66,6 +81,7 @@ public class OpenLibraryIsbnEditionLookup implements IsbnEditionLookup {
     this.requestTimeout = requestTimeout;
     this.userAgent = "RosiesBooks (" + contact + ")";
     this.minimumSpacingMillis = 1000L / requestsPerSecond;
+    this.logFullExceptionDetails = logFullExceptionDetails;
   }
 
   @Override
@@ -83,13 +99,25 @@ public class OpenLibraryIsbnEditionLookup implements IsbnEditionLookup {
       if (outcome != null) return outcome;
       return selectedEdition(isbn, candidate, json.readTree(edition.body()), editionId);
     } catch (IOException malformed) {
+      logFailure(malformed);
       return new IsbnLookupResult.MalformedResponse();
     } catch (InterruptedException interrupted) {
       Thread.currentThread().interrupt();
+      logFailure(interrupted);
       return new IsbnLookupResult.Unavailable();
     } catch (RuntimeException unavailable) {
+      logFailure(unavailable);
       return new IsbnLookupResult.Unavailable();
     }
+  }
+
+  private void logFailure(Exception failure) {
+    if (logFullExceptionDetails) {
+      LOG.warn("Open Library ISBN lookup failed", failure);
+      return;
+    }
+    LOG.warnf(
+        "open_library_isbn_lookup_failed exception_class=%s", failure.getClass().getName());
   }
 
   private HttpResponse<String> send(String path) throws IOException, InterruptedException {

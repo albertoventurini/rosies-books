@@ -16,4 +16,6 @@ interface OpenLibraryConfig {
   Duration requestTimeout();
 
   int requestsPerSecond();
+
+  boolean logFullExceptionDetails();
 }

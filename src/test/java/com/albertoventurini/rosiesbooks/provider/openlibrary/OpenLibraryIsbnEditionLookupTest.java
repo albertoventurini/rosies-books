@@ -10,23 +10,75 @@ import com.sun.net.httpserver.HttpServer;
 import java.net.InetSocketAddress;
 import java.net.http.HttpClient;
 import java.time.Duration;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Handler;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class OpenLibraryIsbnEditionLookupTest {
   private HttpServer server;
+  private final List<LogRecord> records = new CopyOnWriteArrayList<>();
+  private final Handler handler =
+      new Handler() {
+        @Override
+        public void publish(LogRecord record) {
+          records.add(record);
+        }
+
+        @Override
+        public void flush() {}
+
+        @Override
+        public void close() {}
+      };
 
   @BeforeEach
   void startServer() throws Exception {
     server = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
     server.start();
+    Logger.getLogger(OpenLibraryIsbnEditionLookup.class.getName()).addHandler(handler);
   }
 
   @AfterEach
   void stopServer() {
+    Logger.getLogger(OpenLibraryIsbnEditionLookup.class.getName()).removeHandler(handler);
     server.stop(0);
+  }
+
+  @Test
+  void logsLookupExceptionsWithoutLoggingTheProviderResponse() {
+    String privateResponse = "private-provider-response";
+    server.createContext("/search.json", exchange -> respond(exchange, 200, privateResponse));
+
+    assertInstanceOf(
+        IsbnLookupResult.MalformedResponse.class,
+        lookup().lookup(new Isbn13("9780306406157")));
+
+    assertEquals(1, records.size());
+    assertEquals(
+        "open_library_isbn_lookup_failed exception_class=com.fasterxml.jackson.core.JsonParseException",
+        records.getFirst().getMessage());
+    org.junit.jupiter.api.Assertions.assertFalse(records.getFirst().getMessage().contains(privateResponse));
+  }
+
+  @Test
+  void logsFullLookupExceptionDetailsWhenEnabled() {
+    String providerResponse = "diagnostic-provider-response";
+    server.createContext("/search.json", exchange -> respond(exchange, 200, providerResponse));
+
+    assertInstanceOf(
+        IsbnLookupResult.MalformedResponse.class,
+        lookup(true).lookup(new Isbn13("9780306406157")));
+
+    assertEquals(1, records.size());
+    assertEquals("Open Library ISBN lookup failed", records.getFirst().getMessage());
+    org.junit.jupiter.api.Assertions.assertTrue(
+        records.getFirst().getThrown().getMessage().contains("diagnostic"));
   }
 
   @Test
@@ -132,13 +184,18 @@ class OpenLibraryIsbnEditionLookupTest {
   }
 
   private OpenLibraryIsbnEditionLookup lookup() {
+    return lookup(false);
+  }
+
+  private OpenLibraryIsbnEditionLookup lookup(boolean logFullDetails) {
     return new OpenLibraryIsbnEditionLookup(
         HttpClient.newHttpClient(),
         new ObjectMapper(),
         java.net.URI.create("http://localhost:" + server.getAddress().getPort()),
         Duration.ofSeconds(2),
         "test@example.test",
-        3);
+        3,
+        logFullDetails);
   }
 
   private static void respond(com.sun.net.httpserver.HttpExchange exchange, int status, String body)
