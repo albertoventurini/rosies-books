@@ -71,7 +71,8 @@ class ProviderAddBookResource {
                       owner.displayLabel(),
                       submitted,
                       found.edition(),
-                      tokens.issue(normalized.value(), found.edition()))))
+                      tokens.issue(normalized.value(), found.edition()),
+                      initialStateForm())))
           .build();
     return Response.ok(
             ProviderBookTemplates.add(
@@ -80,10 +81,10 @@ class ProviderAddBookResource {
   }
 
   @POST
-  @Path("review")
+  @Path("add")
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   @Produces(MediaType.TEXT_HTML)
-  public Response review(
+  public Response add(
       @RestForm String reviewToken,
       @RestForm String intent,
       @RestForm String state,
@@ -96,29 +97,29 @@ class ProviderAddBookResource {
           ProviderAddBookPage.error(
               owner.displayLabel(),
               "",
-              "This result can no longer be reviewed. Look it up again."));
+              "This result is no longer available. Look up the ISBN again."));
     ManualBookForm form =
         stateValidator.prepare(stateForm(state == null ? "TO_READ" : state, startedOn, finishedOn));
-    if ("start".equals(intent))
-      return Response.ok(
-              ProviderBookTemplates.review(reviewPage(owner, accepted.get(), reviewToken, form)))
-          .build();
     if ("change-state".equals(intent))
       return Response.ok(
-              ProviderBookTemplates.review(reviewPage(owner, accepted.get(), reviewToken, form)))
+              ProviderBookTemplates.add(addPage(owner, accepted.get(), reviewToken, form)))
           .build();
     if (!"confirm".equals(intent))
-      return badReview(
+      return badAdd(
           owner,
           accepted.get(),
           reviewToken,
           form.withErrors(Map.of("form", List.of("Choose one of the available form actions."))));
     form = stateValidator.validateState(form);
-    if (!form.errors().isEmpty()) return badReview(owner, accepted.get(), reviewToken, form);
+    if (!form.errors().isEmpty()) return badAdd(owner, accepted.get(), reviewToken, form);
     // Persistence is intentionally deferred to task 7-3; this route only establishes the contract.
     return Response.status(Response.Status.NOT_IMPLEMENTED)
-        .entity(ProviderBookTemplates.review(reviewPage(owner, accepted.get(), reviewToken, form)))
+        .entity(ProviderBookTemplates.add(addPage(owner, accepted.get(), reviewToken, form)))
         .build();
+  }
+
+  private ManualBookForm initialStateForm() {
+    return stateValidator.prepare(stateForm("TO_READ", null, null));
   }
 
   private static ManualBookForm stateForm(String state, String startedOn, String finishedOn) {
@@ -141,9 +142,10 @@ class ProviderAddBookResource {
         Map.of());
   }
 
-  private static ProviderReviewPage reviewPage(
+  private static ProviderAddBookPage addPage(
       CurrentUser owner, AcceptedProviderReview accepted, String token, ManualBookForm form) {
-    return new ProviderReviewPage(owner.displayLabel(), accepted.edition(), token, form);
+    return ProviderAddBookPage.found(
+        owner.displayLabel(), accepted.lookupIsbn(), accepted.edition(), token, form);
   }
 
   private static Response bad(ProviderAddBookPage page) {
@@ -152,10 +154,10 @@ class ProviderAddBookResource {
         .build();
   }
 
-  private static Response badReview(
+  private static Response badAdd(
       CurrentUser owner, AcceptedProviderReview accepted, String token, ManualBookForm form) {
     return Response.status(Response.Status.BAD_REQUEST)
-        .entity(ProviderBookTemplates.review(reviewPage(owner, accepted, token, form)))
+        .entity(ProviderBookTemplates.add(addPage(owner, accepted, token, form)))
         .build();
   }
 
@@ -179,11 +181,11 @@ class ProviderAddBookResource {
   }
 
   private static String message(IsbnLookupResult result) {
-    if (result instanceof IsbnLookupResult.NotFound) return "No edition was found for that ISBN.";
+    if (result instanceof IsbnLookupResult.NotFound) return "ISBN not found.";
     if (result instanceof IsbnLookupResult.RateLimited)
-      return "The book provider is rate-limiting requests. Please try again shortly.";
+      return "ISBN lookup is temporarily limited.";
     if (result instanceof IsbnLookupResult.MalformedResponse)
-      return "The book provider returned an unusable response. Please try again.";
-    return "The book provider is unavailable. Please try again.";
+      return "ISBN lookup is temporarily unavailable.";
+    return "ISBN lookup is temporarily unavailable.";
   }
 }

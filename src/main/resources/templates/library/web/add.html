@@ -10,11 +10,15 @@
         <div class="form-actions"><a href="{page.manualFallbackRoute}">Enter book manually</a><button class="button-primary" type="submit">Look up ISBN</button></div>
       </form>
       {#if page.result}
-        <section class="form-section" aria-labelledby="provider-result"><h2 id="provider-result">Provider result</h2>
-          <h3>{page.result.get.edition.title}</h3>
-          {#if page.result.get.edition.subtitle}<p>{page.result.get.edition.subtitle.get}</p>{/if}
-          <p>{#for author in page.result.get.edition.authors}{author}{#if author_hasNext}, {/if}{/for}</p>
-          <dl>
+        <section class="form-section isbn-result">
+          <div class="isbn-result-header{#if page.result.get.edition.cover} has-cover{/if}">
+            {#if page.result.get.edition.cover}<img class="isbn-result-cover" src="{page.result.get.edition.cover.get.value}" alt="Cover of {page.result.get.edition.title}">{/if}
+            <div><h3>{page.result.get.edition.title}</h3>
+              {#if page.result.get.edition.subtitle}<p>{page.result.get.edition.subtitle.get}</p>{/if}
+              <p>{#for author in page.result.get.edition.authors}{author}{#if author_hasNext}, {/if}{/for}</p>
+            </div>
+          </div>
+          <dl class="isbn-result-facts">
             <dt>ISBN-13</dt><dd>{#if page.result.get.edition.isbn13}{page.result.get.edition.isbn13.get.value}{#else}Not supplied{/if}</dd>
             <dt>ISBN-10</dt><dd>{#if page.result.get.edition.isbn10}{page.result.get.edition.isbn10.get.value}{#else}Not supplied{/if}</dd>
             <dt>Publication date</dt><dd>{#if page.result.get.edition.publicationDate}{page.result.get.edition.publicationDate.get.year}{#if page.result.get.edition.publicationDate.get.month}-{page.result.get.edition.publicationDate.get.month}{#if page.result.get.edition.publicationDate.get.day}-{page.result.get.edition.publicationDate.get.day}{/if}{/if}{#else}Not supplied{/if}</dd>
@@ -24,7 +28,16 @@
             <dt>Language</dt><dd>{#if page.result.get.edition.language}{page.result.get.edition.language.get}{#else}Not supplied{/if}</dd>
           </dl>
           {#if page.result.get.edition.description}<p>{page.result.get.edition.description.get}</p>{/if}
-          <form method="post" action="/books/new/review"><input type="hidden" name="reviewToken" value="{page.result.get.reviewToken}"><button class="button-primary" type="submit" name="intent" value="start">Review this edition</button></form>
+          <form class="manual-form" method="post" action="/books/new/add" novalidate>
+            <input type="hidden" name="reviewToken" value="{page.result.get.reviewToken}">
+            {#if page.result.get.form.errors.size > 0}<div class="form-error-summary" role="alert"><p>Check the highlighted fields and try again.</p>{#for error in page.result.get.form.errorsFor('form')}<p>{error}</p>{/for}</div>{/if}
+            <section class="form-section" aria-labelledby="state-heading"><h2 id="state-heading">Shelf and dates</h2>
+              <div class="form-field"><label for="state">Shelf</label><select id="state" name="state"><option value="TO_READ"{#if page.result.get.form.toRead} selected{/if}>To Read</option><option value="READING"{#if page.result.get.form.reading} selected{/if}>Reading</option><option value="FINISHED"{#if page.result.get.form.finished} selected{/if}>Finished</option></select><button class="button-secondary" type="submit" name="intent" value="change-state">Update date fields</button></div>
+              {#if page.result.get.form.reading}<div class="form-field"><label for="startedOn">Start date</label><input id="startedOn" type="date" name="startedOn" value="{page.result.get.form.startedOn}" required>{#for error in page.result.get.form.errorsFor('startedOn')}<p class="field-errors">{error}</p>{/for}</div>{/if}
+              {#if page.result.get.form.finished}<div class="form-grid"><div class="form-field"><label for="startedOn">Start date <span class="label-note">optional</span></label><input id="startedOn" type="date" name="startedOn" value="{page.result.get.form.startedOn}"></div><div class="form-field"><label for="finishedOn">Finish date</label><input id="finishedOn" type="date" name="finishedOn" value="{page.result.get.form.finishedOn}" required>{#for error in page.result.get.form.errorsFor('finishedOn')}<p class="field-errors">{error}</p>{/for}</div></div>{/if}
+            </section>
+            <div class="form-actions"><a href="/books/new">Cancel</a><button class="button-primary" type="submit" name="intent" value="confirm">Add book</button></div>
+          </form>
         </section>
       {/if}
     </main>

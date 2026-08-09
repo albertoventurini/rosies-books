@@ -21,14 +21,18 @@ record ProviderAddBookPage(
   }
 
   static ProviderAddBookPage found(
-      String userDisplayLabel, String isbn, SelectedEdition edition, String token) {
+      String userDisplayLabel,
+      String isbn,
+      SelectedEdition edition,
+      String token,
+      ManualBookForm form) {
     return new ProviderAddBookPage(
-        userDisplayLabel, isbn, null, Optional.of(new Result(edition, token)));
+        userDisplayLabel, isbn, null, Optional.of(new Result(edition, token, form)));
   }
 
   public String manualFallbackRoute() {
     return "/books/new/manual?isbn=" + URLEncoder.encode(submittedIsbn, StandardCharsets.UTF_8);
   }
 
-  record Result(SelectedEdition edition, String reviewToken) {}
+  record Result(SelectedEdition edition, String reviewToken, ManualBookForm form) {}
 }
