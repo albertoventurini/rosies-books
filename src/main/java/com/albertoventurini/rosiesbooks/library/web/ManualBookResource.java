@@ -10,6 +10,7 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -42,10 +43,30 @@ class ManualBookResource {
 
   @GET
   @Produces(MediaType.TEXT_HTML)
-  public TemplateInstance form() {
+  public TemplateInstance form(@QueryParam("isbn") String isbn) {
     CurrentUser owner = requireCurrentUser();
-    return ManualBookTemplates.manual(
-        new ManualBookPage(owner.displayLabel(), ManualBookForm.empty(UUID.randomUUID())));
+    ManualBookForm form = ManualBookForm.empty(UUID.randomUUID());
+    if (isbn != null && !isbn.isBlank()) {
+      form =
+          new ManualBookForm(
+              form.requestId(),
+              "",
+              List.of(""),
+              "",
+              "",
+              isbn,
+              isbn,
+              "",
+              "",
+              "",
+              "",
+              "",
+              "TO_READ",
+              "",
+              "",
+              Map.of());
+    }
+    return ManualBookTemplates.manual(new ManualBookPage(owner.displayLabel(), form));
   }
 
   @POST

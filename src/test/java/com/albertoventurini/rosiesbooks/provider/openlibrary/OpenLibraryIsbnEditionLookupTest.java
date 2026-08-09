@@ -75,6 +75,30 @@ class OpenLibraryIsbnEditionLookupTest {
   }
 
   @Test
+  void usesCoverEditionWhenSearchOmitsEditionKeys() {
+    server.createContext(
+        "/search.json",
+        exchange ->
+            respond(
+                exchange,
+                200,
+                "{\"docs\":[{\"cover_edition_key\":\"OL32025351M\",\"title\":\"Year of Yes\",\"author_name\":[\"Shonda Rhimes\"]}]}"));
+    server.createContext(
+        "/books/OL32025351M.json",
+        exchange ->
+            respond(
+                exchange,
+                200,
+                "{\"title\":\"Year of Yes\",\"isbn_13\":[\"9781471157325\"]}"));
+
+    IsbnLookupResult.Found found =
+        assertInstanceOf(
+            IsbnLookupResult.Found.class, lookup().lookup(new Isbn13("9781471157325")));
+
+    assertEquals("OL32025351M", found.edition().providerEditionId());
+  }
+
+  @Test
   void returnsRateLimitWithoutRetryingAndParsesRetryAfter() {
     AtomicInteger requests = new AtomicInteger();
     server.createContext(

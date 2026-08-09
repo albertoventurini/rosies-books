@@ -13,10 +13,12 @@ public record SelectedEdition(
     List<String> authors,
     Optional<String> format,
     Optional<String> publisher,
-    Optional<Integer> publicationYear,
+    Optional<PartialPublicationDate> publicationDate,
     Optional<Integer> pageCount,
     Optional<String> language,
     Optional<String> description,
+    Optional<Isbn10> isbn10,
+    Optional<Isbn13> isbn13,
     Optional<TrustedCoverReference> cover) {
   public SelectedEdition {
     if (providerName == null
@@ -33,10 +35,12 @@ public record SelectedEdition(
     Objects.requireNonNull(subtitle, "subtitle");
     Objects.requireNonNull(format, "format");
     Objects.requireNonNull(publisher, "publisher");
-    Objects.requireNonNull(publicationYear, "publicationYear");
+    Objects.requireNonNull(publicationDate, "publicationDate");
     Objects.requireNonNull(pageCount, "pageCount");
     Objects.requireNonNull(language, "language");
     Objects.requireNonNull(description, "description");
+    Objects.requireNonNull(isbn10, "isbn10");
+    Objects.requireNonNull(isbn13, "isbn13");
     Objects.requireNonNull(cover, "cover");
   }
 }

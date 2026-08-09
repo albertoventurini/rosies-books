@@ -131,6 +131,13 @@ final class ManualBookEntryValidator {
     return new ManualBookValidation(form, Optional.of(new ManualBookDraft(metadata, state)));
   }
 
+  ManualBookForm validateState(ManualBookForm submitted) {
+    ManualBookForm form = prepare(submitted);
+    Errors errors = new Errors();
+    parseReadingState(form, errors);
+    return form.withErrors(errors.copy());
+  }
+
   private static Optional<String> optionalText(
       Errors errors, String field, String raw, int maximum, String label) {
     String normalized = raw.strip();

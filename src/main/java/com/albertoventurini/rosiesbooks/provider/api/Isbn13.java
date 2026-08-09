@@ -12,7 +12,7 @@ public record Isbn13(String value) {
     }
   }
 
-  private static char checkDigit(String twelveDigits) {
+  static char checkDigit(String twelveDigits) {
     int sum = 0;
     for (int index = 0; index < twelveDigits.length(); index++) {
       sum += (twelveDigits.charAt(index) - '0') * (index % 2 == 0 ? 1 : 3);

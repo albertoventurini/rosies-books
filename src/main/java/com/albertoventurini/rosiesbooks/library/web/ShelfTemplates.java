@@ -16,6 +16,13 @@ class ManualBookTemplates {
 }
 
 @CheckedTemplate(basePath = "library/web")
+class ProviderBookTemplates {
+  static native TemplateInstance add(ProviderAddBookPage page);
+
+  static native TemplateInstance review(ProviderReviewPage page);
+}
+
+@CheckedTemplate(basePath = "library/web")
 class StateChangeTemplates {
 
   static native TemplateInstance state(StateChangePage page);

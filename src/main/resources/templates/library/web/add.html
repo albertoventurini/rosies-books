@@ -1,0 +1,32 @@
+{@com.albertoventurini.rosiesbooks.library.web.ProviderAddBookPage page}
+{#include platform/web/shell}
+  {#title}Add a book · Rosie's books{/title}
+  {#content}
+    <main class="manual-main" id="main-content">
+      <header class="manual-header"><p class="eyebrow">Your library</p><h1>Add a book</h1><p>Look up one exact edition by ISBN, or enter its details yourself.</p></header>
+      {#if page.message}<div class="form-error-summary" role="alert"><p>{page.message}</p></div>{/if}
+      <form class="manual-form" method="post" action="/books/new/lookup" novalidate>
+        <div class="form-field"><label for="isbn">ISBN</label><input id="isbn" name="isbn" value="{page.submittedIsbn}" maxlength="64" inputmode="text" required><p>ISBN-10 and ISBN-13 are accepted.</p></div>
+        <div class="form-actions"><a href="{page.manualFallbackRoute}">Enter book manually</a><button class="button-primary" type="submit">Look up ISBN</button></div>
+      </form>
+      {#if page.result}
+        <section class="form-section" aria-labelledby="provider-result"><h2 id="provider-result">Provider result</h2>
+          <h3>{page.result.get.edition.title}</h3>
+          {#if page.result.get.edition.subtitle}<p>{page.result.get.edition.subtitle.get}</p>{/if}
+          <p>{#for author in page.result.get.edition.authors}{author}{#if author_hasNext}, {/if}{/for}</p>
+          <dl>
+            <dt>ISBN-13</dt><dd>{#if page.result.get.edition.isbn13}{page.result.get.edition.isbn13.get.value}{#else}Not supplied{/if}</dd>
+            <dt>ISBN-10</dt><dd>{#if page.result.get.edition.isbn10}{page.result.get.edition.isbn10.get.value}{#else}Not supplied{/if}</dd>
+            <dt>Publication date</dt><dd>{#if page.result.get.edition.publicationDate}{page.result.get.edition.publicationDate.get.year}{#if page.result.get.edition.publicationDate.get.month}-{page.result.get.edition.publicationDate.get.month}{#if page.result.get.edition.publicationDate.get.day}-{page.result.get.edition.publicationDate.get.day}{/if}{/if}{#else}Not supplied{/if}</dd>
+            <dt>Format</dt><dd>{#if page.result.get.edition.format}{page.result.get.edition.format.get}{#else}Not supplied{/if}</dd>
+            <dt>Publisher</dt><dd>{#if page.result.get.edition.publisher}{page.result.get.edition.publisher.get}{#else}Not supplied{/if}</dd>
+            <dt>Pages</dt><dd>{#if page.result.get.edition.pageCount}{page.result.get.edition.pageCount.get}{#else}Not supplied{/if}</dd>
+            <dt>Language</dt><dd>{#if page.result.get.edition.language}{page.result.get.edition.language.get}{#else}Not supplied{/if}</dd>
+          </dl>
+          {#if page.result.get.edition.description}<p>{page.result.get.edition.description.get}</p>{/if}
+          <form method="post" action="/books/new/review"><input type="hidden" name="reviewToken" value="{page.result.get.reviewToken}"><button class="button-primary" type="submit" name="intent" value="start">Review this edition</button></form>
+        </section>
+      {/if}
+    </main>
+  {/content}
+{/include}

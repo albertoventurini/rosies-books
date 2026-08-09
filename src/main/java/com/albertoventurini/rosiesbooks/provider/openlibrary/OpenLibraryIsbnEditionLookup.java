@@ -1,8 +1,10 @@
 package com.albertoventurini.rosiesbooks.provider.openlibrary;
 
+import com.albertoventurini.rosiesbooks.provider.api.Isbn10;
 import com.albertoventurini.rosiesbooks.provider.api.Isbn13;
 import com.albertoventurini.rosiesbooks.provider.api.IsbnEditionLookup;
 import com.albertoventurini.rosiesbooks.provider.api.IsbnLookupResult;
+import com.albertoventurini.rosiesbooks.provider.api.PartialPublicationDate;
 import com.albertoventurini.rosiesbooks.provider.api.SelectedEdition;
 import com.albertoventurini.rosiesbooks.provider.api.TrustedCoverReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -74,6 +76,7 @@ public class OpenLibraryIsbnEditionLookup implements IsbnEditionLookup {
       if (outcome != null) return outcome;
       JsonNode candidate = json.readTree(search.body()).path("docs").path(0);
       String editionId = text(candidate.path("edition_key").path(0));
+      if (editionId == null) editionId = text(candidate.path("cover_edition_key"));
       if (editionId == null) return new IsbnLookupResult.NotFound();
       HttpResponse<String> edition = send("/books/" + encoded(editionId) + ".json");
       outcome = responseOutcome(edition);
@@ -147,10 +150,12 @@ public class OpenLibraryIsbnEditionLookup implements IsbnEditionLookup {
             authors,
             optionalText(edition.path("physical_format")),
             firstText(edition.path("publishers")),
-            year(edition.path("publish_date")),
+            publicationDate(edition.path("publish_date")),
             positiveInteger(edition.path("number_of_pages")),
             Optional.empty(),
             Optional.empty(),
+            isbn10(edition.path("isbn_10")),
+            isbn13(edition.path("isbn_13")),
             cover(edition.path("covers"))));
   }
 
@@ -212,12 +217,47 @@ public class OpenLibraryIsbnEditionLookup implements IsbnEditionLookup {
         : Optional.empty();
   }
 
-  private static Optional<Integer> year(JsonNode node) {
+  private static Optional<PartialPublicationDate> publicationDate(JsonNode node) {
     String value = text(node);
     if (value == null) return Optional.empty();
     java.util.regex.Matcher match =
-        java.util.regex.Pattern.compile("\\b(\\d{4})\\b").matcher(value);
-    return match.find() ? Optional.of(Integer.parseInt(match.group(1))) : Optional.empty();
+        java.util.regex.Pattern.compile("\\b(\\d{4})(?:-(\\d{2})(?:-(\\d{2}))?)?\\b")
+            .matcher(value);
+    if (!match.find()) return Optional.empty();
+    try {
+      int year = Integer.parseInt(match.group(1));
+      if (match.group(2) == null) return Optional.of(PartialPublicationDate.year(year));
+      int month = Integer.parseInt(match.group(2));
+      if (match.group(3) == null) return Optional.of(PartialPublicationDate.yearMonth(year, month));
+      return Optional.of(
+          PartialPublicationDate.full(year, month, Integer.parseInt(match.group(3))));
+    } catch (RuntimeException invalid) {
+      return Optional.empty();
+    }
+  }
+
+  private static Optional<Isbn10> isbn10(JsonNode node) {
+    return strings(node).stream().flatMap(value -> parseIsbn10(value).stream()).findFirst();
+  }
+
+  private static Optional<Isbn13> isbn13(JsonNode node) {
+    return strings(node).stream().flatMap(value -> parseIsbn13(value).stream()).findFirst();
+  }
+
+  private static Optional<Isbn10> parseIsbn10(String value) {
+    try {
+      return Optional.of(Isbn10.parse(value));
+    } catch (IllegalArgumentException invalid) {
+      return Optional.empty();
+    }
+  }
+
+  private static Optional<Isbn13> parseIsbn13(String value) {
+    try {
+      return Optional.of(new Isbn13(value.replaceAll("[-\\s]", "")));
+    } catch (IllegalArgumentException invalid) {
+      return Optional.empty();
+    }
   }
 
   private static Optional<String> firstText(JsonNode node) {
