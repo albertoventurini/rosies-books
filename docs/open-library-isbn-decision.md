@@ -10,4 +10,6 @@ Accepted covers will be fetched once and stored locally in task 7-4; ordinary li
 
 Identity is deterministic: normalized ISBN-13 first; otherwise non-null `(provider_name, provider_edition_id)`; identifierless/manual editions are never fuzzy merged. If the two identifiers resolve to different editions, the add flow must surface an identifier conflict.
 
+When a provider-confirmed add resolves an existing canonical edition, every canonical field is retained exactly as stored: title, subtitle, authors, format, publisher, publication date, page count, language, description, ISBN identifiers, provider identity, metadata origin, and cover reference. Per-user private notes and metadata overrides are likewise retained. Provider data is only used when creating a previously unknown canonical edition; it never enriches or refreshes one.
+
 Deferred: Add Book will later offer **Search by ISBN** and **Search by title/author**. Title/author search must find works and show a bounded, paginated concrete-edition picker; it must not silently select a representative edition. Camera scanning is a separate progressive-enhancement task: EAN-13 detection may populate the ISBN field, typed entry remains available, and camera frames never leave the device.

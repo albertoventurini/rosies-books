@@ -11,8 +11,8 @@
       </form>
       {#if page.result}
         <section class="form-section isbn-result">
-          <div class="isbn-result-header{#if page.result.get.edition.cover} has-cover{/if}">
-            {#if page.result.get.edition.cover}<img class="isbn-result-cover" src="{page.result.get.edition.cover.get.value}" alt="Cover of {page.result.get.edition.title}">{/if}
+          <div class="isbn-result-header{#if page.result.get.edition.cover} has-cover{#else}{#if page.result.get.localCoverUrl} has-cover{/if}{/if}">
+            {#if page.result.get.edition.cover}<img class="isbn-result-cover" src="{page.result.get.edition.cover.get.value}" alt="Cover of {page.result.get.edition.title}">{#else}{#if page.result.get.localCoverUrl}<img class="isbn-result-cover" src="{page.result.get.localCoverUrl}" alt="Cover of {page.result.get.edition.title}">{/if}{/if}
             <div><h3>{page.result.get.edition.title}</h3>
               {#if page.result.get.edition.subtitle}<p>{page.result.get.edition.subtitle.get}</p>{/if}
               <p>{#for author in page.result.get.edition.authors}{author}{#if author_hasNext}, {/if}{/for}</p>

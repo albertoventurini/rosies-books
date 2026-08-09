@@ -26,13 +26,23 @@ record ProviderAddBookPage(
       SelectedEdition edition,
       String token,
       ManualBookForm form) {
+    return found(userDisplayLabel, isbn, edition, token, form, null);
+  }
+
+  static ProviderAddBookPage found(
+      String userDisplayLabel,
+      String isbn,
+      SelectedEdition edition,
+      String token,
+      ManualBookForm form,
+      String localCoverUrl) {
     return new ProviderAddBookPage(
-        userDisplayLabel, isbn, null, Optional.of(new Result(edition, token, form)));
+        userDisplayLabel, isbn, null, Optional.of(new Result(edition, token, form, localCoverUrl)));
   }
 
   public String manualFallbackRoute() {
     return "/books/new/manual?isbn=" + URLEncoder.encode(submittedIsbn, StandardCharsets.UTF_8);
   }
 
-  record Result(SelectedEdition edition, String reviewToken, ManualBookForm form) {}
+  record Result(SelectedEdition edition, String reviewToken, ManualBookForm form, String localCoverUrl) {}
 }

@@ -8,6 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Clock;
 import java.time.Duration;
+import java.util.UUID;
 import java.util.Base64;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -37,10 +38,16 @@ class ProviderReviewToken {
   }
 
   String issue(String lookupIsbn, SelectedEdition edition) {
+    return issue(new Payload(clock.millis() + lifetime.toMillis(), lookupIsbn, edition, null));
+  }
+
+  String issueLocal(String lookupIsbn, UUID editionId) {
+    return issue(new Payload(clock.millis() + lifetime.toMillis(), lookupIsbn, null, editionId));
+  }
+
+  private String issue(Payload review) {
     try {
-      byte[] payload =
-          json.writeValueAsBytes(
-              new Payload(clock.millis() + lifetime.toMillis(), lookupIsbn, edition));
+      byte[] payload = json.writeValueAsBytes(review);
       String encoded = Base64.getUrlEncoder().withoutPadding().encodeToString(payload);
       return encoded
           + "."
@@ -59,9 +66,10 @@ class ProviderReviewToken {
       Payload payload = json.readValue(Base64.getUrlDecoder().decode(parts[0]), Payload.class);
       if (payload.expiresAt() < clock.millis()
           || payload.lookupIsbn() == null
-          || payload.edition() == null) return java.util.Optional.empty();
+          || (payload.edition() == null && payload.localEditionId() == null)
+          || (payload.edition() != null && payload.localEditionId() != null)) return java.util.Optional.empty();
       return java.util.Optional.of(
-          new AcceptedProviderReview(payload.lookupIsbn(), payload.edition()));
+          new AcceptedProviderReview(payload.lookupIsbn(), payload.edition(), payload.localEditionId()));
     } catch (RuntimeException | java.io.IOException exception) {
       return java.util.Optional.empty();
     }
@@ -77,7 +85,12 @@ class ProviderReviewToken {
     }
   }
 
-  private record Payload(long expiresAt, String lookupIsbn, SelectedEdition edition) {}
+  private record Payload(
+      long expiresAt, String lookupIsbn, SelectedEdition edition, UUID localEditionId) {}
 }
 
-record AcceptedProviderReview(String lookupIsbn, SelectedEdition edition) {}
+record AcceptedProviderReview(String lookupIsbn, SelectedEdition edition, UUID localEditionId) {
+  boolean local() {
+    return localEditionId != null;
+  }
+}

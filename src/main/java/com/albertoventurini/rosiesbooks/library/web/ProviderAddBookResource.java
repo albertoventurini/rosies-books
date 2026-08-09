@@ -4,19 +4,32 @@ import com.albertoventurini.rosiesbooks.identity.api.CurrentUser;
 import com.albertoventurini.rosiesbooks.identity.api.CurrentUserProvider;
 import com.albertoventurini.rosiesbooks.library.internal.Isbn10;
 import com.albertoventurini.rosiesbooks.library.internal.Isbn13;
+import com.albertoventurini.rosiesbooks.library.internal.EditionMetadata;
+import com.albertoventurini.rosiesbooks.library.internal.Finished;
+import com.albertoventurini.rosiesbooks.library.internal.Reading;
+import com.albertoventurini.rosiesbooks.library.internal.ReadingState;
+import com.albertoventurini.rosiesbooks.library.internal.ToRead;
+import com.albertoventurini.rosiesbooks.library.persistence.ProviderBookAdditionService;
+import com.albertoventurini.rosiesbooks.library.persistence.ProviderBookAdditionService.IdentifierConflictException;
+import com.albertoventurini.rosiesbooks.library.persistence.ProviderBookAdditionService.StaleReviewException;
 import com.albertoventurini.rosiesbooks.provider.api.IsbnEditionLookup;
 import com.albertoventurini.rosiesbooks.provider.api.IsbnLookupResult;
+import com.albertoventurini.rosiesbooks.provider.api.SelectedEdition;
 import io.quarkus.qute.TemplateInstance;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.time.Clock;
+import java.time.LocalDate;
 import java.time.ZoneId;
+import java.net.URI;
+import java.util.UUID;
 import java.util.List;
 import java.util.Map;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -27,18 +40,21 @@ class ProviderAddBookResource {
   private final CurrentUserProvider currentUsers;
   private final IsbnEditionLookup lookup;
   private final ProviderReviewToken tokens;
+  private final ProviderBookAdditionService additions;
   private final ManualBookEntryValidator stateValidator;
 
   ProviderAddBookResource(
       CurrentUserProvider currentUsers,
       IsbnEditionLookup lookup,
       ProviderReviewToken tokens,
+      ProviderBookAdditionService additions,
       Clock clock,
       @ConfigProperty(name = "rosies-books.default-zone", defaultValue = "Africa/Johannesburg")
           String zone) {
     this.currentUsers = currentUsers;
     this.lookup = lookup;
     this.tokens = tokens;
+    this.additions = additions;
     this.stateValidator = new ManualBookEntryValidator(clock, ZoneId.of(zone));
   }
 
@@ -62,6 +78,17 @@ class ProviderAddBookResource {
       return bad(
           ProviderAddBookPage.error(
               owner.displayLabel(), submitted, "Enter a valid ISBN-10 or ISBN-13."));
+    }
+    var local = additions.findByIsbn13(normalized.value());
+    if (local.isPresent()) {
+      SelectedEdition edition = selected(local.get().metadata());
+      return Response.ok(
+              ProviderBookTemplates.add(
+                  ProviderAddBookPage.found(
+                      owner.displayLabel(), submitted, edition,
+                      tokens.issueLocal(normalized.value(), local.get().id()), initialStateForm(),
+                      local.get().hasCover() ? "/books/new/cover/" + local.get().id() : null)))
+          .build();
     }
     IsbnLookupResult result = lookup.lookup(normalized);
     if (result instanceof IsbnLookupResult.Found found)
@@ -112,10 +139,32 @@ class ProviderAddBookResource {
           form.withErrors(Map.of("form", List.of("Choose one of the available form actions."))));
     form = stateValidator.validateState(form);
     if (!form.errors().isEmpty()) return badAdd(owner, accepted.get(), reviewToken, form);
-    // Persistence is intentionally deferred to task 7-3; this route only establishes the contract.
-    return Response.status(Response.Status.NOT_IMPLEMENTED)
-        .entity(ProviderBookTemplates.add(addPage(owner, accepted.get(), reviewToken, form)))
-        .build();
+    try {
+      var added = accepted.get().local()
+          ? additions.addLocal(owner, accepted.get().localEditionId(), readingState(form))
+          : additions.addProvider(owner, candidate(accepted.get()), readingState(form));
+      return Response.seeOther(URI.create("/books/" + added.id().value() + "?notice=book-added")).build();
+    } catch (StaleReviewException exception) {
+      return bad(ProviderAddBookPage.error(owner.displayLabel(), "", "This result is no longer available. Look up the ISBN again."));
+    } catch (IdentifierConflictException exception) {
+      return badAdd(owner, accepted.get(), reviewToken, form.withErrors(Map.of("form", List.of("This result conflicts with an existing edition. Look up the ISBN again."))));
+    } catch (IllegalArgumentException exception) {
+      return badAdd(owner, accepted.get(), reviewToken, form.withErrors(Map.of("form", List.of("This result is no longer available. Look up the ISBN again."))));
+    }
+  }
+
+  @GET
+  @Path("cover/{editionId}")
+  public Response localCover(@PathParam("editionId") String rawId) {
+    owner();
+    try {
+      UUID id = UUID.fromString(rawId);
+      if (!id.toString().equalsIgnoreCase(rawId)) throw new IllegalArgumentException();
+      var cover = additions.localCover(id).orElseThrow(() -> new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build()));
+      return Response.ok(cover.content(), cover.mimeType()).header("Cache-Control", "no-store").build();
+    } catch (IllegalArgumentException invalid) {
+      throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
+    }
   }
 
   private ManualBookForm initialStateForm() {
@@ -142,10 +191,16 @@ class ProviderAddBookResource {
         Map.of());
   }
 
-  private static ProviderAddBookPage addPage(
+  private ProviderAddBookPage addPage(
       CurrentUser owner, AcceptedProviderReview accepted, String token, ManualBookForm form) {
+    SelectedEdition edition = accepted.local()
+        ? additions.findByIsbn13(accepted.lookupIsbn()).map(value -> selected(value.metadata())).orElse(null)
+        : accepted.edition();
+    if (edition == null) return ProviderAddBookPage.error(owner.displayLabel(), "", "This result is no longer available. Look up the ISBN again.");
+    String cover = accepted.local() && additions.findByIsbn13(accepted.lookupIsbn()).map(ProviderBookAdditionService.LocalEdition::hasCover).orElse(false)
+        ? "/books/new/cover/" + accepted.localEditionId() : null;
     return ProviderAddBookPage.found(
-        owner.displayLabel(), accepted.lookupIsbn(), accepted.edition(), token, form);
+        owner.displayLabel(), accepted.lookupIsbn(), edition, token, form, cover);
   }
 
   private static Response bad(ProviderAddBookPage page) {
@@ -154,7 +209,7 @@ class ProviderAddBookResource {
         .build();
   }
 
-  private static Response badAdd(
+  private Response badAdd(
       CurrentUser owner, AcceptedProviderReview accepted, String token, ManualBookForm form) {
     return Response.status(Response.Status.BAD_REQUEST)
         .entity(ProviderBookTemplates.add(addPage(owner, accepted, token, form)))
@@ -187,5 +242,34 @@ class ProviderAddBookResource {
     if (result instanceof IsbnLookupResult.MalformedResponse)
       return "ISBN lookup is temporarily unavailable.";
     return "ISBN lookup is temporarily unavailable.";
+  }
+
+  private static ProviderBookAdditionService.ProviderCandidate candidate(AcceptedProviderReview accepted) {
+    SelectedEdition edition = accepted.edition();
+    return new ProviderBookAdditionService.ProviderCandidate(
+        accepted.lookupIsbn(), edition.providerName(), edition.providerEditionId(), metadata(edition, accepted.lookupIsbn()));
+  }
+
+  private static EditionMetadata metadata(SelectedEdition edition, String lookupIsbn) {
+    return new EditionMetadata(edition.title(), edition.subtitle(), edition.authors(), edition.format(),
+        edition.isbn10().map(value -> com.albertoventurini.rosiesbooks.library.internal.Isbn10.parse(value.value())),
+        java.util.Optional.of(Isbn13.parse(lookupIsbn)), edition.publisher(),
+        edition.publicationDate().map(value -> new com.albertoventurini.rosiesbooks.library.internal.PartialPublicationDate(value.year(), value.month(), value.day())),
+        edition.pageCount(), edition.language(), edition.description());
+  }
+
+  private static SelectedEdition selected(EditionMetadata metadata) {
+    return new SelectedEdition("local", "local", metadata.title(), metadata.subtitle(), metadata.authors(), metadata.format(), metadata.publisher(),
+        metadata.publicationDate().map(value -> new com.albertoventurini.rosiesbooks.provider.api.PartialPublicationDate(value.year(), value.month(), value.day())), metadata.pageCount(), metadata.language(), metadata.description(),
+        metadata.isbn10().map(value -> new com.albertoventurini.rosiesbooks.provider.api.Isbn10(value.value())), metadata.isbn13().map(value -> new com.albertoventurini.rosiesbooks.provider.api.Isbn13(value.value())), java.util.Optional.empty());
+  }
+
+  private static ReadingState readingState(ManualBookForm form) {
+    return switch (form.state()) {
+      case "TO_READ" -> new ToRead();
+      case "READING" -> new Reading(LocalDate.parse(form.startedOn()));
+      case "FINISHED" -> new Finished(form.startedOn().isBlank() ? java.util.Optional.empty() : java.util.Optional.of(LocalDate.parse(form.startedOn())), LocalDate.parse(form.finishedOn()));
+      default -> throw new IllegalArgumentException("Invalid reading state");
+    };
   }
 }
