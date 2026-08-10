@@ -10,10 +10,8 @@ front of the published application port before exposing the service to the inter
    distinct real value, and export it into the shell. The application rejects missing, blank,
    placeholder, and known local-development values at production startup. The Google allowlist is
    still checked for valid email syntax by the identity boundary.
-2. Set `ROSIES_BOOKS_IMAGE` in that file to a published stable image tag, such as
-   `ghcr.io/albertoventurini/rosies-books:v0.1.0`. Prefer the immutable digest recorded in the
-   matching GitHub Release, for example
-   `ghcr.io/albertoventurini/rosies-books@sha256:<published-digest>`.
+2. The Compose file pins the application image to a published digest. Update its `app.image`
+   value to the digest recorded in the matching GitHub Release when deploying a new release.
 3. Pull and start the production topology:
 
    ```shell
@@ -44,12 +42,15 @@ its own health check calls `/q/health/ready`, which includes datasource readines
 only succeeds after Flyway can start against PostgreSQL. On a schema migration failure, investigate
 and deploy a forward fix—do not edit a migration that ran against a deployed database.
 
-`ROSIES_BOOKS_IMAGE` selects the public GHCR image and defaults to
-`ghcr.io/albertoventurini/rosies-books:v0.1.0`. Production Compose is pull-only: deploy from a
-clean directory containing this Compose file, the `docker/` initialization directory, and secure
+Production Compose pins the public GHCR image directly. It is pull-only: deploy from a clean
+directory containing this Compose file, the `docker/` initialization directory, and secure
 configuration files; no source checkout or local image build is needed. `ROSIES_BOOKS_HTTP_PORT`
-is the only host port exposed by the topology. `latest` is only a convenience tag and must not be
-used for production deployment.
+is the only host port exposed by the topology. Update the pinned digest for each release; `latest`
+is only a convenience tag and must not be used for production deployment.
+
+Releases published by the multi-architecture workflow provide `linux/amd64` and `linux/arm64/v8`
+images under the same tag and digest, so a newly pinned release image can be pulled by either server
+architecture.
 
 ## Automated image smoke check
 

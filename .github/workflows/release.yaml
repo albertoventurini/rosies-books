@@ -4,13 +4,13 @@ on:
   push:
     tags: ["v*"]
 
-permissions:
-  contents: write
-  packages: write
-
 jobs:
-  publish:
+  validate:
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      tagged_commit: ${{ steps.tag.outputs.tagged_commit }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
@@ -20,7 +20,8 @@ jobs:
           distribution: temurin
           java-version: "25"
           cache: maven
-      - name: Validate stable tag and main ancestry
+      - id: tag
+        name: Validate stable tag and main ancestry
         env:
           TAG: ${{ github.ref_name }}
         run: |
@@ -32,15 +33,27 @@ jobs:
           git fetch --no-tags origin main:refs/remotes/origin/main
           tagged_commit="$(git rev-list --max-count=1 "$GITHUB_REF")"
           git merge-base --is-ancestor "$tagged_commit" origin/main
-          printf 'TAGGED_COMMIT=%s\n' "$tagged_commit" >> "$GITHUB_ENV"
+          printf 'tagged_commit=%s\n' "$tagged_commit" >> "$GITHUB_OUTPUT"
       - run: ./mvnw verify
       - run: ./scripts/check-tracked-secrets.sh
-      - name: Build the release candidate
+
+  build-amd64:
+    needs: validate
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      digest: ${{ steps.publish.outputs.digest }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Build the AMD64 release candidate
         env:
           TAG: ${{ github.ref_name }}
+          TAGGED_COMMIT: ${{ needs.validate.outputs.tagged_commit }}
         run: |
           set -euo pipefail
-          image="rosies-books:${TAG}-candidate"
+          image="rosies-books:${TAG}-amd64-candidate"
           docker build --platform linux/amd64 \
             --label "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
             --label "org.opencontainers.image.revision=${TAGGED_COMMIT}" \
@@ -48,25 +61,111 @@ jobs:
             --tag "$image" \
             .
           printf 'CANDIDATE_IMAGE=%s\n' "$image" >> "$GITHUB_ENV"
-      - name: Smoke test the release candidate
+      - name: Smoke test the AMD64 release candidate
         env:
           ROSIES_BOOKS_IMAGE: ${{ env.CANDIDATE_IMAGE }}
           ROSIES_BOOKS_SMOKE_SKIP_BUILD: "true"
         run: ./scripts/container-smoke.sh
-      - name: Publish the smoke-tested image
+      - uses: docker/setup-buildx-action@c47758b77c9736f4b2ef4073d4d51994fabfe349 # v3.7.1
+      - id: publish
+        name: Publish the AMD64 image by digest
+        env:
+          GHCR_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          TAGGED_COMMIT: ${{ needs.validate.outputs.tagged_commit }}
+        run: |
+          set -euo pipefail
+          registry_image="ghcr.io/albertoventurini/rosies-books"
+          metadata="$(mktemp)"
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          docker buildx build --platform linux/amd64 \
+            --label "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
+            --label "org.opencontainers.image.revision=${TAGGED_COMMIT}" \
+            --label "org.opencontainers.image.version=${TAG}" \
+            --metadata-file "$metadata" \
+            --output "type=image,name=$registry_image,push-by-digest=true,name-canonical=true,push=true" \
+            .
+          digest="$(jq --raw-output '."containerimage.digest"' "$metadata")"
+          test "$digest" != null
+          printf 'digest=%s\n' "$digest" >> "$GITHUB_OUTPUT"
+
+  build-arm64:
+    needs: validate
+    runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      digest: ${{ steps.publish.outputs.digest }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Build the ARM64 release candidate
+        env:
+          TAG: ${{ github.ref_name }}
+          TAGGED_COMMIT: ${{ needs.validate.outputs.tagged_commit }}
+        run: |
+          set -euo pipefail
+          image="rosies-books:${TAG}-arm64-candidate"
+          docker build --platform linux/arm64/v8 \
+            --label "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
+            --label "org.opencontainers.image.revision=${TAGGED_COMMIT}" \
+            --label "org.opencontainers.image.version=${TAG}" \
+            --tag "$image" \
+            .
+          printf 'CANDIDATE_IMAGE=%s\n' "$image" >> "$GITHUB_ENV"
+      - name: Smoke test the ARM64 release candidate
+        env:
+          ROSIES_BOOKS_IMAGE: ${{ env.CANDIDATE_IMAGE }}
+          ROSIES_BOOKS_SMOKE_SKIP_BUILD: "true"
+        run: ./scripts/container-smoke.sh
+      - uses: docker/setup-buildx-action@c47758b77c9736f4b2ef4073d4d51994fabfe349 # v3.7.1
+      - id: publish
+        name: Publish the ARM64 image by digest
+        env:
+          GHCR_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          TAGGED_COMMIT: ${{ needs.validate.outputs.tagged_commit }}
+        run: |
+          set -euo pipefail
+          registry_image="ghcr.io/albertoventurini/rosies-books"
+          metadata="$(mktemp)"
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          docker buildx build --platform linux/arm64/v8 \
+            --label "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
+            --label "org.opencontainers.image.revision=${TAGGED_COMMIT}" \
+            --label "org.opencontainers.image.version=${TAG}" \
+            --metadata-file "$metadata" \
+            --output "type=image,name=$registry_image,push-by-digest=true,name-canonical=true,push=true" \
+            .
+          digest="$(jq --raw-output '."containerimage.digest"' "$metadata")"
+          test "$digest" != null
+          printf 'digest=%s\n' "$digest" >> "$GITHUB_OUTPUT"
+
+  publish:
+    needs: [validate, build-amd64, build-arm64]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - uses: docker/setup-buildx-action@c47758b77c9736f4b2ef4073d4d51994fabfe349 # v3.7.1
+      - name: Create and publish the multi-architecture image
         env:
           TAG: ${{ github.ref_name }}
           GHCR_TOKEN: ${{ github.token }}
+          TAGGED_COMMIT: ${{ needs.validate.outputs.tagged_commit }}
+          AMD64_DIGEST: ${{ needs.build-amd64.outputs.digest }}
+          ARM64_DIGEST: ${{ needs.build-arm64.outputs.digest }}
         run: |
           set -euo pipefail
           registry_image="ghcr.io/albertoventurini/rosies-books"
           printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
-          docker tag "$CANDIDATE_IMAGE" "$registry_image:$TAG"
-          docker tag "$CANDIDATE_IMAGE" "$registry_image:sha-$TAGGED_COMMIT"
-          docker tag "$CANDIDATE_IMAGE" "$registry_image:latest"
-          docker push "$registry_image:$TAG"
-          docker push "$registry_image:sha-$TAGGED_COMMIT"
-          docker push "$registry_image:latest"
+          docker buildx imagetools create \
+            --tag "$registry_image:$TAG" \
+            --tag "$registry_image:sha-$TAGGED_COMMIT" \
+            --tag "$registry_image:latest" \
+            "$registry_image@$AMD64_DIGEST" \
+            "$registry_image@$ARM64_DIGEST"
           digest="$(docker buildx imagetools inspect "$registry_image:$TAG" --format '{{.Manifest.Digest}}')"
           printf 'PUBLISHED_IMAGE=%s@%s\n' "$registry_image" "$digest" >> "$GITHUB_ENV"
       - name: Create GitHub Release
