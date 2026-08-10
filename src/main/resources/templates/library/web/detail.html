@@ -10,6 +10,7 @@
             <a href="{item.route}"{#if item.active} aria-current="page"{/if} class="shelf-navigation-link">{item.label}</a>
           {/for}
         </nav>
+        <p class="release-version">{releaseVersion}</p>
       </aside>
       <main class="shelf-main book-detail" id="main-content">
         {#if page.hasNotice}<div class="shelf-notice" role="status">{page.notice}</div>{/if}

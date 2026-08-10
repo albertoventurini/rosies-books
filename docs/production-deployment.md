@@ -76,6 +76,10 @@ procedure.
 
 ## GitHub release administration
 
+The release workflow stamps the validated `v<major>.<minor>.<patch>` tag into the application,
+which appears in the library sidebar. The visible version therefore identifies the deployed release,
+not the Maven development version.
+
 After the first successful release, set the `ghcr.io/albertoventurini/rosies-books` container
 package visibility to **public** in GitHub package settings. Also create an active `v*` tag ruleset
 that limits tag creation, updates, and deletion to release maintainers. Stable tags are the

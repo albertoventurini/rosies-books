@@ -55,6 +55,7 @@ jobs:
           set -euo pipefail
           image="rosies-books:${TAG}-amd64-candidate"
           docker build --platform linux/amd64 \
+            --build-arg "RELEASE_VERSION=$TAG" \
             --label "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
             --label "org.opencontainers.image.revision=${TAGGED_COMMIT}" \
             --label "org.opencontainers.image.version=${TAG}" \
@@ -79,6 +80,7 @@ jobs:
           metadata="$(mktemp)"
           printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
           docker buildx build --platform linux/amd64 \
+            --build-arg "RELEASE_VERSION=$TAG" \
             --label "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
             --label "org.opencontainers.image.revision=${TAGGED_COMMIT}" \
             --label "org.opencontainers.image.version=${TAG}" \
@@ -107,6 +109,7 @@ jobs:
           set -euo pipefail
           image="rosies-books:${TAG}-arm64-candidate"
           docker build --platform linux/arm64/v8 \
+            --build-arg "RELEASE_VERSION=$TAG" \
             --label "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
             --label "org.opencontainers.image.revision=${TAGGED_COMMIT}" \
             --label "org.opencontainers.image.version=${TAG}" \
@@ -131,6 +134,7 @@ jobs:
           metadata="$(mktemp)"
           printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
           docker buildx build --platform linux/arm64/v8 \
+            --build-arg "RELEASE_VERSION=$TAG" \
             --label "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
             --label "org.opencontainers.image.revision=${TAGGED_COMMIT}" \
             --label "org.opencontainers.image.version=${TAG}" \

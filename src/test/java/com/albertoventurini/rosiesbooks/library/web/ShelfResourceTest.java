@@ -63,6 +63,8 @@ class ShelfResourceTest {
             .body(containsString("href=\"/reading\""))
             .body(containsString("href=\"/to-read\""))
             .body(containsString("href=\"/finished\""))
+            .body(containsString("class=\"release-version\""))
+            .body(containsString("v0.1.0-SNAPSHOT"))
             .body(not(containsString("<script")));
 
         given()

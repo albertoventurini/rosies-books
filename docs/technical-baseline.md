@@ -34,6 +34,7 @@ and Testcontainers) use the BOM without a dependency-level override.
 | Component | Version | Owner | Rationale | Source |
 | --- | --- | --- | --- | --- |
 | Maven Compiler Plugin | 3.15.0 | `maven.compiler.version` | Compiles with `release=25` and parameter metadata | [Compiler Plugin](https://maven.apache.org/plugins/maven-compiler-plugin/) |
+| Maven Resources Plugin | 3.3.1 | `maven.resources.version` | Filters the build-stamped release version into `application.properties` without processing binary static assets | [Resources Plugin](https://maven.apache.org/plugins/maven-resources-plugin/) |
 | Maven Surefire Plugin | 3.5.5 | `maven.surefire.version` | Runs JUnit Platform tests on Java 25 | [Surefire Plugin](https://maven.apache.org/surefire/maven-surefire-plugin/) |
 | Maven Failsafe Plugin | 3.5.5 | `maven.failsafe.version` | Runs packaged-JVM `@QuarkusIntegrationTest` tests during `verify` | [Failsafe Plugin](https://maven.apache.org/surefire/maven-failsafe-plugin/) |
 | Maven Enforcer Plugin | 3.6.3 | `maven.enforcer.version` | Rejects an unpinned Maven or Java runtime | [Enforcer Plugin](https://maven.apache.org/enforcer/maven-enforcer-plugin/) |
