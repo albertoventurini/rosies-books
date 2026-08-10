@@ -179,8 +179,14 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          gh release create "$TAG" \
-            --repo "$GH_REPO" \
-            --title "$TAG" \
-            --generate-notes \
-            --notes "Container image: \`$PUBLISHED_IMAGE\`"
+          if gh release view "$TAG" --repo "$GH_REPO" >/dev/null 2>&1; then
+            gh release edit "$TAG" \
+              --repo "$GH_REPO" \
+              --draft=false
+          else
+            gh release create "$TAG" \
+              --repo "$GH_REPO" \
+              --title "$TAG" \
+              --generate-notes \
+              --notes "Container image: \`$PUBLISHED_IMAGE\`"
+          fi
