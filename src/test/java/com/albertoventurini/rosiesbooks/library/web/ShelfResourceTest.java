@@ -104,7 +104,7 @@ class ShelfResourceTest {
     assertThat(finished, containsString("No books finished in 2026."));
     assertThat(finished, containsString("href=\"/finished?year=2026\""));
     assertThat(finished, containsString("aria-current=\"true\""));
-    assertThat(finished, containsString("Add book manually"));
+    assertThat(finished, containsString("Add book"));
   }
 
   @Test

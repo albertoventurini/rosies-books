@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
+import java.time.OffsetDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,14 +35,22 @@ class CoverAssetSchemaCompatibilityTest {
         Map.of(
             "id", new ColumnContract(UUID.class, false),
             "content", new ColumnContract(byte[].class, false),
-            "mime_type", new ColumnContract(String.class, false)),
+            "mime_type", new ColumnContract(String.class, false),
+            "sha256", new ColumnContract(String.class, true),
+            "width", new ColumnContract(Integer.class, true),
+            "height", new ColumnContract(Integer.class, true),
+            "provenance_url", new ColumnContract(String.class, true),
+            "fetched_at", new ColumnContract(OffsetDateTime.class, true)),
         generatedColumns);
     assertEquals("cover_asset_pkey", COVER_ASSET.getPrimaryKey().getName());
     assertEquals(
         List.of("id"),
         COVER_ASSET.getPrimaryKey().getFields().stream().map(Field::getName).toList());
     assertEquals(
-        List.of("cover_asset_content_max_5_mib"),
+        List.of(
+            "cover_asset_content_max_5_mib",
+            "cover_asset_dimensions_positive",
+            "cover_asset_sha256_format"),
         COVER_ASSET.getChecks().stream().map(check -> check.getName()).toList());
 
     var liveColumns =
@@ -57,7 +66,19 @@ class CoverAssetSchemaCompatibilityTest {
         List.of(
             Map.of("column_name", "id", "data_type", "uuid", "is_nullable", "NO"),
             Map.of("column_name", "content", "data_type", "bytea", "is_nullable", "NO"),
-            Map.of("column_name", "mime_type", "data_type", "text", "is_nullable", "NO")),
+            Map.of("column_name", "mime_type", "data_type", "text", "is_nullable", "NO"),
+            Map.of(
+                "column_name", "sha256", "data_type", "character varying", "is_nullable", "YES"),
+            Map.of("column_name", "width", "data_type", "integer", "is_nullable", "YES"),
+            Map.of("column_name", "height", "data_type", "integer", "is_nullable", "YES"),
+            Map.of("column_name", "provenance_url", "data_type", "text", "is_nullable", "YES"),
+            Map.of(
+                "column_name",
+                "fetched_at",
+                "data_type",
+                "timestamp with time zone",
+                "is_nullable",
+                "YES")),
         liveColumns);
 
     assertEquals(

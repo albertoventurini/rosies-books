@@ -87,15 +87,17 @@ class BookDetailResourceTest {
   }
 
   @Test
-  void returnsStoredCoversOnlyToTheirOwnerAndFailsClosedOtherwise() {
+  void returnsStoredCoversByTheirContentHash() {
     UUID cover = UUID.randomUUID();
     UUID edition = UUID.randomUUID();
     UUID book = UUID.randomUUID();
+    String hash = "a".repeat(64);
     OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
     dsl.insertInto(COVER_ASSET)
         .set(COVER_ASSET.ID, cover)
         .set(COVER_ASSET.CONTENT, new byte[] {1, 2, 3})
         .set(COVER_ASSET.MIME_TYPE, "image/png")
+        .set(COVER_ASSET.SHA256, hash)
         .execute();
     dsl.insertInto(EDITION)
         .set(EDITION.ID, edition)
@@ -123,22 +125,17 @@ class BookDetailResourceTest {
 
     byte[] returned =
         given()
-            .cookie("rosies-dev-user", DevelopmentUser.READER_ONE.alias())
             .when()
-            .get("/books/" + book + "/cover")
+            .get("/covers/" + hash)
             .then()
             .statusCode(200)
             .contentType("image/png")
-            .header("Cache-Control", containsString("no-store"))
+            .header("Cache-Control", containsString("immutable"))
+            .header("ETag", '\"' + hash + '\"')
             .extract()
             .asByteArray();
     assertArrayEquals(new byte[] {1, 2, 3}, returned);
-    given()
-        .cookie("rosies-dev-user", DevelopmentUser.READER_TWO.alias())
-        .when()
-        .get("/books/" + book + "/cover")
-        .then()
-        .statusCode(404);
+    given().when().get("/covers/" + "b".repeat(64)).then().statusCode(404);
     given().when().get("/books/" + book).then().statusCode(401);
     given()
         .cookie("rosies-dev-user", DevelopmentUser.READER_ONE.alias())

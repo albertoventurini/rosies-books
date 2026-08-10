@@ -63,7 +63,7 @@ class ManualBookResourceTest {
       assertThat(body, containsString("Save book"));
       assertThat(body, not(containsString("Review book")));
       assertThat(body, not(containsString("<script")));
-      assertThat(body, containsString(user.displayLabel()));
+      assertThat(body, not(containsString("current-user-label")));
     }
   }
 
@@ -250,7 +250,7 @@ class ManualBookResourceTest {
           .get(route)
           .then()
           .statusCode(200)
-          .body(containsString("href=\"/books/new/manual\""));
+          .body(containsString("href=\"/books/new\""));
     }
     given()
         .cookie("rosies-dev-user", DevelopmentUser.READER_ONE.alias())
