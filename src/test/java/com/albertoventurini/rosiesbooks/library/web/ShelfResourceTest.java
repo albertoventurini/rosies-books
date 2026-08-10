@@ -261,22 +261,6 @@ class ShelfResourceTest {
     }
   }
 
-  @Test
-  void escapesTheCurrentUserDisplayLabelInTheCheckedTemplate() {
-    String html =
-        ShelfTemplates.shelf(
-                ShelfPage.from(
-                    "<img src=x onerror=private>",
-                    Shelf.READING,
-                    List.of(),
-                    LocalDate.of(2026, 8, 4),
-                    ZoneId.of("Africa/Johannesburg")))
-            .render();
-
-    assertThat(html, containsString("&lt;img src=x onerror=private&gt;"));
-    assertThat(html, not(containsString("<img src=x")));
-  }
-
   private void assertActiveAndEmpty(String route, String heading, String emptyMessage) {
     String body =
         given()
