@@ -10,13 +10,17 @@ front of the published application port before exposing the service to the inter
    distinct real value, and export it into the shell. The application rejects missing, blank,
    placeholder, and known local-development values at production startup. The Google allowlist is
    still checked for valid email syntax by the identity boundary.
-2. Build and start the production topology:
+2. Set `ROSIES_BOOKS_IMAGE` in that file to a published stable image tag, such as
+   `ghcr.io/albertoventurini/rosies-books:v0.1.0`. Prefer the immutable digest recorded in the
+   matching GitHub Release, for example
+   `ghcr.io/albertoventurini/rosies-books@sha256:<published-digest>`.
+3. Pull and start the production topology:
 
    ```shell
    set -a
    source /secure/path/rosies-books.production.env
    set +a
-   ./scripts/build-production-image.sh
+   docker compose --env-file /secure/path/rosies-books.production.env -f compose.production.yaml pull
    docker compose --env-file /secure/path/rosies-books.production.env -f compose.production.yaml up -d
    ```
 
@@ -40,9 +44,12 @@ its own health check calls `/q/health/ready`, which includes datasource readines
 only succeeds after Flyway can start against PostgreSQL. On a schema migration failure, investigate
 and deploy a forward fix—do not edit a migration that ran against a deployed database.
 
-Use `ROSIES_BOOKS_IMAGE` to run a separately built/tagged image. Its default is
-`rosies-books:latest`; the Compose file also has build metadata so a normal local first start can
-build it. `ROSIES_BOOKS_HTTP_PORT` is the only host port exposed by the topology.
+`ROSIES_BOOKS_IMAGE` selects the public GHCR image and defaults to
+`ghcr.io/albertoventurini/rosies-books:v0.1.0`. Production Compose is pull-only: deploy from a
+clean directory containing this Compose file, the `docker/` initialization directory, and secure
+configuration files; no source checkout or local image build is needed. `ROSIES_BOOKS_HTTP_PORT`
+is the only host port exposed by the topology. `latest` is only a convenience tag and must not be
+used for production deployment.
 
 ## Automated image smoke check
 
@@ -52,12 +59,22 @@ Run this only from a checkout with Docker available:
 ./scripts/container-smoke.sh
 ```
 
-The script builds the image, starts an isolated Compose project with its own network and named
-volume, waits for `/q/health/ready`, confirms the configured image user is `rosies:rosies`, and
-always removes only the project, containers, network, and volume it created. It uses the
+The script builds the image by default, starts an isolated Compose project with its own network
+and named volume, waits for `/q/health/ready`, confirms the configured image user is
+`rosies:rosies`, and always removes only the project, containers, network, and volume it created.
+To check an already-built, explicitly named image without rebuilding it, set both
+`ROSIES_BOOKS_IMAGE` and `ROSIES_BOOKS_SMOKE_SKIP_BUILD=true`. It uses the
 `container-smoke` profile exclusively to disable OIDC for automated image/database/readiness
 verification. It is not a deployment mode and is intentionally absent from the production startup
 procedure.
+
+## GitHub release administration
+
+After the first successful release, set the `ghcr.io/albertoventurini/rosies-books` container
+package visibility to **public** in GitHub package settings. Also create an active `v*` tag ruleset
+that limits tag creation, updates, and deletion to release maintainers. Stable tags are the
+deliberate release approval point; the release workflow accepts only `v<major>.<minor>.<patch>`
+tags that point to commits reachable from `main`.
 
 ## Credential-pattern check
 

@@ -1,0 +1,81 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: maven
+      - name: Validate stable tag and main ancestry
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Only stable v<major>.<minor>.<patch> tags can be released." >&2
+            exit 1
+          fi
+          git fetch --no-tags origin main:refs/remotes/origin/main
+          tagged_commit="$(git rev-list --max-count=1 "$GITHUB_REF")"
+          git merge-base --is-ancestor "$tagged_commit" origin/main
+          printf 'TAGGED_COMMIT=%s\n' "$tagged_commit" >> "$GITHUB_ENV"
+      - run: ./mvnw verify
+      - run: ./scripts/check-tracked-secrets.sh
+      - name: Build the release candidate
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          image="rosies-books:${TAG}-candidate"
+          docker build --platform linux/amd64 \
+            --label "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
+            --label "org.opencontainers.image.revision=${TAGGED_COMMIT}" \
+            --label "org.opencontainers.image.version=${TAG}" \
+            --tag "$image" \
+            .
+          printf 'CANDIDATE_IMAGE=%s\n' "$image" >> "$GITHUB_ENV"
+      - name: Smoke test the release candidate
+        env:
+          ROSIES_BOOKS_IMAGE: ${{ env.CANDIDATE_IMAGE }}
+          ROSIES_BOOKS_SMOKE_SKIP_BUILD: "true"
+        run: ./scripts/container-smoke.sh
+      - name: Publish the smoke-tested image
+        env:
+          TAG: ${{ github.ref_name }}
+          GHCR_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          registry_image="ghcr.io/albertoventurini/rosies-books"
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          docker tag "$CANDIDATE_IMAGE" "$registry_image:$TAG"
+          docker tag "$CANDIDATE_IMAGE" "$registry_image:sha-$TAGGED_COMMIT"
+          docker tag "$CANDIDATE_IMAGE" "$registry_image:latest"
+          docker push "$registry_image:$TAG"
+          docker push "$registry_image:sha-$TAGGED_COMMIT"
+          docker push "$registry_image:latest"
+          digest="$(docker buildx imagetools inspect "$registry_image:$TAG" --format '{{.Digest}}')"
+          printf 'PUBLISHED_IMAGE=%s@%s\n' "$registry_image" "$digest" >> "$GITHUB_ENV"
+      - name: Create GitHub Release
+        env:
+          TAG: ${{ github.ref_name }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --generate-notes \
+            --notes "Container image: \`$PUBLISHED_IMAGE\`"

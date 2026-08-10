@@ -20,9 +20,7 @@ services:
       start_period: 10s
 
   app:
-    image: ${ROSIES_BOOKS_IMAGE:-rosies-books:latest}
-    build:
-      context: .
+    image: ${ROSIES_BOOKS_IMAGE:-ghcr.io/albertoventurini/rosies-books:v0.1.0}
     restart: unless-stopped
     environment:
       ROSIES_BOOKS_DATABASE_URL: jdbc:postgresql://postgres:5432/${ROSIES_BOOKS_DATABASE_NAME:?Set ROSIES_BOOKS_DATABASE_NAME}

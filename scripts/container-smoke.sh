@@ -9,7 +9,9 @@ cleanup() {
 }
 trap cleanup EXIT
 
-./scripts/build-production-image.sh
+if [[ "${ROSIES_BOOKS_SMOKE_SKIP_BUILD:-false}" != "true" ]]; then
+  ./scripts/build-production-image.sh
+fi
 "${compose[@]}" up --detach
 
 for attempt in $(seq 1 60); do
