@@ -31,6 +31,20 @@ class ProviderAddBookTemplateTest {
     assertTrue(template.contains("data-shelf-date-fields=\"READING\""));
     assertTrue(template.contains("data-shelf-date-fields=\"FINISHED\""));
     assertTrue(template.contains("/assets/state-change.js"));
+    assertTrue(template.contains("id=\"scan-barcode\""));
+    assertTrue(template.contains("aria-haspopup=\"dialog\""));
+    assertTrue(template.contains("id=\"barcode-scanner\""));
+    assertTrue(template.contains("role=\"dialog\""));
+    assertTrue(template.contains("aria-modal=\"true\""));
+    assertTrue(template.contains("id=\"barcode-scanner-status\""));
+    assertTrue(template.contains("/assets/isbn-barcode-scanner.js"));
+    assertTrue(template.contains("action=\"/books/new/lookup\""));
+    assertTrue(
+        Files.exists(
+            Path.of("src/main/resources/META-INF/resources/assets/isbn-barcode-scanner.js")));
+    assertTrue(
+        Files.exists(
+            Path.of("src/main/resources/META-INF/resources/assets/zxing-library-0.20.0.min.js")));
     assertFalse(template.contains(">Shelf and dates<"));
     assertFalse(template.contains(">Update date fields<"));
     assertFalse(template.contains(">Provider result<"));

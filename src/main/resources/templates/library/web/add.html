@@ -16,9 +16,9 @@
       <main class="manual-main" id="main-content">
       <header class="manual-header"><p class="eyebrow">Your library</p><h1>Add a book</h1><p>Look up one exact edition by ISBN, or enter its details yourself.</p></header>
       {#if page.message}<div class="form-error-summary" role="alert"><p>{page.message}</p></div>{/if}
-      <form class="manual-form" method="post" action="/books/new/lookup" novalidate>
+      <form class="manual-form" id="isbn-lookup-form" method="post" action="/books/new/lookup" novalidate>
         <div class="form-field"><label for="isbn">ISBN</label><input id="isbn" name="isbn" value="{page.submittedIsbn}" maxlength="64" inputmode="text" required><p>ISBN-10 and ISBN-13 are accepted.</p></div>
-        <div class="form-actions"><a href="{page.manualFallbackRoute}">Enter book manually</a><button class="button-primary" type="submit">Look up ISBN</button></div>
+        <div class="form-actions"><a href="{page.manualFallbackRoute}">Enter book manually</a><button class="button-secondary" id="scan-barcode" type="button" aria-haspopup="dialog" aria-controls="barcode-scanner">Scan barcode</button><button class="button-primary" type="submit">Look up ISBN</button></div>
       </form>
       {#if page.result}
         <section class="form-section isbn-result">
@@ -52,5 +52,14 @@
       </main>
     </div>
     <script src="/assets/state-change.js" defer></script>
+    <section class="barcode-scanner" id="barcode-scanner" role="dialog" aria-modal="true" aria-labelledby="barcode-scanner-title" hidden tabindex="-1">
+      <div class="barcode-scanner-header"><h2 id="barcode-scanner-title">Scan book barcode</h2><button class="button-secondary" id="barcode-scanner-close" type="button">Close</button></div>
+      <div class="barcode-scanner-camera"><video id="barcode-scanner-video" autoplay muted playsinline></video><div class="barcode-scanner-guide" aria-hidden="true"></div></div>
+      <p class="barcode-scanner-status" id="barcode-scanner-status" role="status" aria-live="polite">Preparing camera…</p>
+      <p class="barcode-scanner-error" id="barcode-scanner-error" role="alert" hidden></p>
+      <p>Align the barcode inside the guide. Only ISBN barcodes can be scanned.</p>
+      <button class="button-secondary" id="barcode-scanner-cancel" type="button">Cancel</button>
+    </section>
+    <script src="/assets/isbn-barcode-scanner.js" defer></script>
   {/content}
 {/include}

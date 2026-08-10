@@ -4,6 +4,10 @@ Task 6-1 provides a production-oriented JVM fast-jar image and a separate Compos
 does not provision a host, DNS, TLS, backups, or a reverse proxy. Put an HTTPS reverse proxy in
 front of the published application port before exposing the service to the internet.
 
+HTTPS is also required for the optional ISBN camera scanner on the Add a book page. Browsers do
+not make camera access available to normal HTTP production origins; the scanner leaves the regular
+ISBN and manual-entry workflows available whenever HTTPS or camera access is unavailable.
+
 ## Configure and start
 
 1. Create a clean deployment directory containing `docker-compose.yml` (a copy of
