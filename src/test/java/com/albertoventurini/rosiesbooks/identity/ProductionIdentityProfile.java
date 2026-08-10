@@ -21,7 +21,8 @@ public class ProductionIdentityProfile implements QuarkusTestProfile {
         "quarkus.oidc.credentials.secret", "production-test-secret",
         "quarkus.oidc.authentication.state-secret", "production-test-state-secret",
         "rosies-books.oidc.allowed-emails", "reader@example.com",
-        "rosies-books.review-token.secret", "production-test-review-token-secret");
+        "rosies-books.review-token.secret", "production-test-review-token-secret",
+        "rosies-books.open-library.operator-contact", "production-test@invalid.example");
   }
 
   @Override

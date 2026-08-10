@@ -15,13 +15,20 @@ public class UnreachableDatasourceHealthProfile implements QuarkusTestProfile {
 
   @Override
   public Map<String, String> getConfigOverrides() {
-    return Map.of(
-        "quarkus.datasource.db-kind", "postgresql",
-        "quarkus.datasource.devservices.enabled", "false",
-        "quarkus.datasource.jdbc.url", "jdbc:postgresql://127.0.0.1:1/rosies",
-        "quarkus.datasource.username", USERNAME,
-        "quarkus.datasource.password", PASSWORD,
-        "quarkus.datasource.jdbc.acquisition-timeout", "1S",
-        "quarkus.flyway.migrate-at-start", "false");
+    return Map.ofEntries(
+        Map.entry("quarkus.oidc.enabled", "false"),
+        Map.entry("quarkus.oidc.client-id", "health-test-client"),
+        Map.entry("quarkus.oidc.credentials.secret", "health-test-client-secret"),
+        Map.entry("quarkus.oidc.authentication.state-secret", "health-test-state-secret"),
+        Map.entry("rosies-books.oidc.allowed-emails", "reader@example.com"),
+        Map.entry("rosies-books.review-token.secret", "health-test-review-token-secret"),
+        Map.entry("rosies-books.open-library.operator-contact", "health-test@invalid.example"),
+        Map.entry("quarkus.datasource.db-kind", "postgresql"),
+        Map.entry("quarkus.datasource.devservices.enabled", "false"),
+        Map.entry("quarkus.datasource.jdbc.url", "jdbc:postgresql://127.0.0.1:1/rosies"),
+        Map.entry("quarkus.datasource.username", USERNAME),
+        Map.entry("quarkus.datasource.password", PASSWORD),
+        Map.entry("quarkus.datasource.jdbc.acquisition-timeout", "1S"),
+        Map.entry("quarkus.flyway.migrate-at-start", "false"));
   }
 }
