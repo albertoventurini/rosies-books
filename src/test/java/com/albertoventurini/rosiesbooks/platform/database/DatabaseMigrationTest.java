@@ -18,7 +18,7 @@ class DatabaseMigrationTest {
     var appliedVersions =
         Arrays.stream(flyway.info().applied()).map(info -> info.getVersion().getVersion()).toList();
 
-    assertEquals(java.util.List.of("1", "2", "3", "4", "5", "6", "7", "8"), appliedVersions);
-    assertEquals("8", flyway.info().current().getVersion().getVersion());
+    assertEquals(java.util.List.of("1", "2", "3", "4", "5", "6", "7", "8", "9"), appliedVersions);
+    assertEquals("9", flyway.info().current().getVersion().getVersion());
   }
 }
