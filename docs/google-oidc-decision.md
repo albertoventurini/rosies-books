@@ -29,8 +29,8 @@ logout workflow in task 8-2. This decision makes no PWA compatibility claim.
 ## Manual local acceptance check
 
 1. Create the separate local Web client and register the localhost callback above.
-2. Export the `GOOGLE_OIDC_LOCAL_*` values from the example file, including the tester's allowed
-   Google email, then run `./mvnw quarkus:dev -Dquarkus.profile=local-oidc`.
+2. Export the `ROSIES_BOOKS_GOOGLE_OIDC_LOCAL_*` values from the example file, including the
+   tester's allowed Google email, then run `./mvnw quarkus:dev -Dquarkus.profile=local-oidc`.
 3. Open the application, sign in with the allowed account, and confirm both first and repeat access.
 4. Sign in with a non-allowlisted account and confirm access is denied without creating a user.
 

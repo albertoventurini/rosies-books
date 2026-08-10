@@ -1,0 +1,41 @@
+services:
+  postgres:
+    image: postgres:18.4
+    environment:
+      POSTGRES_DB: rosies_books_smoke
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: container-smoke-bootstrap-password
+      ROSIES_BOOKS_DATABASE_PASSWORD: container-smoke-application-password
+    volumes:
+      - smoke-postgres-data:/var/lib/postgresql
+      - ./docker/postgres-init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - database
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+  app:
+    image: ${ROSIES_BOOKS_IMAGE:-rosies-books:latest}
+    environment:
+      QUARKUS_PROFILE: container-smoke
+      ROSIES_BOOKS_DATABASE_URL: jdbc:postgresql://postgres:5432/rosies_books_smoke
+      ROSIES_BOOKS_DATABASE_USERNAME: rosies_books_app
+      ROSIES_BOOKS_DATABASE_PASSWORD: container-smoke-application-password
+      ROSIES_BOOKS_OIDC_ALLOWED_EMAILS: smoke@invalid.example
+      ROSIES_BOOKS_REVIEW_TOKEN_SECRET: container-smoke-review-token-secret
+      ROSIES_BOOKS_OPEN_LIBRARY_OPERATOR_CONTACT: smoke@invalid.example
+    networks:
+      - database
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+networks:
+  database:
+    internal: true
+
+volumes:
+  smoke-postgres-data:

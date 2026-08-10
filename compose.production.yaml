@@ -1,0 +1,56 @@
+services:
+  postgres:
+    image: postgres:18.4
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${ROSIES_BOOKS_DATABASE_NAME:?Set ROSIES_BOOKS_DATABASE_NAME}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${ROSIES_BOOKS_DATABASE_BOOTSTRAP_PASSWORD:?Set ROSIES_BOOKS_DATABASE_BOOTSTRAP_PASSWORD}
+      ROSIES_BOOKS_DATABASE_PASSWORD: ${ROSIES_BOOKS_DATABASE_PASSWORD:?Set ROSIES_BOOKS_DATABASE_PASSWORD}
+    volumes:
+      - rosies-books-production-postgres-data:/var/lib/postgresql
+      - ./docker/postgres-init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - database
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+  app:
+    image: ${ROSIES_BOOKS_IMAGE:-rosies-books:latest}
+    build:
+      context: .
+    restart: unless-stopped
+    environment:
+      ROSIES_BOOKS_DATABASE_URL: jdbc:postgresql://postgres:5432/${ROSIES_BOOKS_DATABASE_NAME:?Set ROSIES_BOOKS_DATABASE_NAME}
+      ROSIES_BOOKS_DATABASE_USERNAME: rosies_books_app
+      ROSIES_BOOKS_DATABASE_PASSWORD: ${ROSIES_BOOKS_DATABASE_PASSWORD:?Set ROSIES_BOOKS_DATABASE_PASSWORD}
+      ROSIES_BOOKS_GOOGLE_OIDC_CLIENT_ID: ${ROSIES_BOOKS_GOOGLE_OIDC_CLIENT_ID:?Set ROSIES_BOOKS_GOOGLE_OIDC_CLIENT_ID}
+      ROSIES_BOOKS_GOOGLE_OIDC_CLIENT_SECRET: ${ROSIES_BOOKS_GOOGLE_OIDC_CLIENT_SECRET:?Set ROSIES_BOOKS_GOOGLE_OIDC_CLIENT_SECRET}
+      ROSIES_BOOKS_GOOGLE_OIDC_STATE_SECRET: ${ROSIES_BOOKS_GOOGLE_OIDC_STATE_SECRET:?Set ROSIES_BOOKS_GOOGLE_OIDC_STATE_SECRET}
+      ROSIES_BOOKS_GOOGLE_OIDC_ALLOWED_EMAILS: ${ROSIES_BOOKS_GOOGLE_OIDC_ALLOWED_EMAILS:?Set ROSIES_BOOKS_GOOGLE_OIDC_ALLOWED_EMAILS}
+      ROSIES_BOOKS_REVIEW_TOKEN_SECRET: ${ROSIES_BOOKS_REVIEW_TOKEN_SECRET:?Set ROSIES_BOOKS_REVIEW_TOKEN_SECRET}
+      ROSIES_BOOKS_OPEN_LIBRARY_OPERATOR_CONTACT: ${ROSIES_BOOKS_OPEN_LIBRARY_OPERATOR_CONTACT:?Set ROSIES_BOOKS_OPEN_LIBRARY_OPERATOR_CONTACT}
+    ports:
+      - "${ROSIES_BOOKS_HTTP_PORT:-8080}:8080"
+    networks:
+      - database
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent --show-error http://localhost:8080/q/health/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+networks:
+  database:
+    internal: true
+
+volumes:
+  rosies-books-production-postgres-data:

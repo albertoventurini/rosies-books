@@ -24,12 +24,12 @@ docker compose up -d postgres
 ```
 
 The development profile connects to `localhost:5432` with the fixed, non-production database,
-username, and password declared in `compose.yaml`. Set `POSTGRES_PORT` before both Compose and the
+username, and password declared in `compose.yaml`. Set `ROSIES_BOOKS_POSTGRES_PORT` before both Compose and the
 application when port 5432 is unavailable. For example:
 
 ```shell
-POSTGRES_PORT=55432 docker compose up -d postgres
-POSTGRES_PORT=55432 ./mvnw quarkus:dev
+ROSIES_BOOKS_POSTGRES_PORT=55432 docker compose up -d postgres
+ROSIES_BOOKS_POSTGRES_PORT=55432 ./mvnw quarkus:dev
 ```
 
 Stop PostgreSQL without deleting its named development volume:
@@ -54,16 +54,16 @@ environment:
 
 | Variable | Required | Purpose |
 | --- | --- | --- |
-| `DATABASE_URL` | Yes | PostgreSQL JDBC URL, such as `jdbc:postgresql://db:5432/rosies_books` |
-| `DATABASE_USERNAME` | Yes | Application database role |
-| `DATABASE_PASSWORD` | Yes | Application database credential; treat as a secret |
+| `ROSIES_BOOKS_DATABASE_URL` | Yes | PostgreSQL JDBC URL, such as `jdbc:postgresql://db:5432/rosies_books` |
+| `ROSIES_BOOKS_DATABASE_USERNAME` | Yes | Application database role |
+| `ROSIES_BOOKS_DATABASE_PASSWORD` | Yes | Application database credential; treat as a secret |
 
 After creating the fast-jar with `./mvnw -DskipTests package`, a configured packaged launch is:
 
 ```shell
-DATABASE_URL=jdbc:postgresql://localhost:5432/rosies_books \
-DATABASE_USERNAME=rosies \
-DATABASE_PASSWORD=rosies-local \
+ROSIES_BOOKS_DATABASE_URL=jdbc:postgresql://localhost:5432/rosies_books \
+ROSIES_BOOKS_DATABASE_USERNAME=rosies \
+ROSIES_BOOKS_DATABASE_PASSWORD=rosies-local \
 java -jar target/quarkus-app/quarkus-run.jar
 ```
 

@@ -11,6 +11,7 @@ versions are not restated on dependencies when the BOM already supplies the sele
 | Component | Version | Owner | Rationale | Source |
 | --- | --- | --- | --- | --- |
 | Java | 25 LTS | `maven.compiler.release`; Enforcer range `[25,26)` | Current LTS language/runtime baseline; Quarkus 3.33 supports JVM mode through Java 25 | [OpenJDK 25](https://openjdk.org/projects/jdk/25/), [Quarkus Java 25 support](https://quarkus.io/blog/mandrel-25-minimum-version/) |
+| Temurin container bases | 25.0.3_9 Noble (JDK and JRE) | `Dockerfile` | Fixed build/runtime JVM images; update both tags together and run image smoke validation | [Eclipse Temurin](https://adoptium.net/) |
 | Maven | 3.9.16 | `.mvn/wrapper/maven-wrapper.properties`; Enforcer range `[3.9.16,3.9.17)` | Reproducible build runtime | [Apache Maven 3.9.16](https://maven.apache.org/docs/3.9.16/release-notes.html) |
 | Maven Wrapper scripts | 3.3.4 | `wrapperVersion` in `.mvn/wrapper/maven-wrapper.properties` | Current script-only wrapper; avoids checking in a wrapper JAR | [Maven Wrapper 3.3.4](https://maven.apache.org/wrapper/) |
 | Quarkus Platform | 3.33.2.1 LTS | `quarkus.platform.version` and imported `quarkus-bom` | Production-recommended LTS line with Java 25 support | [Quarkus releases](https://quarkus.io/releases/) |

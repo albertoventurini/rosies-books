@@ -6,7 +6,7 @@ services:
       POSTGRES_USER: rosies
       POSTGRES_PASSWORD: rosies-local
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "${ROSIES_BOOKS_POSTGRES_PORT:-5432}:5432"
     volumes:
       - rosies-postgres-data:/var/lib/postgresql
     healthcheck:

@@ -92,9 +92,9 @@ class MigrationStartupFailureIT {
 
     ProcessBuilder processBuilder =
         new ProcessBuilder(command).redirectErrorStream(true).redirectOutput(output.toFile());
-    processBuilder.environment().put("DATABASE_URL", POSTGRES.getJdbcUrl());
-    processBuilder.environment().put("DATABASE_USERNAME", POSTGRES.getUsername());
-    processBuilder.environment().put("DATABASE_PASSWORD", POSTGRES.getPassword());
+    processBuilder.environment().put("ROSIES_BOOKS_DATABASE_URL", POSTGRES.getJdbcUrl());
+    processBuilder.environment().put("ROSIES_BOOKS_DATABASE_USERNAME", POSTGRES.getUsername());
+    processBuilder.environment().put("ROSIES_BOOKS_DATABASE_PASSWORD", POSTGRES.getPassword());
     return processBuilder.start();
   }
 }

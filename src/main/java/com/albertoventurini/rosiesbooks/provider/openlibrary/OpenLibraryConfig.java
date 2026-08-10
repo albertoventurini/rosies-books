@@ -5,7 +5,7 @@ import java.net.URI;
 import java.time.Duration;
 import java.util.Optional;
 
-@ConfigMapping(prefix = "provider.open-library")
+@ConfigMapping(prefix = "rosies-books.open-library")
 interface OpenLibraryConfig {
   URI baseUrl();
 
