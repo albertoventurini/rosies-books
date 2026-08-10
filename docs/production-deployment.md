@@ -6,8 +6,11 @@ front of the published application port before exposing the service to the inter
 
 ## Configure and start
 
-1. Copy `.env.production.example` to an untracked file, replace every angle-bracket value with a
-   distinct real value, and export it into the shell. The application rejects missing, blank,
+1. Create a clean deployment directory containing `docker-compose.yml` (a copy of
+   `compose.production.yaml`), `.env` (a copy of `.env.production.example`), and
+   `01-create-application-role.sh` (a copy of the same-named repository file). Replace every
+   angle-bracket value in `.env` with a distinct real value and restrict its permissions. The
+   application rejects missing, blank,
    placeholder, and known local-development values at production startup. The Google allowlist is
    still checked for valid email syntax by the identity boundary.
 2. The Compose file pins the application image to a published digest. Update its `app.image`
@@ -15,27 +18,25 @@ front of the published application port before exposing the service to the inter
 3. Pull and start the production topology:
 
    ```shell
-   set -a
-   source /secure/path/rosies-books.production.env
-   set +a
-   docker compose --env-file /secure/path/rosies-books.production.env -f compose.production.yaml pull
-   docker compose --env-file /secure/path/rosies-books.production.env -f compose.production.yaml up -d
+   chmod 600 .env
+   docker compose pull
+   docker compose up -d
    ```
 
-3. Check startup and readiness without printing configuration values:
+4. Check startup and readiness without printing configuration values:
 
    ```shell
-   docker compose --env-file /secure/path/rosies-books.production.env -f compose.production.yaml ps
-   curl --fail http://127.0.0.1:${ROSIES_BOOKS_HTTP_PORT:-8080}/q/health/ready
+   docker compose ps
+   docker compose exec app curl --fail --silent --show-error http://localhost:8080/q/health/ready
    ```
 
-The database is on an internal Compose network and has no host port. PostgreSQL initializes a
-fixed `rosies_books_app` login role. It can connect to the selected database and create/use the
-`public` schema required for Flyway and application tables, but it is not a superuser and cannot
-create databases or roles. The bootstrap administrator installs the trusted `pg_trgm` extension
-required by the existing migrations before the application role runs Flyway. The app receives its
-private JDBC endpoint from Compose; operators do not configure a database hostname or application
-role name.
+The database is on an internal Compose network and has no host port. PostgreSQL initializes the
+fixed `rosies_books_app` login role from the mounted script when it creates a new data volume. It
+can connect to the selected database and create/use the `public` schema required for Flyway and
+application tables, but it is not a superuser and cannot create databases or roles. The bootstrap
+administrator installs the trusted `pg_trgm` extension required by the existing migrations before
+the application role runs Flyway. The app receives its private JDBC endpoint from Compose;
+operators do not configure a database hostname or application role name.
 
 Both services restart with `unless-stopped`. The application waits until PostgreSQL is healthy;
 its own health check calls `/q/health/ready`, which includes datasource readiness and therefore
@@ -43,8 +44,8 @@ only succeeds after Flyway can start against PostgreSQL. On a schema migration f
 and deploy a forward fix—do not edit a migration that ran against a deployed database.
 
 Production Compose pins the public GHCR image directly. It is pull-only: deploy from a clean
-directory containing this Compose file, the `docker/` initialization directory, and secure
-configuration files; no source checkout or local image build is needed. `ROSIES_BOOKS_HTTP_PORT`
+directory containing these three files; no source checkout or local image build is needed.
+`ROSIES_BOOKS_HTTP_PORT`
 is the only host port exposed by the topology. Update the pinned digest for each release; `latest`
 is only a convenience tag and must not be used for production deployment.
 
