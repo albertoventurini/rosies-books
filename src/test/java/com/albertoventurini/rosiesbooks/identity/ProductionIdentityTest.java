@@ -8,6 +8,7 @@ import com.albertoventurini.rosiesbooks.identity.api.CurrentUserProvider;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import jakarta.inject.Inject;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.Test;
 
@@ -17,6 +18,13 @@ class ProductionIdentityTest {
 
   @Inject CurrentUserProvider currentUsers;
   @Inject DSLContext dsl;
+  @ConfigProperty(name = "quarkus.oidc.authentication.force-redirect-https-scheme")
+  boolean forceRedirectHttpsScheme;
+
+  @Test
+  void productionForcesHttpsForOidcRedirectUris() {
+    assertTrue(forceRedirectHttpsScheme);
+  }
 
   @Test
   void productionStartsWithoutSeedsAndFailsClosed() {
