@@ -67,8 +67,7 @@ class CoverAssetSchemaCompatibilityTest {
             Map.of("column_name", "id", "data_type", "uuid", "is_nullable", "NO"),
             Map.of("column_name", "content", "data_type", "bytea", "is_nullable", "NO"),
             Map.of("column_name", "mime_type", "data_type", "text", "is_nullable", "NO"),
-            Map.of(
-                "column_name", "sha256", "data_type", "character varying", "is_nullable", "YES"),
+            Map.of("column_name", "sha256", "data_type", "character varying", "is_nullable", "YES"),
             Map.of("column_name", "width", "data_type", "integer", "is_nullable", "YES"),
             Map.of("column_name", "height", "data_type", "integer", "is_nullable", "YES"),
             Map.of("column_name", "provenance_url", "data_type", "text", "is_nullable", "YES"),

@@ -253,6 +253,14 @@
           <systemPropertyVariables>
             <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
           </systemPropertyVariables>
+          <environmentVariables>
+            <ROSIES_BOOKS_GOOGLE_OIDC_ALLOWED_EMAILS>integration-test@example.com</ROSIES_BOOKS_GOOGLE_OIDC_ALLOWED_EMAILS>
+            <ROSIES_BOOKS_GOOGLE_OIDC_CLIENT_ID>integration-test-client-id</ROSIES_BOOKS_GOOGLE_OIDC_CLIENT_ID>
+            <ROSIES_BOOKS_GOOGLE_OIDC_CLIENT_SECRET>integration-test-client-secret</ROSIES_BOOKS_GOOGLE_OIDC_CLIENT_SECRET>
+            <ROSIES_BOOKS_GOOGLE_OIDC_STATE_SECRET>integration-test-state-secret</ROSIES_BOOKS_GOOGLE_OIDC_STATE_SECRET>
+            <ROSIES_BOOKS_OPEN_LIBRARY_OPERATOR_CONTACT>integration-test@invalid.example</ROSIES_BOOKS_OPEN_LIBRARY_OPERATOR_CONTACT>
+            <ROSIES_BOOKS_REVIEW_TOKEN_SECRET>integration-test-review-token-secret</ROSIES_BOOKS_REVIEW_TOKEN_SECRET>
+          </environmentVariables>
         </configuration>
         <executions>
           <execution>

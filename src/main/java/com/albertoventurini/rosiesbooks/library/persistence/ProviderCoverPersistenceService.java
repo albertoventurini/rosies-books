@@ -78,7 +78,9 @@ public class ProviderCoverPersistenceService {
         .join(EDITION)
         .on(EDITION.ID.eq(USER_EDITION.EDITION_ID))
         .where(
-            USER_EDITION.ID.eq(userEditionId.value())
+            USER_EDITION
+                .ID
+                .eq(userEditionId.value())
                 .and(USER_EDITION.USER_ID.eq(owner.id().value()))
                 .and(EDITION.COVER_ASSET_ID.isNull())
                 .and(EDITION.COVER_LAST_OUTCOME.eq("FAILED")))

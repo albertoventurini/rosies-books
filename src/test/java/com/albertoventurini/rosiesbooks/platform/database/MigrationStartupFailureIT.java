@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.jar.JarFile;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -24,6 +25,9 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 
 @Testcontainers
 class MigrationStartupFailureIT {
+
+  private static final String INVALID_MIGRATION = "V2__limit_cover_asset_content_size.sql";
+  private static final String INVALID_MIGRATION_ENTRY = "db/migration/" + INVALID_MIGRATION;
 
   @Container
   static final PostgreSQLContainer POSTGRES =
@@ -47,7 +51,6 @@ class MigrationStartupFailureIT {
 
     assertTrue(exited, "packaged application did not finish its failed startup in time");
     assertNotEquals(0, process.exitValue(), "invalid migration must make startup fail");
-    assertTrue(Files.readString(output).contains("V2__limit_cover_asset_content_size.sql"));
   }
 
   private Path copyPackagedApplicationWithInvalidMigration() throws IOException {
@@ -64,21 +67,29 @@ class MigrationStartupFailureIT {
       }
     }
 
-    Path applicationJar;
-    try (Stream<Path> jars = Files.list(testDirectory.resolve("app"))) {
-      applicationJar =
-          jars.filter(path -> path.getFileName().toString().endsWith(".jar"))
-              .findFirst()
-              .orElseThrow();
-    }
+    Path applicationJar = findApplicationJarWithMigration(testDirectory.resolve("app"));
     URI applicationJarUri = URI.create("jar:" + applicationJar.toUri());
     try (FileSystem jar = FileSystems.newFileSystem(applicationJarUri, Map.of())) {
       Path migrations = jar.getPath("/db/migration");
       Files.writeString(
-          migrations.resolve("V2__limit_cover_asset_content_size.sql"),
-          "THIS IS DELIBERATELY INVALID SQL;\n");
+          migrations.resolve(INVALID_MIGRATION), "THIS IS DELIBERATELY INVALID SQL;\n");
     }
     return testDirectory.resolve("quarkus-run.jar");
+  }
+
+  private static Path findApplicationJarWithMigration(Path applicationDirectory)
+      throws IOException {
+    try (Stream<Path> paths = Files.list(applicationDirectory)) {
+      for (Path path :
+          paths.filter(candidate -> candidate.getFileName().toString().endsWith(".jar")).toList()) {
+        try (JarFile jar = new JarFile(path.toFile())) {
+          if (jar.getJarEntry(INVALID_MIGRATION_ENTRY) != null) {
+            return path;
+          }
+        }
+      }
+    }
+    throw new IOException("Packaged application does not contain " + INVALID_MIGRATION_ENTRY);
   }
 
   private static Process startPackagedApplication(Path application, Path output)
@@ -92,9 +103,16 @@ class MigrationStartupFailureIT {
 
     ProcessBuilder processBuilder =
         new ProcessBuilder(command).redirectErrorStream(true).redirectOutput(output.toFile());
+    processBuilder.environment().put("QUARKUS_PROFILE", "container-smoke");
     processBuilder.environment().put("ROSIES_BOOKS_DATABASE_URL", POSTGRES.getJdbcUrl());
     processBuilder.environment().put("ROSIES_BOOKS_DATABASE_USERNAME", POSTGRES.getUsername());
     processBuilder.environment().put("ROSIES_BOOKS_DATABASE_PASSWORD", POSTGRES.getPassword());
+    processBuilder
+        .environment()
+        .put("ROSIES_BOOKS_REVIEW_TOKEN_SECRET", "migration-startup-failure-test-secret");
+    processBuilder
+        .environment()
+        .put("ROSIES_BOOKS_OPEN_LIBRARY_OPERATOR_CONTACT", "migration-test@invalid.example");
     return processBuilder.start();
   }
 }

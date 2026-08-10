@@ -11,12 +11,10 @@ import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.not;
 
 import com.albertoventurini.rosiesbooks.identity.internal.DevelopmentUser;
-import com.albertoventurini.rosiesbooks.library.shelves.Shelf;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;

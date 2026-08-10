@@ -2,9 +2,9 @@ package com.albertoventurini.rosiesbooks.platform.web;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.startsWith;
 
 import io.quarkus.test.junit.QuarkusIntegrationTest;
 import org.junit.jupiter.api.Test;
@@ -13,15 +13,15 @@ import org.junit.jupiter.api.Test;
 class WebFoundationIT {
 
   @Test
-  void redirectsThePackagedApplicationRootToTheLibrary() {
+  void packagedProductionRequiresAuthenticationAtTheRoot() {
     given()
         .redirects()
         .follow(false)
         .when()
         .get("/")
         .then()
-        .statusCode(303)
-        .header("Location", endsWith("/reading"));
+        .statusCode(302)
+        .header("Location", startsWith("https://accounts.google.com/"));
   }
 
   @Test

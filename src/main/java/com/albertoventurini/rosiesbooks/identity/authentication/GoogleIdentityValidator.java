@@ -16,7 +16,8 @@ final class GoogleIdentityValidator {
   GoogleIdentityValidator(Iterable<String> allowedEmails) {
     this.allowedEmails = normalizeAllowlist(allowedEmails);
     if (this.allowedEmails.isEmpty()) {
-      throw new IllegalStateException("Google OIDC allowlist must contain at least one valid email address");
+      throw new IllegalStateException(
+          "Google OIDC allowlist must contain at least one valid email address");
     }
   }
 

@@ -156,7 +156,12 @@ class ProviderAddBookResource {
               : additions.addProvider(owner, candidate(accepted.get()), readingState(form));
       if (accepted.get().local())
         additions.findByIsbn13(accepted.get().lookupIsbn()).ifPresent(this::retryCover);
-      else accepted.get().edition().cover().ifPresent(source -> attemptCover(added.editionId(), source));
+      else
+        accepted
+            .get()
+            .edition()
+            .cover()
+            .ifPresent(source -> attemptCover(added.editionId(), source));
       return Response.seeOther(URI.create("/books/" + added.id().value() + "?notice=book-added"))
           .build();
     } catch (StaleReviewException exception) {
@@ -286,7 +291,8 @@ class ProviderAddBookResource {
         edition.cover());
   }
 
-  private void attemptCover(UUID editionId, com.albertoventurini.rosiesbooks.provider.api.TrustedCoverReference source) {
+  private void attemptCover(
+      UUID editionId, com.albertoventurini.rosiesbooks.provider.api.TrustedCoverReference source) {
     try {
       covers.fetchAndAttach(editionId, source);
     } catch (RuntimeException ignored) {

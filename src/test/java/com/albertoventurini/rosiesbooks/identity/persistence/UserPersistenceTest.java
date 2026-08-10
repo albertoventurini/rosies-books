@@ -81,7 +81,8 @@ class UserPersistenceTest {
     createdUserIds.add(user.id().value());
     repository.create(user);
 
-    assertEquals(user, repository.findByOidcIdentity(user.oidcIssuer(), user.oidcSubject()).orElseThrow());
+    assertEquals(
+        user, repository.findByOidcIdentity(user.oidcIssuer(), user.oidcSubject()).orElseThrow());
     assertFalse(
         repository.createIfAbsent(
             new User(
@@ -94,7 +95,10 @@ class UserPersistenceTest {
 
     repository.updateEmail(user.id(), "changed@example.com", UPDATED);
     assertEquals("changed@example.com", repository.find(user.id()).orElseThrow().email());
-    assertTrue(repository.findByOidcIdentity("https://other-issuer.example", user.oidcSubject()).isEmpty());
+    assertTrue(
+        repository
+            .findByOidcIdentity("https://other-issuer.example", user.oidcSubject())
+            .isEmpty());
   }
 
   private static User user(String subject) {

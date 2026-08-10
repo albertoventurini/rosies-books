@@ -70,8 +70,7 @@ record BookDetailPage(
         Arrays.stream(Shelf.values())
             .map(
                 shelf ->
-                    new ShelfNavigationItem(
-                        shelf.route(), shelf.heading(), shelf == book.shelf()))
+                    new ShelfNavigationItem(shelf.route(), shelf.heading(), shelf == book.shelf()))
             .toList(),
         "details-updated".equals(noticeCode) ? "Details updated." : null,
         route + "/state?returnTo=details",

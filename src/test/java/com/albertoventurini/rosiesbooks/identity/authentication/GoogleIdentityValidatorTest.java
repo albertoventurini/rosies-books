@@ -16,8 +16,7 @@ class GoogleIdentityValidatorTest {
   void acceptsOnlyAnAllowedVerifiedGoogleIdentityAndNormalizesItsBoundaryValues() {
     GoogleIdentity identity =
         validator
-            .validate(
-                " https://accounts.google.com ", " subject-1 ", " READER@example.COM ", true)
+            .validate(" https://accounts.google.com ", " subject-1 ", " READER@example.COM ", true)
             .orElseThrow();
 
     assertEquals("https://accounts.google.com", identity.issuer());

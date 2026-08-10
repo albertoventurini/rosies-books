@@ -2,8 +2,8 @@ package com.albertoventurini.rosiesbooks.identity.authentication;
 
 import com.albertoventurini.rosiesbooks.identity.api.CurrentUser;
 import com.albertoventurini.rosiesbooks.identity.api.CurrentUserProvider;
-import io.quarkus.arc.properties.IfBuildProperty;
 import io.quarkus.arc.profile.IfBuildProfile;
+import io.quarkus.arc.properties.IfBuildProperty;
 import jakarta.enterprise.context.ApplicationScoped;
 import java.util.Optional;
 
