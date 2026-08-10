@@ -18,6 +18,7 @@ class ProductionIdentityTest {
 
   @Inject CurrentUserProvider currentUsers;
   @Inject DSLContext dsl;
+
   @ConfigProperty(name = "quarkus.oidc.authentication.force-redirect-https-scheme")
   boolean forceRedirectHttpsScheme;
 
