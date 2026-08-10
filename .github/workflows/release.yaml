@@ -67,7 +67,7 @@ jobs:
           docker push "$registry_image:$TAG"
           docker push "$registry_image:sha-$TAGGED_COMMIT"
           docker push "$registry_image:latest"
-          digest="$(docker buildx imagetools inspect "$registry_image:$TAG" --format '{{.Digest}}')"
+          digest="$(docker buildx imagetools inspect "$registry_image:$TAG" --format '{{.Manifest.Digest}}')"
           printf 'PUBLISHED_IMAGE=%s@%s\n' "$registry_image" "$digest" >> "$GITHUB_ENV"
       - name: Create GitHub Release
         env:
