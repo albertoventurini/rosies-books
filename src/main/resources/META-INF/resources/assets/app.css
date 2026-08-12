@@ -502,12 +502,8 @@ h1 {
 }
 
 .shelf-book-metadata .shelf-book-context {
-  color: var(--color-muted);
+  color: var(--color-current);
   font-size: 0.8125rem;
-}
-
-.shelf-book-state {
-  color: var(--color-ink);
   font-weight: 600;
 }
 

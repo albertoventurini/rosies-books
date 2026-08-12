@@ -159,7 +159,7 @@ class ShelfResourceTest {
     assertThat(body, not(containsString("style=")));
     assertThat(body, containsString("placeholder-theme-"));
     assertThat(body, containsString("class=\"shelf-book-card\""));
-    assertThat(body, containsString("<span class=\"shelf-book-state\">Reading</span>"));
+    assertThat(body, not(containsString("class=\"shelf-book-state\"")));
     assertThat(body, containsString("Started 1 Jul 2026"));
     assertThat(body, containsString("href=\"/books/" + older + "/delete\""));
   }
@@ -217,12 +217,15 @@ class ShelfResourceTest {
         Instant.parse("2026-02-01T00:00:00Z"));
 
     String reading = assertBookOrder("/reading", "Newer reading", "Older reading");
-    assertThat(reading, containsString("Reading</span> · Started 1 Feb 2026"));
+    assertThat(reading, containsString("Started 1 Feb 2026"));
+    assertThat(reading, not(containsString("class=\"shelf-book-state\"")));
     String toRead = assertBookOrder("/to-read", "Newer to read", "Older to read");
-    assertThat(toRead, containsString("To Read</span> · Added "));
+    assertThat(toRead, containsString("Added "));
+    assertThat(toRead, not(containsString("class=\"shelf-book-state\"")));
     String finished =
         assertBookOrder("/finished?year=2026", "Finished later in 2026", "Finished in 2026");
-    assertThat(finished, containsString("Finished</span> · Finished 1 Jan 2026"));
+    assertThat(finished, containsString("Finished 1 Jan 2026"));
+    assertThat(finished, not(containsString("class=\"shelf-book-state\"")));
     assertThat(finished, not(containsString("Finished in 2024")));
     assertThat(finished, containsString("2 books read in 2026"));
     assertThat(finished, containsString("href=\"/finished?year=2024\""));
