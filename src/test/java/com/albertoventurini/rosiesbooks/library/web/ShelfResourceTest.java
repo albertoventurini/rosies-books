@@ -65,7 +65,7 @@ class ShelfResourceTest {
             .body(containsString("href=\"/finished\""))
             .body(not(containsString("class=\"release-version\"")))
             .body(not(containsString("v0.1.0-SNAPSHOT")))
-            .body(not(containsString("<script")));
+            .body(containsString("<script src=\"/assets/pwa-registration.js\" defer></script>"));
 
         given()
             .cookie("rosies-dev-user", user.alias())
@@ -233,7 +233,7 @@ class ShelfResourceTest {
     String older = assertBookOrder("/finished?year=2024", "Finished in 2024");
     assertThat(older, containsString("1 book read in 2024"));
     assertThat(older, not(containsString("Finished in 2026")));
-    assertThat(older, not(containsString("<script")));
+    assertThat(older, containsString("<script src=\"/assets/pwa-registration.js\" defer></script>"));
 
     assertThat(reading, not(containsString("books read in")));
     assertThat(reading, not(containsString("/finished?year=")));
