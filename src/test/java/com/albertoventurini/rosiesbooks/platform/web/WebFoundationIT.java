@@ -42,6 +42,19 @@ class WebFoundationIT {
   }
 
   @Test
+  void servesPublicPackagedPwaResources() {
+    given()
+        .when()
+        .get("/assets/manifest.webmanifest")
+        .then()
+        .statusCode(200)
+        .contentType("application/manifest+json")
+        .body("start_url", is("/reading"));
+    given().when().get("/service-worker.js").then().statusCode(200).contentType("text/javascript");
+    given().when().get("/offline.html").then().statusCode(200).contentType("text/html");
+  }
+
+  @Test
   void servesPackagedHealthProbes() {
     given().when().get("/q/health/started").then().statusCode(200).body("status", is("UP"));
     given().when().get("/q/health/live").then().statusCode(200).body("status", is("UP"));

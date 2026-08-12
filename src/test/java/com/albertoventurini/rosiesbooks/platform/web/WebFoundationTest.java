@@ -8,6 +8,9 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 
 import io.quarkus.test.junit.QuarkusTest;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 
 @QuarkusTest
@@ -66,6 +69,82 @@ class WebFoundationTest {
         .then()
         .statusCode(200)
         .contentType("font/woff2");
+  }
+
+  @Test
+  void servesThePwaResources() {
+    given()
+        .when()
+        .get("/assets/manifest.webmanifest")
+        .then()
+        .statusCode(200)
+        .contentType("application/manifest+json")
+        .body("name", org.hamcrest.Matchers.is("Rosie's Books"))
+        .body("short_name", org.hamcrest.Matchers.is("Rosie's Books"))
+        .body("start_url", org.hamcrest.Matchers.is("/reading"))
+        .body("scope", org.hamcrest.Matchers.is("/"))
+        .body("display", org.hamcrest.Matchers.is("standalone"))
+        .body("theme_color", org.hamcrest.Matchers.is("#2f4739"))
+        .body("background_color", org.hamcrest.Matchers.is("#e7dfd1"));
+
+    given().when().get("/service-worker.js").then().statusCode(200).contentType("text/javascript");
+    given().when().get("/offline.html").then().statusCode(200).contentType("text/html");
+    given()
+        .when()
+        .get("/assets/icons/rosies-books-rounded-192.png")
+        .then()
+        .statusCode(200)
+        .contentType("image/png");
+    given()
+        .when()
+        .get("/assets/icons/rosies-books-rounded-512.png")
+        .then()
+        .statusCode(200)
+        .contentType("image/png");
+    given()
+        .when()
+        .get("/assets/icons/rosies-books-rounded-16.png")
+        .then()
+        .statusCode(200)
+        .contentType("image/png");
+    given()
+        .when()
+        .get("/assets/icons/rosies-books-rounded-32.png")
+        .then()
+        .statusCode(200)
+        .contentType("image/png");
+    given()
+        .when()
+        .get("/assets/icons/rosies-books-square-180.png")
+        .then()
+        .statusCode(200)
+        .contentType("image/png");
+  }
+
+  @Test
+  void sharedShellRegistersThePwa() throws IOException {
+    String shell =
+        Files.readString(Path.of("src/main/resources/templates/platform/web/shell.html"));
+
+    org.junit.jupiter.api.Assertions.assertAll(
+        () ->
+            org.junit.jupiter.api.Assertions.assertTrue(
+                shell.contains("/assets/manifest.webmanifest")),
+        () ->
+            org.junit.jupiter.api.Assertions.assertTrue(
+                shell.contains("rosies-books-rounded-16.png")),
+        () ->
+            org.junit.jupiter.api.Assertions.assertTrue(
+                shell.contains("rosies-books-rounded-32.png")),
+        () ->
+            org.junit.jupiter.api.Assertions.assertTrue(
+                shell.contains("rosies-books-square-180.png")),
+        () ->
+            org.junit.jupiter.api.Assertions.assertTrue(
+                shell.contains("name=\"theme-color\" content=\"#2f4739\"")),
+        () ->
+            org.junit.jupiter.api.Assertions.assertTrue(
+                shell.contains("/assets/pwa-registration.js")));
   }
 
   @Test

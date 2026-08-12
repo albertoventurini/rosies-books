@@ -46,6 +46,27 @@ Verify vendored bytes after any deliberate font update:
 sha256sum src/main/resources/META-INF/resources/assets/fonts/*.woff2
 ```
 
+## Installable PWA and offline boundary
+
+Every page links `/assets/manifest.webmanifest` and registers the root-scoped
+`/service-worker.js`. The manifest installs **Rosie's Books** as a standalone app whose start URL
+is `/reading`. Installation requires a trusted HTTPS origin (or a browser's localhost exception).
+
+The app is intentionally online-only for private library data. The worker precaches only the
+generic offline page and public static resources: the manifest, CSS, local fonts, icons, and
+progressive-enhancement scripts. It serves those known assets cache-first, but always fetches
+library pages and application requests from the network. It never stores HTML, books, covers,
+forms, OIDC responses, or mutations, and a failed navigation can show only `/offline.html`.
+
+When changing a precached asset, change the `STATIC_CACHE` version in `service-worker.js` in the
+same release. Activation removes previous `rosies-books-static-*` caches so clients receive the
+new static bundle without retaining old caches indefinitely.
+
+The PNG icon set lives in `assets/icons`. Rounded 192 px and 512 px icons are manifest icons;
+rounded 16 px and 32 px icons are browser favicons; the square 180 px icon is the Apple touch
+icon. They are original raster artwork generated for this application. The repository does not
+ship an SVG source because browser/app-icon rendering must not depend on a live font.
+
 ## Health probes
 
 SmallRye Health exposes three independently addressable process probes:

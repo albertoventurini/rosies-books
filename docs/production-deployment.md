@@ -8,6 +8,11 @@ HTTPS is also required for the optional ISBN camera scanner on the Add a book pa
 not make camera access available to normal HTTP production origins; the scanner leaves the regular
 ISBN and manual-entry workflows available whenever HTTPS or camera access is unavailable.
 
+HTTPS is also required for PWA installation and service-worker control. The deployed worker caches
+only public static assets and a generic offline page; it does not retain authenticated pages,
+books, covers, forms, OIDC responses, or mutations. An offline navigation therefore shows an
+online-required message rather than private library content.
+
 ## Configure and start
 
 1. Create a clean deployment directory containing `docker-compose.yml` (a copy of
