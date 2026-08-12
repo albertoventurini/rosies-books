@@ -233,7 +233,8 @@ class ShelfResourceTest {
     String older = assertBookOrder("/finished?year=2024", "Finished in 2024");
     assertThat(older, containsString("1 book read in 2024"));
     assertThat(older, not(containsString("Finished in 2026")));
-    assertThat(older, containsString("<script src=\"/assets/pwa-registration.js\" defer></script>"));
+    assertThat(
+        older, containsString("<script src=\"/assets/pwa-registration.js\" defer></script>"));
 
     assertThat(reading, not(containsString("books read in")));
     assertThat(reading, not(containsString("/finished?year=")));

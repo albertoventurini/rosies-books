@@ -14,7 +14,9 @@ class ShelfCardStylesTest {
     String styles =
         Files.readString(Path.of("src/main/resources/META-INF/resources/assets/app.css"));
 
-    assertTrue(styles.contains(".shelf-book-metadata .shelf-book-context {\n  color: var(--color-current);"));
+    assertTrue(
+        styles.contains(
+            ".shelf-book-metadata .shelf-book-context {\n  color: var(--color-current);"));
     assertTrue(styles.contains("font-weight: 600;"));
   }
 }

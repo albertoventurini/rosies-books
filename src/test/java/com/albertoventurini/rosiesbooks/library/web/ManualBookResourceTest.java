@@ -62,7 +62,8 @@ class ManualBookResourceTest {
       assertThat(body, containsString("name=\"intent\" value=\"save\""));
       assertThat(body, containsString("Save book"));
       assertThat(body, not(containsString("Review book")));
-      assertThat(body, containsString("<script src=\"/assets/pwa-registration.js\" defer></script>"));
+      assertThat(
+          body, containsString("<script src=\"/assets/pwa-registration.js\" defer></script>"));
       assertThat(body, not(containsString("current-user-label")));
     }
   }
