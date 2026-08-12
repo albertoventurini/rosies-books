@@ -21,9 +21,9 @@ class ServiceWorkerPolicyTest {
     assertTrue(worker.contains("const PRECACHE_URLS"));
     assertTrue(worker.contains("/assets/manifest.webmanifest"));
     assertTrue(worker.contains("/assets/app.css"));
-    assertTrue(worker.contains("rosies-books-static-v2"));
-    assertTrue(worker.contains("/assets/icons/rosies-books-192.png"));
-    assertTrue(worker.contains("/assets/icons/rosies-books-512.png"));
+    assertTrue(worker.contains("rosies-books-static-v3"));
+    assertTrue(worker.contains("/assets/icons/rosies-books-rounded-192.png"));
+    assertTrue(worker.contains("/assets/icons/rosies-books-rounded-512.png"));
     assertTrue(worker.contains("/assets/fonts/newsreader-latin-v1.woff2"));
     assertTrue(worker.contains("/assets/fonts/ibm-plex-sans-latin-v1.woff2"));
     assertTrue(worker.contains("/offline.html"));

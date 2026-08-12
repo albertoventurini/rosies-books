@@ -22,15 +22,18 @@ class PwaIconAssetTest {
     String manifest = Files.readString(MANIFEST);
 
     assertTrue(manifest.contains("\"purpose\": \"any maskable\""));
-    assertVisibleAtCenter("rosies-books-192.png", 192);
-    assertVisibleAtCenter("rosies-books-512.png", 512);
+    assertTrue(manifest.contains("/assets/icons/rosies-books-rounded-192.png"));
+    assertTrue(manifest.contains("/assets/icons/rosies-books-rounded-512.png"));
+    assertBrandedAtCenter("rosies-books-rounded-192.png", 192);
+    assertBrandedAtCenter("rosies-books-rounded-512.png", 512);
   }
 
-  private void assertVisibleAtCenter(String fileName, int expectedSize) throws IOException {
+  private void assertBrandedAtCenter(String fileName, int expectedSize) throws IOException {
     BufferedImage icon = ImageIO.read(ICONS.resolve(fileName).toFile());
 
     assertEquals(expectedSize, icon.getWidth());
     assertEquals(expectedSize, icon.getHeight());
     assertNotEquals(0, icon.getRGB(expectedSize / 2, expectedSize / 2) >>> 24);
+    assertEquals(0xfff0e8d6, icon.getRGB(expectedSize / 2, expectedSize / 2));
   }
 }

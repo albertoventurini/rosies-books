@@ -1,4 +1,4 @@
-const STATIC_CACHE = "rosies-books-static-v2";
+const STATIC_CACHE = "rosies-books-static-v3";
 const OFFLINE_FALLBACK = "/offline.html";
 const PRECACHE_URLS = [
   OFFLINE_FALLBACK,
@@ -13,8 +13,8 @@ const PRECACHE_URLS = [
   "/assets/fonts/ibm-plex-sans-latin-v1.woff2",
   "/assets/icons/rosies-books-rounded-16.png",
   "/assets/icons/rosies-books-rounded-32.png",
-  "/assets/icons/rosies-books-192.png",
-  "/assets/icons/rosies-books-512.png",
+  "/assets/icons/rosies-books-rounded-192.png",
+  "/assets/icons/rosies-books-rounded-512.png",
   "/assets/icons/rosies-books-square-180.png"
 ];
 const STATIC_ASSET_URLS = new Set(PRECACHE_URLS);

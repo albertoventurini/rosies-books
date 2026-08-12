@@ -91,13 +91,13 @@ class WebFoundationTest {
     given().when().get("/offline.html").then().statusCode(200).contentType("text/html");
     given()
         .when()
-        .get("/assets/icons/rosies-books-192.png")
+        .get("/assets/icons/rosies-books-rounded-192.png")
         .then()
         .statusCode(200)
         .contentType("image/png");
     given()
         .when()
-        .get("/assets/icons/rosies-books-512.png")
+        .get("/assets/icons/rosies-books-rounded-512.png")
         .then()
         .statusCode(200)
         .contentType("image/png");
