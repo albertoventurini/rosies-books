@@ -22,9 +22,17 @@ class ProductionIdentityTest {
   @ConfigProperty(name = "quarkus.oidc.authentication.force-redirect-https-scheme")
   boolean forceRedirectHttpsScheme;
 
+  @ConfigProperty(name = "quarkus.oidc.authentication.restore-path-after-redirect")
+  boolean restorePathAfterRedirect;
+
   @Test
   void productionForcesHttpsForOidcRedirectUris() {
     assertTrue(forceRedirectHttpsScheme);
+  }
+
+  @Test
+  void productionRestoresTheOriginalPathAfterOidcRedirects() {
+    assertTrue(restorePathAfterRedirect);
   }
 
   @Test
