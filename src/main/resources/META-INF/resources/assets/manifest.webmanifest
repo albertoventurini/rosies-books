@@ -8,16 +8,16 @@
   "background_color": "#e7dfd1",
   "icons": [
     {
-      "src": "/assets/icons/rosies-books-rounded-192.png",
+      "src": "/assets/icons/rosies-books-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
-      "src": "/assets/icons/rosies-books-rounded-512.png",
+      "src": "/assets/icons/rosies-books-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     }
   ]
 }
