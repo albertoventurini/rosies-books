@@ -23,12 +23,18 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import org.jboss.logging.Logger;
 
 /** Google Books HTTP/JSON adapter; Google representations remain in this package. */
 @ApplicationScoped
 public class GoogleBooksIsbnEditionLookup {
   private static final Logger LOG = Logger.getLogger(GoogleBooksIsbnEditionLookup.class);
+  private static final Pattern LINE_BREAK = Pattern.compile("(?i)<br\\b[^>]*>");
+  private static final Pattern PARAGRAPH_BREAK = Pattern.compile("(?i)</?(?:p|div)\\b[^>]*>");
+  private static final Pattern HTML_TAG = Pattern.compile("<[^>]*>");
+  private static final Pattern WHITESPACE_AROUND_LINE_BREAK = Pattern.compile("[ \\t]*\\R[ \\t]*");
+  private static final Pattern EXCESS_LINE_BREAKS = Pattern.compile("\\n{3,}");
   private final HttpClient client;
   private final ObjectMapper json;
   private final URI baseUrl;
@@ -146,7 +152,7 @@ public class GoogleBooksIsbnEditionLookup {
             publicationDate(info.path("publishedDate")),
             positiveInteger(info.path("pageCount")),
             optionalText(info.path("language")),
-            optionalText(info.path("description")),
+            description(info.path("description")),
             isbn10,
             isbn13,
             cover(info.path("imageLinks"))));
@@ -245,6 +251,26 @@ public class GoogleBooksIsbnEditionLookup {
 
   private static Optional<String> optionalText(JsonNode node) {
     return Optional.ofNullable(text(node));
+  }
+
+  private static Optional<String> description(JsonNode node) {
+    return optionalText(node).map(GoogleBooksIsbnEditionLookup::plainTextDescription);
+  }
+
+  private static String plainTextDescription(String description) {
+    return EXCESS_LINE_BREAKS
+        .matcher(
+            WHITESPACE_AROUND_LINE_BREAK
+                .matcher(
+                    HTML_TAG
+                        .matcher(
+                            PARAGRAPH_BREAK
+                                .matcher(LINE_BREAK.matcher(description).replaceAll("\n"))
+                                .replaceAll("\n\n"))
+                        .replaceAll(""))
+                .replaceAll("\n"))
+        .replaceAll("\n\n")
+        .strip();
   }
 
   private static String encoded(String value) {

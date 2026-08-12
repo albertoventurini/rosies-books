@@ -40,7 +40,7 @@ class GoogleBooksIsbnEditionLookupTest {
                 """
                 {"items":[
                   {"id":"wrong","volumeInfo":{"title":"Wrong","authors":["Author"],"industryIdentifiers":[{"type":"ISBN_13","identifier":"9781861972712"}]}},
-                  {"id":"google-volume","volumeInfo":{"title":"Example","subtitle":"Sub","authors":["Author"],"publisher":"Publisher","publishedDate":"2024-03-04","pageCount":321,"language":"en","industryIdentifiers":[{"type":"ISBN_10","identifier":"0306406152"}],"imageLinks":{"large":"http://books.google.com/books?id=google-volume&img=1"}}}
+                  {"id":"google-volume","volumeInfo":{"title":"Example","subtitle":"Sub","authors":["Author"],"publisher":"Publisher","publishedDate":"2024-03-04","pageCount":321,"language":"en","description":"Why are some people more successful than others?<br>And why can they repeat their success?<p>Because they start with why.</p>","industryIdentifiers":[{"type":"ISBN_10","identifier":"0306406152"}],"imageLinks":{"large":"http://books.google.com/books?id=google-volume&img=1"}}}
                 ]}
                 """));
 
@@ -54,6 +54,11 @@ class GoogleBooksIsbnEditionLookupTest {
     assertEquals(
         "https://books.google.com/books?id=google-volume&img=1",
         found.edition().cover().orElseThrow().value().toString());
+    assertEquals(
+        "Why are some people more successful than others?\n"
+            + "And why can they repeat their success?\n\n"
+            + "Because they start with why.",
+        found.edition().description().orElseThrow());
   }
 
   @Test
