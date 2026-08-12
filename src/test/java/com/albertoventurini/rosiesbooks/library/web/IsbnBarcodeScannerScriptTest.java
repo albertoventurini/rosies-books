@@ -1,5 +1,6 @@
 package com.albertoventurini.rosiesbooks.library.web;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -17,6 +18,10 @@ class IsbnBarcodeScannerScriptTest {
     assertTrue(script.contains("/^(978|979)\\d{10}$/"));
     assertTrue(script.contains("sum + Number(digit) * (index % 2 === 0 ? 1 : 3)"));
     assertTrue(script.contains("ZXing.BarcodeFormat.EAN_13"));
+    assertTrue(script.contains("new ZXing.BrowserBarcodeReader(100, hints)"));
+    assertTrue(script.contains("ZXing.DecodeHintType.TRY_HARDER, true"));
+    assertTrue(script.contains("width: { ideal: 1920 }"));
+    assertTrue(script.contains("height: { ideal: 1080 }"));
     assertTrue(script.contains("This is not a book ISBN. Keep scanning."));
     assertTrue(script.contains("isbnInput.value = isbn"));
     assertTrue(script.contains("form.requestSubmit()"));
@@ -36,6 +41,7 @@ class IsbnBarcodeScannerScriptTest {
             "Camera scanning needs HTTPS and a camera. You can enter an ISBN instead."));
     assertTrue(script.contains("pagehide"));
     assertTrue(script.contains("beforeunload"));
+    assertFalse(script.contains("barcode-scanner-cancel"));
   }
 
   private String scannerScript() throws IOException {

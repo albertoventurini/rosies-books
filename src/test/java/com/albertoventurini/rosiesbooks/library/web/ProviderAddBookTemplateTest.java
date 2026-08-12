@@ -37,6 +37,8 @@ class ProviderAddBookTemplateTest {
     assertTrue(template.contains("role=\"dialog\""));
     assertTrue(template.contains("aria-modal=\"true\""));
     assertTrue(template.contains("id=\"barcode-scanner-status\""));
+    assertTrue(template.contains("id=\"barcode-scanner-close\""));
+    assertFalse(template.contains("id=\"barcode-scanner-cancel\""));
     assertTrue(template.contains("/assets/isbn-barcode-scanner.js"));
     assertTrue(template.contains("action=\"/books/new/lookup\""));
     assertTrue(

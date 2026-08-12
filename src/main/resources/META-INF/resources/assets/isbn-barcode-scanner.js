@@ -7,13 +7,12 @@
   const status = document.getElementById("barcode-scanner-status");
   const error = document.getElementById("barcode-scanner-error");
   const closeButton = document.getElementById("barcode-scanner-close");
-  const cancelButton = document.getElementById("barcode-scanner-cancel");
   const zxingAsset = "/assets/zxing-library-0.20.0.min.js";
   let reader;
   let returnFocus;
   let scannerOpen = false;
 
-  if (!form || !isbnInput || !trigger || !dialog || !video || !status || !error || !closeButton || !cancelButton) {
+  if (!form || !isbnInput || !trigger || !dialog || !video || !status || !error || !closeButton) {
     return;
   }
 
@@ -97,10 +96,20 @@
       if (!scannerOpen) {
         return;
       }
-      const hints = new Map([[ZXing.DecodeHintType.POSSIBLE_FORMATS, [ZXing.BarcodeFormat.EAN_13]]]);
-      reader = new ZXing.BrowserMultiFormatReader(hints, 250);
+      const hints = new Map([
+        [ZXing.DecodeHintType.POSSIBLE_FORMATS, [ZXing.BarcodeFormat.EAN_13]],
+        [ZXing.DecodeHintType.TRY_HARDER, true]
+      ]);
+      reader = new ZXing.BrowserBarcodeReader(100, hints);
       await reader.decodeFromConstraints(
-          { audio: false, video: { facingMode: { ideal: "environment" } } },
+          {
+            audio: false,
+            video: {
+              facingMode: { ideal: "environment" },
+              width: { ideal: 1920 },
+              height: { ideal: 1080 }
+            }
+          },
           video,
           (result) => {
             if (!scannerOpen) {
@@ -140,7 +149,7 @@
     startScanner();
   });
 
-  [closeButton, cancelButton].forEach((button) => button.addEventListener("click", () => closeScanner()));
+  closeButton.addEventListener("click", () => closeScanner());
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && !dialog.hidden) {
       event.preventDefault();

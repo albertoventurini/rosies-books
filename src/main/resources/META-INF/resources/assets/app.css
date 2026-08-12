@@ -655,6 +655,10 @@ h1 {
   position: fixed;
   z-index: 10;
   inset: 0;
+  width: 100dvw;
+  height: 100dvh;
+  max-width: none;
+  box-sizing: border-box;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto auto auto;
   gap: var(--space-4);
