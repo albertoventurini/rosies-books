@@ -11,12 +11,7 @@ COPY mvnw pom.xml ./
 RUN ./mvnw --batch-mode --no-transfer-progress -DskipTests dependency:go-offline
 
 COPY src src
-ARG RELEASE_VERSION
-RUN if [ -n "$RELEASE_VERSION" ]; then \
-      ./mvnw --batch-mode --no-transfer-progress -DskipTests -Drelease.version="$RELEASE_VERSION" package; \
-    else \
-      ./mvnw --batch-mode --no-transfer-progress -DskipTests package; \
-    fi
+RUN ./mvnw --batch-mode --no-transfer-progress -DskipTests package
 
 FROM eclipse-temurin:25.0.3_9-jre-noble
 

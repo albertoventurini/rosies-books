@@ -176,13 +176,6 @@ h1 {
   overflow-wrap: anywhere;
 }
 
-.release-version {
-  margin: var(--space-2) 0 0;
-  color: var(--color-muted);
-  font-size: 0.75rem;
-  line-height: 1.2;
-}
-
 .shelf-navigation {
   position: fixed;
   z-index: 2;
@@ -790,11 +783,6 @@ h1 {
     padding: 0;
     border: 0;
     background: transparent;
-  }
-
-  .release-version {
-    margin-top: auto;
-    padding-top: var(--space-6);
   }
 
   .shelf-navigation-link {
