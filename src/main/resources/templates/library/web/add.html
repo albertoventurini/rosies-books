@@ -54,12 +54,13 @@
     </div>
     <script src="/assets/state-change.js" defer></script>
     <section class="barcode-scanner" id="barcode-scanner" role="dialog" aria-modal="true" aria-labelledby="barcode-scanner-title" hidden tabindex="-1">
-      <div class="barcode-scanner-header"><h2 id="barcode-scanner-title">Scan book barcode</h2><button class="button-secondary" id="barcode-scanner-close" type="button">Close</button></div>
-      <div class="barcode-scanner-camera"><video id="barcode-scanner-video" autoplay muted playsinline></video><div class="barcode-scanner-guide" aria-hidden="true"></div></div>
+      <div class="barcode-scanner-header"><h2 id="barcode-scanner-title">Scan book barcode</h2><div class="barcode-scanner-actions"><button class="button-secondary" id="barcode-scanner-switch-camera" type="button" hidden disabled>Switch camera</button><button class="button-secondary" id="barcode-scanner-close" type="button">Close</button></div></div>
+      <div class="barcode-scanner-camera"><div class="barcode-scanner-preview" id="barcode-scanner-preview"></div><div class="barcode-scanner-guide" aria-hidden="true"></div></div>
       <p class="barcode-scanner-status" id="barcode-scanner-status" role="status" aria-live="polite">Preparing camera…</p>
       <p class="barcode-scanner-error" id="barcode-scanner-error" role="alert" hidden></p>
       <p>Align the barcode inside the guide. Only ISBN barcodes can be scanned.</p>
     </section>
+    <script src="/assets/quagga-1.12.1.min.js" defer></script>
     <script src="/assets/isbn-barcode-scanner.js" defer></script>
   {/content}
 {/include}

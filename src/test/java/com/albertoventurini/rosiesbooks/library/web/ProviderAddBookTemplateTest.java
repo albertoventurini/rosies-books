@@ -38,6 +38,7 @@ class ProviderAddBookTemplateTest {
     assertTrue(template.contains("aria-modal=\"true\""));
     assertTrue(template.contains("id=\"barcode-scanner-status\""));
     assertTrue(template.contains("id=\"barcode-scanner-close\""));
+    assertTrue(template.contains("id=\"barcode-scanner-switch-camera\""));
     assertFalse(template.contains("id=\"barcode-scanner-cancel\""));
     assertTrue(template.contains("/assets/isbn-barcode-scanner.js"));
     assertTrue(template.contains("action=\"/books/new/lookup\""));
@@ -46,7 +47,7 @@ class ProviderAddBookTemplateTest {
             Path.of("src/main/resources/META-INF/resources/assets/isbn-barcode-scanner.js")));
     assertTrue(
         Files.exists(
-            Path.of("src/main/resources/META-INF/resources/assets/zxing-library-0.20.0.min.js")));
+            Path.of("src/main/resources/META-INF/resources/assets/quagga-1.12.1.min.js")));
     assertFalse(template.contains(">Shelf and dates<"));
     assertFalse(template.contains(">Update date fields<"));
     assertFalse(template.contains(">Provider result<"));

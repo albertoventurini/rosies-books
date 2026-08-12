@@ -38,6 +38,7 @@ License 1.1 texts are packaged under `src/main/resources/META-INF/licenses`.
 | --- | --- | --- | --- |
 | `newsreader-latin-v1.woff2` | [Google Fonts Newsreader v26 Latin WOFF2](https://fonts.gstatic.com/s/newsreader/v26/cY9AfjOCX1hbuyalUrK4397yjA.woff2) | [Newsreader OFL 1.1](https://github.com/google/fonts/blob/main/ofl/newsreader/OFL.txt) | `6e4f2958c3a7c4a80acde4e5a679abe7e01bc1e30b92be3c7a8b696ef401d101` |
 | `ibm-plex-sans-latin-v1.woff2` | [Google Fonts IBM Plex Sans v23 Latin WOFF2](https://fonts.gstatic.com/s/ibmplexsans/v23/zYXzKVElMYYaJe8bpLHnCwDKr932-G7dytD-Dmu1syxeKYY.woff2) | [IBM Plex Sans OFL 1.1](https://github.com/google/fonts/blob/main/ofl/ibmplexsans/OFL.txt) | `e2291e842cf5af167122a22881a740c7f2dda7716f1e8cd76680264f4a859470` |
+| `quagga-1.12.1.min.js` | [@ericblade/quagga2 1.12.1 bundle](https://cdn.jsdelivr.net/npm/@ericblade/quagga2@1.12.1/dist/quagga.min.js) | [Quagga2 MIT](https://github.com/ericblade/quagga2/blob/master/LICENSE) | `ae6c469103c5d427625a9a4c41175bd15420a14aa5579ea57dc1571d42346f4d` |
 
 Verify vendored bytes after any deliberate font update:
 

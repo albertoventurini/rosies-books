@@ -1,152 +1,178 @@
 (() => {
-  const form = document.getElementById("isbn-lookup-form");
   const isbnInput = document.getElementById("isbn");
   const trigger = document.getElementById("scan-barcode");
   const dialog = document.getElementById("barcode-scanner");
-  const video = document.getElementById("barcode-scanner-video");
+  const preview = document.getElementById("barcode-scanner-preview");
   const status = document.getElementById("barcode-scanner-status");
   const error = document.getElementById("barcode-scanner-error");
   const closeButton = document.getElementById("barcode-scanner-close");
-  const zxingAsset = "/assets/zxing-library-0.20.0.min.js";
-  let reader;
+  const switchCameraButton = document.getElementById("barcode-scanner-switch-camera");
   let returnFocus;
   let scannerOpen = false;
+  let scannerRunning = false;
+  let detectedHandler;
+  let cameras = [];
+  let activeDeviceId;
+  let scanAttempt = 0;
 
-  if (!form || !isbnInput || !trigger || !dialog || !video || !status || !error || !closeButton) {
+  if (!isbnInput || !trigger || !dialog || !preview || !status || !error || !closeButton || !switchCameraButton) {
     return;
   }
 
   const isBooklandIsbn13 = (value) => {
-    if (!/^(978|979)\d{10}$/.test(value)) {
-      return false;
-    }
+    if (!/^(978|979)\d{10}$/.test(value)) return false;
     return [...value].reduce((sum, digit, index) => sum + Number(digit) * (index % 2 === 0 ? 1 : 3), 0) % 10 === 0;
   };
 
-  const setStatus = (message) => {
-    status.textContent = message;
-  };
-
+  const setStatus = (message) => { status.textContent = message; };
   const setError = (message) => {
     error.textContent = message;
     error.hidden = !message;
   };
 
-  const stopCamera = () => {
-    if (reader) {
-      try {
-        reader.reset();
-      } catch (_) {
-        // The stream tracks below remain the reliable final cleanup path.
-      }
-      reader = undefined;
-    }
-    const stream = video.srcObject;
-    if (stream && typeof stream.getTracks === "function") {
-      stream.getTracks().forEach((track) => track.stop());
-    }
-    video.srcObject = null;
+  const releaseCameraTracks = () => {
+    preview.querySelectorAll("video").forEach((video) => {
+      const stream = video.srcObject;
+      if (stream && typeof stream.getTracks === "function") stream.getTracks().forEach((track) => track.stop());
+      video.srcObject = null;
+    });
   };
 
-  const closeScanner = ({ restoreFocus = true } = {}) => {
-    scannerOpen = false;
-    stopCamera();
-    dialog.hidden = true;
-    document.body.classList.remove("barcode-scanner-open");
-    if (restoreFocus && returnFocus) {
-      returnFocus.focus();
+  const stopScanner = () => {
+    scanAttempt += 1;
+    if (window.Quagga && detectedHandler) window.Quagga.offDetected(detectedHandler);
+    detectedHandler = undefined;
+    if (window.Quagga && scannerRunning) {
+      try { window.Quagga.stop(); } catch (_) { /* Tracks below are the final cleanup path. */ }
+    }
+    scannerRunning = false;
+    releaseCameraTracks();
+    preview.replaceChildren();
+  };
+
+  const updateCameraSwitch = async () => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
+    try {
+      cameras = (await navigator.mediaDevices.enumerateDevices()).filter((device) => device.kind === "videoinput");
+      const stream = preview.querySelector("video")?.srcObject;
+      activeDeviceId = stream?.getVideoTracks?.()[0]?.getSettings?.().deviceId || activeDeviceId;
+      switchCameraButton.hidden = cameras.length < 2;
+      switchCameraButton.disabled = cameras.length < 2;
+    } catch (_) {
+      cameras = [];
+      switchCameraButton.hidden = true;
+      switchCameraButton.disabled = true;
     }
   };
 
   const scannerError = (cause) => {
-    stopCamera();
-    if (cause && cause.name === "NotAllowedError") {
-      setError("Camera permission was denied. You can enter an ISBN instead.");
-    } else if (cause && cause.name === "NotFoundError") {
-      setError("No camera is available. You can enter an ISBN instead.");
-    } else {
-      setError("The scanner could not start. You can enter an ISBN instead.");
-    }
+    stopScanner();
+    switchCameraButton.hidden = true;
+    switchCameraButton.disabled = true;
+    if (cause && cause.name === "NotAllowedError") setError("Camera permission was denied. You can enter an ISBN instead.");
+    else if (cause && cause.name === "NotFoundError") setError("No camera is available. You can enter an ISBN instead.");
+    else setError("The scanner could not start. You can enter an ISBN instead.");
     setStatus("Scanner unavailable");
   };
 
-  const loadZxing = () => new Promise((resolve, reject) => {
-    if (window.ZXing) {
-      resolve(window.ZXing);
-      return;
-    }
-    const script = document.createElement("script");
-    script.src = zxingAsset;
-    script.async = true;
-    script.onload = () => window.ZXing ? resolve(window.ZXing) : reject(new Error("ZXing unavailable"));
-    script.onerror = () => reject(new Error("ZXing unavailable"));
-    document.head.append(script);
+  const initialiseQuagga = (config) => new Promise((resolve, reject) => {
+    window.Quagga.init(config, (cause) => cause ? reject(cause) : resolve());
   });
 
-  const startScanner = async () => {
-    if (!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+  const startScanner = async (deviceId) => {
+    if (!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.Quagga) {
       setStatus("Scanner unavailable");
       setError("Camera scanning needs HTTPS and a camera. You can enter an ISBN instead.");
-      return;
+      return false;
     }
+    const attempt = ++scanAttempt;
     setError("");
-    setStatus("Starting camera…");
+    setStatus(deviceId ? "Switching camera…" : "Starting camera…");
     try {
-      const ZXing = await loadZxing();
-      if (!scannerOpen) {
-        return;
+      await initialiseQuagga({
+        inputStream: {
+          type: "LiveStream",
+          target: preview,
+          constraints: deviceId
+            ? {
+                deviceId: { exact: deviceId },
+                width: { ideal: 1920 },
+                height: { ideal: 1080 }
+              }
+            : {
+                facingMode: { ideal: "environment" },
+                width: { ideal: 1920 },
+                height: { ideal: 1080 }
+              },
+          area: { top: "32%", right: "10%", bottom: "32%", left: "10%" }
+        },
+        locator: { patchSize: "small", halfSample: false },
+        locate: false,
+        decoder: { readers: ["ean_reader"] }
+      });
+      if (!scannerOpen || attempt !== scanAttempt) {
+        window.Quagga.stop();
+        releaseCameraTracks();
+        return false;
       }
-      const hints = new Map([
-        [ZXing.DecodeHintType.POSSIBLE_FORMATS, [ZXing.BarcodeFormat.EAN_13]],
-        [ZXing.DecodeHintType.TRY_HARDER, true]
-      ]);
-      reader = new ZXing.BrowserBarcodeReader(100, hints);
-      await reader.decodeFromConstraints(
-          {
-            audio: false,
-            video: {
-              facingMode: { ideal: "environment" },
-              width: { ideal: 1920 },
-              height: { ideal: 1080 }
-            }
-          },
-          video,
-          (result) => {
-            if (!scannerOpen) {
-              return;
-            }
-            if (!result || result.getBarcodeFormat() !== ZXing.BarcodeFormat.EAN_13) {
-              return;
-            }
-            const isbn = result.getText();
-            if (!isBooklandIsbn13(isbn)) {
-              setStatus("This is not a book ISBN. Keep scanning.");
-              return;
-            }
-            isbnInput.value = isbn;
-            closeScanner({ restoreFocus: false });
-            if (typeof form.requestSubmit === "function") {
-              form.requestSubmit();
-            } else {
-              form.submit();
-            }
-          });
-      setStatus("Point the rear camera at a book barcode.");
+      detectedHandler = (result) => {
+        if (!scannerOpen || !result?.codeResult?.code) return;
+        const isbn = result.codeResult.code;
+        if (!isBooklandIsbn13(isbn)) {
+          setStatus("This is not a book ISBN. Keep scanning.");
+          return;
+        }
+        stopScanner();
+        scannerOpen = false;
+        dialog.hidden = true;
+        document.body.classList.remove("barcode-scanner-open");
+        isbnInput.value = isbn;
+        isbnInput.focus();
+      };
+      window.Quagga.onDetected(detectedHandler);
+      window.Quagga.start();
+      scannerRunning = true;
+      await updateCameraSwitch();
+      if (scannerOpen && attempt === scanAttempt) {
+        setStatus(deviceId ? "Camera switched. Point it at a book barcode." : "Point the rear camera at a book barcode.");
+      }
+      return true;
     } catch (cause) {
-      scannerError(cause);
+      if (scannerOpen && attempt === scanAttempt) scannerError(cause);
+      return false;
     }
   };
 
+  const closeScanner = ({ restoreFocus = true } = {}) => {
+    scannerOpen = false;
+    stopScanner();
+    dialog.hidden = true;
+    document.body.classList.remove("barcode-scanner-open");
+    if (restoreFocus && returnFocus) returnFocus.focus();
+  };
+
   trigger.addEventListener("click", () => {
-    if (scannerOpen) {
-      return;
-    }
+    if (scannerOpen) return;
     returnFocus = trigger;
     scannerOpen = true;
+    cameras = [];
+    activeDeviceId = undefined;
+    switchCameraButton.hidden = true;
+    switchCameraButton.disabled = true;
     dialog.hidden = false;
     document.body.classList.add("barcode-scanner-open");
     closeButton.focus();
     startScanner();
+  });
+
+  switchCameraButton.addEventListener("click", async () => {
+    if (!scannerOpen || cameras.length < 2) return;
+    const currentIndex = Math.max(0, cameras.findIndex((device) => device.deviceId === activeDeviceId));
+    const nextCameraIndex = (currentIndex + 1) % cameras.length;
+    switchCameraButton.disabled = true;
+    stopScanner();
+    const started = await startScanner(cameras[nextCameraIndex].deviceId);
+    if (started) switchCameraButton.disabled = false;
   });
 
   closeButton.addEventListener("click", () => closeScanner());

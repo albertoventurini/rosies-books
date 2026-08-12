@@ -679,6 +679,13 @@ h1 {
   gap: var(--space-4);
 }
 
+.barcode-scanner-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+
 .barcode-scanner-header h2 {
   font-family: "Newsreader", Georgia, serif;
   font-size: 1.75rem;
@@ -693,7 +700,13 @@ h1 {
   background: #000;
 }
 
-.barcode-scanner-camera video {
+.barcode-scanner-preview {
+  width: 100%;
+  height: 100%;
+}
+
+.barcode-scanner-preview video,
+.barcode-scanner-preview canvas {
   width: 100%;
   height: 100%;
   object-fit: cover;
