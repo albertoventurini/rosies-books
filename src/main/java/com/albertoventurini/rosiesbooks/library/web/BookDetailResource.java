@@ -39,7 +39,7 @@ class BookDetailResource {
     CurrentUser owner = requireCurrentUser();
     UserEditionId id = parse(rawId);
     try {
-      covers.retryFailed(owner, id);
+      covers.refresh(owner, id);
     } catch (RuntimeException ignored) {
       // Refresh is best effort; the book remains usable with its placeholder.
     }

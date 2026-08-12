@@ -144,4 +144,45 @@ class BookDetailResourceTest {
         .then()
         .statusCode(404);
   }
+
+  @Test
+  void offersCoverRefreshForAnOwnedCoverlessProviderEditionWithAnIsbn() {
+    UUID edition = UUID.randomUUID();
+    UUID book = UUID.randomUUID();
+    OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
+    dsl.insertInto(EDITION)
+        .set(EDITION.ID, edition)
+        .set(EDITION.ISBN_13, "9780306406157")
+        .set(EDITION.PROVIDER_NAME, "googlebooks")
+        .set(EDITION.PROVIDER_EDITION_ID, "google-volume")
+        .set(EDITION.TITLE, "Coverless provider book")
+        .set(EDITION.METADATA_ORIGIN, "PROVIDER")
+        .set(EDITION.CREATED_AT, now)
+        .set(EDITION.UPDATED_AT, now)
+        .execute();
+    dsl.insertInto(EDITION_AUTHOR)
+        .set(EDITION_AUTHOR.EDITION_ID, edition)
+        .set(EDITION_AUTHOR.POSITION, 0)
+        .set(EDITION_AUTHOR.NAME, "Author")
+        .execute();
+    dsl.insertInto(USER_EDITION)
+        .set(USER_EDITION.ID, book)
+        .set(USER_EDITION.USER_ID, DevelopmentUser.READER_ONE.currentUser().id().value())
+        .set(USER_EDITION.EDITION_ID, edition)
+        .set(USER_EDITION.STATE, "TO_READ")
+        .set(USER_EDITION.EFFECTIVE_TITLE_SEARCH, "Coverless provider book")
+        .set(USER_EDITION.EFFECTIVE_AUTHORS_SEARCH, "Author")
+        .set(USER_EDITION.CREATED_AT, now)
+        .set(USER_EDITION.UPDATED_AT, now)
+        .execute();
+
+    given()
+        .cookie("rosies-dev-user", DevelopmentUser.READER_ONE.alias())
+        .when()
+        .get("/books/" + book)
+        .then()
+        .statusCode(200)
+        .body(containsString("Refresh cover"))
+        .body(containsString("action=\"/books/" + book + "/cover/refresh\""));
+  }
 }

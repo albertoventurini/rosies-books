@@ -18,7 +18,7 @@ import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
 
-/** Downloads only adapter-issued Open Library cover references. */
+/** Downloads only adapter-issued Open Library or Google Books cover references. */
 @ApplicationScoped
 class OpenLibraryCoverDownloader {
   static final int MAX_BYTES = 5 * 1024 * 1024;
@@ -80,9 +80,7 @@ class OpenLibraryCoverDownloader {
 
   private static boolean safe(URI uri, boolean redirected) throws IOException {
     if (!"https".equalsIgnoreCase(uri.getScheme())
-        || !(redirected
-            ? archiveHost(uri.getHost())
-            : "covers.openlibrary.org".equalsIgnoreCase(uri.getHost()))
+        || !(redirected ? redirectedHost(uri.getHost()) : initialHost(uri.getHost()))
         || uri.getUserInfo() != null
         || uri.getPort() != -1) return false;
     InetAddress[] addresses = InetAddress.getAllByName(uri.getHost());
@@ -94,6 +92,15 @@ class OpenLibraryCoverDownloader {
     return host != null
         && ("archive.org".equalsIgnoreCase(host)
             || host.toLowerCase(Locale.ROOT).endsWith(".archive.org"));
+  }
+
+  private static boolean initialHost(String host) {
+    return "covers.openlibrary.org".equalsIgnoreCase(host)
+        || "books.google.com".equalsIgnoreCase(host);
+  }
+
+  private static boolean redirectedHost(String host) {
+    return archiveHost(host) || "books.google.com".equalsIgnoreCase(host);
   }
 
   private static boolean prohibited(InetAddress address) {

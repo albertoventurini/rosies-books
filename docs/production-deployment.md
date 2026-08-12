@@ -15,8 +15,12 @@ ISBN and manual-entry workflows available whenever HTTPS or camera access is una
    `01-create-application-role.sh` (a copy of the same-named repository file). Replace every
    angle-bracket value in `.env` with a distinct real value and restrict its permissions. The
    application rejects missing, blank,
-   placeholder, and known local-development values at production startup. The Google allowlist is
-   still checked for valid email syntax by the identity boundary.
+placeholder, and known local-development values at production startup. The Google allowlist is
+still checked for valid email syntax by the identity boundary.
+
+The deployment also requires `ROSIES_BOOKS_GOOGLE_BOOKS_API_KEY`. Create it in the Google Cloud
+project that has Books API enabled, restrict it to that API, and store it only in the deployment
+secret file or manager; it is a server-side lookup credential, not the Google OIDC client ID.
 2. The Compose file pins the application image to a published digest. Update its `app.image`
    value to the digest recorded in the matching GitHub Release when deploying a new release.
 3. Pull and start the production topology:

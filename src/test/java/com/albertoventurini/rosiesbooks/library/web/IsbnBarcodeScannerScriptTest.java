@@ -23,7 +23,8 @@ class IsbnBarcodeScannerScriptTest {
     assertTrue(script.contains("facingMode: { ideal: \"environment\" }"));
     assertTrue(script.contains("width: { ideal: 1920 }"));
     assertTrue(script.contains("height: { ideal: 1080 }"));
-    assertTrue(script.contains("area: { top: \"32%\", right: \"10%\", bottom: \"32%\", left: \"10%\" }"));
+    assertTrue(
+        script.contains("area: { top: \"32%\", right: \"10%\", bottom: \"32%\", left: \"10%\" }"));
     assertTrue(script.contains("patchSize: \"small\", halfSample: false"));
     assertTrue(script.contains("This is not a book ISBN. Keep scanning."));
     assertTrue(script.contains("isbnInput.value = isbn"));

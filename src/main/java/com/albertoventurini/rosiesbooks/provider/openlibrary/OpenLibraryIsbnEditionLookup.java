@@ -2,7 +2,6 @@ package com.albertoventurini.rosiesbooks.provider.openlibrary;
 
 import com.albertoventurini.rosiesbooks.provider.api.Isbn10;
 import com.albertoventurini.rosiesbooks.provider.api.Isbn13;
-import com.albertoventurini.rosiesbooks.provider.api.IsbnEditionLookup;
 import com.albertoventurini.rosiesbooks.provider.api.IsbnLookupResult;
 import com.albertoventurini.rosiesbooks.provider.api.PartialPublicationDate;
 import com.albertoventurini.rosiesbooks.provider.api.SelectedEdition;
@@ -30,7 +29,7 @@ import org.jboss.logging.Logger;
 
 /** Open Library HTTP/JSON adapter; provider representations remain in this package. */
 @ApplicationScoped
-public class OpenLibraryIsbnEditionLookup implements IsbnEditionLookup {
+public class OpenLibraryIsbnEditionLookup {
   private static final Logger LOG = Logger.getLogger(OpenLibraryIsbnEditionLookup.class);
   private final HttpClient client;
   private final ObjectMapper json;
@@ -84,7 +83,6 @@ public class OpenLibraryIsbnEditionLookup implements IsbnEditionLookup {
     this.logFullExceptionDetails = logFullExceptionDetails;
   }
 
-  @Override
   public IsbnLookupResult lookup(Isbn13 isbn) {
     try {
       HttpResponse<String> search = send("/search.json?isbn=" + encoded(isbn.value()));

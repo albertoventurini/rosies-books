@@ -27,6 +27,7 @@ services:
       ROSIES_BOOKS_OIDC_ALLOWED_EMAILS: smoke@invalid.example
       ROSIES_BOOKS_REVIEW_TOKEN_SECRET: container-smoke-review-token-secret
       ROSIES_BOOKS_OPEN_LIBRARY_OPERATOR_CONTACT: smoke@invalid.example
+      ROSIES_BOOKS_GOOGLE_BOOKS_API_KEY: smoke-google-books-api-key
     networks:
       - database
     depends_on:

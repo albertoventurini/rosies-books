@@ -5,6 +5,9 @@ import static com.albertoventurini.rosiesbooks.library.persistence.jooq.Tables.U
 
 import com.albertoventurini.rosiesbooks.identity.api.CurrentUser;
 import com.albertoventurini.rosiesbooks.library.internal.UserEditionId;
+import com.albertoventurini.rosiesbooks.provider.api.Isbn13;
+import com.albertoventurini.rosiesbooks.provider.api.IsbnEditionLookup;
+import com.albertoventurini.rosiesbooks.provider.api.IsbnLookupResult;
 import com.albertoventurini.rosiesbooks.provider.api.TrustedCoverReference;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
@@ -20,16 +23,19 @@ public class ProviderCoverPersistenceService {
   private final DSLContext dsl;
   private final CoverAssetRepository assets;
   private final OpenLibraryCoverDownloader downloader;
+  private final IsbnEditionLookup lookup;
   private final Clock clock;
 
   ProviderCoverPersistenceService(
       DSLContext dsl,
       CoverAssetRepository assets,
       OpenLibraryCoverDownloader downloader,
+      IsbnEditionLookup lookup,
       Clock clock) {
     this.dsl = dsl;
     this.assets = assets;
     this.downloader = downloader;
+    this.lookup = lookup;
     this.clock = clock;
   }
 
@@ -70,10 +76,10 @@ public class ProviderCoverPersistenceService {
       fetchAndAttach(edition.id(), edition.trustedCoverSource().get());
   }
 
-  /** Retries only the requesting user's linked edition and only after a recorded failure. */
+  /** Refreshes only the requesting user's coverless linked edition, never its metadata. */
   @Transactional
-  public void retryFailed(CurrentUser owner, UserEditionId userEditionId) {
-    dsl.select(EDITION.ID, EDITION.TRUSTED_COVER_SOURCE)
+  public void refresh(CurrentUser owner, UserEditionId userEditionId) {
+    dsl.select(EDITION.ID, EDITION.ISBN_13, EDITION.TRUSTED_COVER_SOURCE, EDITION.COVER_ASSET_ID)
         .from(USER_EDITION)
         .join(EDITION)
         .on(EDITION.ID.eq(USER_EDITION.EDITION_ID))
@@ -82,16 +88,22 @@ public class ProviderCoverPersistenceService {
                 .ID
                 .eq(userEditionId.value())
                 .and(USER_EDITION.USER_ID.eq(owner.id().value()))
-                .and(EDITION.COVER_ASSET_ID.isNull())
-                .and(EDITION.COVER_LAST_OUTCOME.eq("FAILED")))
+                .and(EDITION.COVER_ASSET_ID.isNull()))
         .fetchOptional()
         .ifPresent(
             row -> {
+              UUID editionId = row.get(EDITION.ID);
               try {
-                fetchAndAttach(
-                    row.get(EDITION.ID),
-                    new TrustedCoverReference(
-                        java.net.URI.create(row.get(EDITION.TRUSTED_COVER_SOURCE))));
+                String source = row.get(EDITION.TRUSTED_COVER_SOURCE);
+                if (source != null) {
+                  fetchAndAttach(editionId, new TrustedCoverReference(java.net.URI.create(source)));
+                  return;
+                }
+                String isbn = row.get(EDITION.ISBN_13);
+                if (isbn == null) return;
+                IsbnLookupResult result = lookup.lookup(new Isbn13(isbn));
+                if (result instanceof IsbnLookupResult.Found found)
+                  found.edition().cover().ifPresent(cover -> fetchAndAttach(editionId, cover));
               } catch (IllegalArgumentException ignored) {
                 // A corrupt persisted source is not a destination that can be retried.
               }

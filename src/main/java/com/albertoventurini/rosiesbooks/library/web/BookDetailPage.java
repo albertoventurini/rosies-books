@@ -35,7 +35,7 @@ record BookDetailPage(
     String deleteUrl,
     String coverUrl,
     String coverRefreshUrl,
-    boolean coverFetchFailed,
+    boolean coverRefreshAvailable,
     BookPlaceholder placeholder) {
 
   static BookDetailPage from(UserEditionId id, BookDetail book) {
@@ -78,7 +78,7 @@ record BookDetailPage(
         route + "/delete",
         book.coverHash() == null ? null : "/covers/" + book.coverHash(),
         route + "/cover/refresh",
-        book.coverFetchFailed(),
+        book.coverRefreshAvailable(),
         BookPlaceholder.from(metadata.title(), metadata.authors()));
   }
 
@@ -135,7 +135,7 @@ record BookDetailPage(
   }
 
   public boolean canRefreshCover() {
-    return coverFetchFailed;
+    return coverRefreshAvailable;
   }
 
   public boolean hasNotice() {

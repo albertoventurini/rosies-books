@@ -46,8 +46,7 @@ class ProviderAddBookTemplateTest {
         Files.exists(
             Path.of("src/main/resources/META-INF/resources/assets/isbn-barcode-scanner.js")));
     assertTrue(
-        Files.exists(
-            Path.of("src/main/resources/META-INF/resources/assets/quagga-1.12.1.min.js")));
+        Files.exists(Path.of("src/main/resources/META-INF/resources/assets/quagga-1.12.1.min.js")));
     assertFalse(template.contains(">Shelf and dates<"));
     assertFalse(template.contains(">Update date fields<"));
     assertFalse(template.contains(">Provider result<"));

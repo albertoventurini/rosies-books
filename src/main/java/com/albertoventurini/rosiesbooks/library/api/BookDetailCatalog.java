@@ -20,7 +20,7 @@ public interface BookDetailCatalog {
       String privateNotes,
       Shelf shelf,
       String coverHash,
-      boolean coverFetchFailed) {}
+      boolean coverRefreshAvailable) {}
 
   record StoredCover(byte[] content, String mimeType) {
     public StoredCover {

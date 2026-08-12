@@ -50,6 +50,7 @@ class ProductionConfigurationValidatorTest {
         "Google OIDC state secret", "a-long-unique-state-secret",
         "Google OIDC allowed emails", "reader@private-domain.invalid",
         "review-token secret", "a-long-unique-review-token-secret",
-        "Open Library operator contact", "operator@private-domain.invalid");
+        "Open Library operator contact", "operator@private-domain.invalid",
+        "Google Books API key", "a-google-books-api-key");
   }
 }

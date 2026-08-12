@@ -56,6 +56,7 @@ public class JooqBookDetailCatalog implements BookDetailCatalog {
             EDITION.LANGUAGE,
             EDITION.DESCRIPTION,
             EDITION.COVER_ASSET_ID,
+            EDITION.PROVIDER_NAME,
             EDITION.COVER_LAST_OUTCOME,
             COVER_ASSET.SHA256,
             USER_EDITION.STATE,
@@ -97,7 +98,10 @@ public class JooqBookDetailCatalog implements BookDetailCatalog {
                   row.get(USER_EDITION.PRIVATE_NOTES),
                   shelf(row.get(USER_EDITION.STATE)),
                   row.get(COVER_ASSET.SHA256),
-                  "FAILED".equals(row.get(EDITION.COVER_LAST_OUTCOME)));
+                  row.get(COVER_ASSET.SHA256) == null
+                      && ("FAILED".equals(row.get(EDITION.COVER_LAST_OUTCOME))
+                          || (row.get(EDITION.PROVIDER_NAME) != null
+                              && row.get(EDITION.ISBN_13) != null)));
             });
   }
 

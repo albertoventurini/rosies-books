@@ -21,7 +21,8 @@ class ProductionConfigurationValidator {
       @ConfigProperty(name = "quarkus.oidc.authentication.state-secret") String oidcStateSecret,
       @ConfigProperty(name = "rosies-books.oidc.allowed-emails") String allowedEmails,
       @ConfigProperty(name = "rosies-books.review-token.secret") String reviewTokenSecret,
-      @ConfigProperty(name = "rosies-books.open-library.operator-contact") String operatorContact) {
+      @ConfigProperty(name = "rosies-books.open-library.operator-contact") String operatorContact,
+      @ConfigProperty(name = "rosies-books.google-books.api-key") String googleBooksApiKey) {
     validate(
         Map.of(
             "database URL", databaseUrl,
@@ -32,7 +33,8 @@ class ProductionConfigurationValidator {
             "Google OIDC state secret", oidcStateSecret,
             "Google OIDC allowed emails", allowedEmails,
             "review-token secret", reviewTokenSecret,
-            "Open Library operator contact", operatorContact));
+            "Open Library operator contact", operatorContact,
+            "Google Books API key", googleBooksApiKey));
   }
 
   static void validate(Map<String, String> values) {
