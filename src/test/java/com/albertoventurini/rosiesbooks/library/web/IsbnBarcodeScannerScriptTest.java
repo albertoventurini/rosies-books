@@ -54,6 +54,22 @@ class IsbnBarcodeScannerScriptTest {
     assertFalse(script.contains("barcode-scanner-cancel"));
   }
 
+  @Test
+  void reusesTheCameraThatSuccessfullyScannedAnIsbnWithoutProbingTemporaryStreams()
+      throws IOException {
+    String script = scannerScript();
+
+    assertTrue(script.contains("rosies-books.isbn-barcode-scanner.camera-device-id"));
+    assertTrue(script.contains("window.localStorage.getItem(cameraStorageKey)"));
+    assertTrue(script.contains("window.localStorage.setItem(cameraStorageKey, activeDeviceId)"));
+    assertTrue(script.contains("window.localStorage.removeItem(cameraStorageKey)"));
+    assertTrue(script.contains("rememberActiveCamera()"));
+    assertTrue(script.contains("const savedCameraDeviceId = preferredCameraDeviceId()"));
+    assertTrue(script.contains("startScanner(savedCameraDeviceId, Boolean(savedCameraDeviceId))"));
+    assertFalse(script.contains("const probeCamera = async"));
+    assertFalse(script.contains("const selectBestCamera = async"));
+  }
+
   private String scannerScript() throws IOException {
     return Files.readString(
         Path.of("src/main/resources/META-INF/resources/assets/isbn-barcode-scanner.js"));

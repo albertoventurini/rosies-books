@@ -7,6 +7,7 @@
   const error = document.getElementById("barcode-scanner-error");
   const closeButton = document.getElementById("barcode-scanner-close");
   const switchCameraButton = document.getElementById("barcode-scanner-switch-camera");
+  const cameraStorageKey = "rosies-books.isbn-barcode-scanner.camera-device-id";
   let returnFocus;
   let scannerOpen = false;
   let scannerRunning = false;
@@ -79,7 +80,38 @@
     window.Quagga.init(config, (cause) => cause ? reject(cause) : resolve());
   });
 
-  const startScanner = async (deviceId) => {
+  const preferredCameraDeviceId = () => {
+    try {
+      return window.localStorage.getItem(cameraStorageKey) || undefined;
+    } catch (_) {
+      return undefined;
+    }
+  };
+
+  const rememberActiveCamera = () => {
+    if (!activeDeviceId) return;
+    try {
+      window.localStorage.setItem(cameraStorageKey, activeDeviceId);
+    } catch (_) {
+      /* Scanning remains available when browser storage is unavailable. */
+    }
+  };
+
+  const forgetPreferredCamera = () => {
+    try {
+      window.localStorage.removeItem(cameraStorageKey);
+    } catch (_) {
+      /* Scanning remains available when browser storage is unavailable. */
+    }
+  };
+
+  const cameraConstraints = (deviceId) => ({
+    deviceId: { exact: deviceId },
+    width: { ideal: 1920 },
+    height: { ideal: 1080 }
+  });
+
+  const startScanner = async (deviceId, fallBackToEnvironmentCamera = false) => {
     if (!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.Quagga) {
       setStatus("Scanner unavailable");
       setError("Camera scanning needs HTTPS and a camera. You can enter an ISBN instead.");
@@ -94,11 +126,7 @@
           type: "LiveStream",
           target: preview,
           constraints: deviceId
-            ? {
-                deviceId: { exact: deviceId },
-                width: { ideal: 1920 },
-                height: { ideal: 1080 }
-              }
+            ? cameraConstraints(deviceId)
             : {
                 facingMode: { ideal: "environment" },
                 width: { ideal: 1920 },
@@ -115,6 +143,8 @@
         releaseCameraTracks();
         return false;
       }
+      const stream = preview.querySelector("video")?.srcObject;
+      activeDeviceId = stream?.getVideoTracks?.()[0]?.getSettings?.().deviceId || deviceId;
       detectedHandler = (result) => {
         if (!scannerOpen || !result?.codeResult?.code) return;
         const isbn = result.codeResult.code;
@@ -122,6 +152,7 @@
           setStatus("This is not a book ISBN. Keep scanning.");
           return;
         }
+        rememberActiveCamera();
         stopScanner();
         scannerOpen = false;
         dialog.hidden = true;
@@ -138,6 +169,12 @@
       }
       return true;
     } catch (cause) {
+      if (fallBackToEnvironmentCamera && (cause?.name === "NotFoundError" || cause?.name === "OverconstrainedError") && scannerOpen && attempt === scanAttempt) {
+        forgetPreferredCamera();
+        releaseCameraTracks();
+        preview.replaceChildren();
+        return startScanner();
+      }
       if (scannerOpen && attempt === scanAttempt) scannerError(cause);
       return false;
     }
@@ -162,7 +199,8 @@
     dialog.hidden = false;
     document.body.classList.add("barcode-scanner-open");
     closeButton.focus();
-    startScanner();
+    const savedCameraDeviceId = preferredCameraDeviceId();
+    startScanner(savedCameraDeviceId, Boolean(savedCameraDeviceId));
   });
 
   switchCameraButton.addEventListener("click", async () => {
