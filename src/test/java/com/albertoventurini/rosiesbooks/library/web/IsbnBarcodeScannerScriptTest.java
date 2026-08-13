@@ -11,8 +11,7 @@ import org.junit.jupiter.api.Test;
 class IsbnBarcodeScannerScriptTest {
 
   @Test
-  void acceptsOnlyChecksumValidBooklandEan13CodesAndPopulatesTheFieldForReview()
-      throws IOException {
+  void acceptsOnlyChecksumValidBooklandEan13CodesAndImmediatelyLooksThemUp() throws IOException {
     String script = scannerScript();
 
     assertTrue(script.contains("/^(978|979)\\d{10}$/"));
@@ -28,8 +27,8 @@ class IsbnBarcodeScannerScriptTest {
     assertTrue(script.contains("patchSize: \"small\", halfSample: false"));
     assertTrue(script.contains("This is not a book ISBN. Keep scanning."));
     assertTrue(script.contains("isbnInput.value = isbn"));
-    assertTrue(script.contains("isbnInput.focus()"));
-    assertFalse(script.contains("requestSubmit"));
+    assertTrue(script.contains("const lookupForm = document.getElementById(\"isbn-lookup-form\")"));
+    assertTrue(script.contains("lookupForm.requestSubmit()"));
     assertFalse(script.contains("ZX" + "ing"));
   }
 

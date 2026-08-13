@@ -1,5 +1,6 @@
 (() => {
   const isbnInput = document.getElementById("isbn");
+  const lookupForm = document.getElementById("isbn-lookup-form");
   const trigger = document.getElementById("scan-barcode");
   const dialog = document.getElementById("barcode-scanner");
   const preview = document.getElementById("barcode-scanner-preview");
@@ -16,7 +17,7 @@
   let activeDeviceId;
   let scanAttempt = 0;
 
-  if (!isbnInput || !trigger || !dialog || !preview || !status || !error || !closeButton || !switchCameraButton) {
+  if (!isbnInput || !lookupForm || !trigger || !dialog || !preview || !status || !error || !closeButton || !switchCameraButton) {
     return;
   }
 
@@ -158,7 +159,7 @@
         dialog.hidden = true;
         document.body.classList.remove("barcode-scanner-open");
         isbnInput.value = isbn;
-        isbnInput.focus();
+        lookupForm.requestSubmit();
       };
       window.Quagga.onDetected(detectedHandler);
       window.Quagga.start();

@@ -15,3 +15,6 @@ browser-local storage. Future scans on that browser try that camera first, avoid
 camera probing. If the ID has become unavailable, the controller removes it and falls back to the
 browser's normal environment-camera selection. The preference is never sent to the server or
 logged.
+
+The recognized ISBN is set on the existing Add a book lookup form and that form is submitted
+immediately. No camera data is sent to the server.

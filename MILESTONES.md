@@ -356,7 +356,7 @@ The spike is complete only when task 7-1 is committed and the adapter contract c
   - Serve stored covers through an ownership-aware or appropriately content-addressed route with correct MIME type, cache headers, responsive image markup, and lazy loading; never hotlink a normal library page.
   - Test valid, slow, oversized, decompression-risk, invalid-content, local/private/redirect/alternate-scheme/unapproved-host, duplicate-content, authorization, cache, placeholder, and offline-from-provider cases.
 - **7-5 — Add camera-assisted ISBN barcode scanning.**
-  - Add an explicit, optional camera-scanning action to the existing ISBN Add Book form. Detect only EAN-13 values and place a recognized value in the ordinary ISBN field for user review before the existing lookup flow runs.
+  - Add an explicit, optional camera-scanning action to the existing ISBN Add Book form. Detect only EAN-13 values, place a recognized value in the ordinary ISBN field, and immediately submit the existing lookup flow.
   - Keep camera frames entirely in the browser: do not upload frames, persist image data, add a camera-upload endpoint, or log barcode values beyond the existing safe request handling.
   - Require an ordinary typed ISBN and manual-entry fallback. Handle unsupported browsers, denied/revoked permissions, unavailable cameras, malformed/non-ISBN barcodes, cancellation, navigation, and repeated scans without blocking or changing the normal add flow.
   - Stop and release the camera stream after a successful scan, cancellation, page navigation, or loss of page visibility.
@@ -368,7 +368,7 @@ Exit criteria:
 - Retrying or re-selecting an existing edition cannot duplicate the user's link.
 - No normal library page hotlinks a provider cover.
 - Missing, slow, oversized, or invalid covers cannot prevent the book from being saved.
-- On supported devices, scanning a valid book barcode populates the existing ISBN add flow without removing the typed/manual path.
+- On supported devices, scanning a valid book barcode immediately starts the existing ISBN lookup without removing the typed/manual path.
 
 ### Milestone 8 — OIDC authentication and account lifecycle
 

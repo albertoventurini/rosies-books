@@ -218,7 +218,7 @@ The section shows user editions whose current state is Finished.
 
 The Add Book flow is distinct from private-library search.
 
-The user can type an ISBN or, on a supported device after an explicit request, scan an EAN-13 book barcode with the camera. Scanning is a progressive enhancement: camera frames remain on the device, a recognized value populates the ordinary ISBN field for review, and typed entry remains available when permission is denied, scanning is unavailable, or the result is invalid.
+The user can type an ISBN or, on a supported device after an explicit request, scan an EAN-13 book barcode with the camera. Scanning is a progressive enhancement: camera frames remain on the device, a recognized value immediately submits the ordinary ISBN lookup form, and typed entry remains available when permission is denied, scanning is unavailable, or the result is invalid.
 
 1. The user enters a valid ISBN; ISBN-10 is normalized to its ISBN-13 equivalent before lookup.
 2. The application performs an exact ISBN lookup with the selected external provider.
