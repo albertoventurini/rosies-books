@@ -38,7 +38,7 @@
             <dt>Pages</dt><dd>{#if page.result.get.edition.pageCount}{page.result.get.edition.pageCount.get}{#else}Not supplied{/if}</dd>
             <dt>Language</dt><dd>{#if page.result.get.edition.language}{page.result.get.edition.language.get}{#else}Not supplied{/if}</dd>
           </dl>
-          {#if page.result.get.edition.description}<p>{page.result.get.edition.description.get}</p>{/if}
+          {#for descriptionParagraph in page.result.get.descriptionParagraphs}<p>{descriptionParagraph}</p>{/for}
           <form class="manual-form" method="post" action="/books/new/add" novalidate>
             <input type="hidden" name="reviewToken" value="{page.result.get.reviewToken}">
             {#if page.result.get.form.errors.size > 0}<div class="form-error-summary" role="alert"><p>Check the highlighted fields and try again.</p>{#for error in page.result.get.form.errorsFor('form')}<p>{error}</p>{/for}</div>{/if}

@@ -68,6 +68,25 @@ class GoogleBooksIsbnEditionLookupTest {
     assertInstanceOf(IsbnLookupResult.NotFound.class, lookup().lookup(new Isbn13("9780306406157")));
   }
 
+  @Test
+  void turnsAnUnspacedPeriodFollowedByALetterIntoANewline() {
+    server.createContext(
+        "/volumes",
+        exchange ->
+            respond(
+                exchange,
+                200,
+                """
+                {"items":[{"id":"google-volume","volumeInfo":{"title":"Example","authors":["Author"],"description":"Bone.They Bone. They","industryIdentifiers":[{"type":"ISBN_13","identifier":"9780306406157"}]}}]}
+                """));
+
+    IsbnLookupResult.Found found =
+        assertInstanceOf(
+            IsbnLookupResult.Found.class, lookup().lookup(new Isbn13("9780306406157")));
+
+    assertEquals("Bone.\nThey Bone. They", found.edition().description().orElseThrow());
+  }
+
   private GoogleBooksIsbnEditionLookup lookup() {
     return new GoogleBooksIsbnEditionLookup(
         HttpClient.newHttpClient(),

@@ -67,5 +67,12 @@ record ProviderAddBookPage(
   }
 
   record Result(
-      SelectedEdition edition, String reviewToken, ManualBookForm form, String localCoverUrl) {}
+      SelectedEdition edition, String reviewToken, ManualBookForm form, String localCoverUrl) {
+    public List<String> descriptionParagraphs() {
+      return edition.description().stream()
+          .flatMap(description -> Arrays.stream(description.split("\\R+")))
+          .filter(paragraph -> !paragraph.isBlank())
+          .toList();
+    }
+  }
 }

@@ -33,6 +33,7 @@ public class GoogleBooksIsbnEditionLookup {
   private static final Pattern LINE_BREAK = Pattern.compile("(?i)<br\\b[^>]*>");
   private static final Pattern PARAGRAPH_BREAK = Pattern.compile("(?i)</?(?:p|div)\\b[^>]*>");
   private static final Pattern HTML_TAG = Pattern.compile("<[^>]*>");
+  private static final Pattern PERIOD_BEFORE_LETTER = Pattern.compile("(?<=\\.)(?=\\p{L})");
   private static final Pattern WHITESPACE_AROUND_LINE_BREAK = Pattern.compile("[ \\t]*\\R[ \\t]*");
   private static final Pattern EXCESS_LINE_BREAKS = Pattern.compile("\\n{3,}");
   private final HttpClient client;
@@ -262,12 +263,15 @@ public class GoogleBooksIsbnEditionLookup {
         .matcher(
             WHITESPACE_AROUND_LINE_BREAK
                 .matcher(
-                    HTML_TAG
+                    PERIOD_BEFORE_LETTER
                         .matcher(
-                            PARAGRAPH_BREAK
-                                .matcher(LINE_BREAK.matcher(description).replaceAll("\n"))
-                                .replaceAll("\n\n"))
-                        .replaceAll(""))
+                            HTML_TAG
+                                .matcher(
+                                    PARAGRAPH_BREAK
+                                        .matcher(LINE_BREAK.matcher(description).replaceAll("\n"))
+                                        .replaceAll("\n\n"))
+                                .replaceAll(""))
+                        .replaceAll("\n"))
                 .replaceAll("\n"))
         .replaceAll("\n\n")
         .strip();

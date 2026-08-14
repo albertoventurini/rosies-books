@@ -4,12 +4,39 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.albertoventurini.rosiesbooks.provider.api.SelectedEdition;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 class ProviderAddBookTemplateTest {
+
+  @Test
+  void splitsNormalizedDescriptionLinesIntoParagraphs() {
+    SelectedEdition edition =
+        new SelectedEdition(
+            "googlebooks",
+            "google-volume",
+            "Title",
+            Optional.empty(),
+            List.of("Author"),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of("First paragraph.\n\nSecond paragraph.\nThird paragraph."),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty());
+
+    assertEquals(
+        List.of("First paragraph.", "Second paragraph.", "Third paragraph."),
+        new ProviderAddBookPage.Result(edition, "token", null, null).descriptionParagraphs());
+  }
 
   @Test
   void keepsTheFoundEditionAndShelfSelectionOnOnePage() throws IOException {
@@ -27,6 +54,8 @@ class ProviderAddBookTemplateTest {
     assertTrue(template.contains("page.result.get.edition.cover"));
     assertTrue(template.contains("class=\"isbn-result-facts\""));
     assertTrue(template.contains("class=\"form-section isbn-result\""));
+    assertTrue(template.contains("{#for descriptionParagraph in page.result.get.descriptionParagraphs}"));
+    assertTrue(template.contains("<p>{descriptionParagraph}</p>"));
     assertTrue(template.contains("data-shelf-target"));
     assertTrue(template.contains("data-shelf-date-fields=\"READING\""));
     assertTrue(template.contains("data-shelf-date-fields=\"FINISHED\""));
