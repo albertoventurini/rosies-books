@@ -88,6 +88,12 @@ class WebFoundationTest {
         .body("background_color", org.hamcrest.Matchers.is("#e7dfd1"));
 
     given().when().get("/service-worker.js").then().statusCode(200).contentType("text/javascript");
+    given()
+        .when()
+        .get("/assets/shelf-navigation-feedback.js")
+        .then()
+        .statusCode(200)
+        .body(containsString("shelf-navigation-pending"));
     given().when().get("/offline.html").then().statusCode(200).contentType("text/html");
     given()
         .when()
@@ -144,7 +150,13 @@ class WebFoundationTest {
                 shell.contains("name=\"theme-color\" content=\"#2f4739\"")),
         () ->
             org.junit.jupiter.api.Assertions.assertTrue(
-                shell.contains("/assets/pwa-registration.js")));
+                shell.contains("/assets/pwa-registration.js")),
+        () ->
+            org.junit.jupiter.api.Assertions.assertTrue(
+                shell.contains("/assets/shelf-navigation-feedback.js")),
+        () ->
+            org.junit.jupiter.api.Assertions.assertTrue(
+                shell.contains("data-shelf-navigation-feedback")));
   }
 
   @Test

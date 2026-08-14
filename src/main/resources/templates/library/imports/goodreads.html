@@ -1,0 +1,15 @@
+{@com.albertoventurini.rosiesbooks.library.imports.GoodreadsImportPage page}
+{#include platform/web/shell}
+  {#title}Import from Goodreads · {page.productName}{/title}
+  {#content}
+    <main class="manual-main" id="main-content">
+      <header class="manual-header"><p class="eyebrow">Your library</p><h1>Import from Goodreads</h1></header>
+      {#if page.hasResult}
+        <section class="form-section"><h2>Import complete</h2><p>{page.result.importedCount} imported, {page.result.alreadyPresentCount} already present.</p><ul><li>{page.result.readingCount} added to Reading</li><li>{page.result.toReadCount} added to To Read</li><li>{page.result.finishedCount} added to Finished</li></ul><a class="button-link" href="/reading">Close</a></section>
+      {#else}
+        {#if page.hasErrors}<div class="form-error-summary" role="alert">{#for error in page.errors}<p>{error}</p>{/for}</div>{/if}
+        <form class="manual-form" method="post" action="/imports/goodreads" enctype="multipart/form-data"><input type="hidden" name="requestId" value="{page.requestId}"><div class="form-field"><label for="file">Goodreads CSV export</label><input id="file" name="file" type="file" accept=".csv,text/csv" required></div><button class="button-link" type="submit">Import books</button></form>
+      {/if}
+    </main>
+  {/content}
+{/include}

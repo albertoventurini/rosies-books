@@ -83,6 +83,11 @@
       <version>${jooq.version}</version>
     </dependency>
     <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-csv</artifactId>
+      <version>1.14.1</version>
+    </dependency>
+    <dependency>
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
       <version>${postgresql.jdbc.version}</version>
@@ -195,7 +200,7 @@
               <generator>
                 <database>
                   <name>org.jooq.meta.extensions.ddl.DDLDatabase</name>
-                  <includes>cover_asset|user_preference|edition|edition_author|user_edition|user_edition_metadata_override|user_edition_author_override</includes>
+                  <includes>cover_asset|user_preference|edition|edition_author|user_edition|user_edition_metadata_override|user_edition_author_override|goodreads_import</includes>
                   <properties>
                     <property>
                       <key>scripts</key>

@@ -11,11 +11,18 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/rosies-books-square-180.png">
     <link rel="stylesheet" href="/assets/app.css">
     <script src="/assets/pwa-registration.js" defer></script>
+    <script src="/assets/shelf-navigation-feedback.js" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to main content</a>
     <div class="site-shell">
       {#insert content}{/insert}
+    </div>
+    <div class="shelf-navigation-feedback" data-shelf-navigation-feedback role="status" aria-live="polite" hidden>
+      <div class="shelf-navigation-feedback-panel">
+        <span class="shelf-navigation-feedback-spinner" aria-hidden="true"></span>
+        <span>Opening shelf</span>
+      </div>
     </div>
   </body>
 </html>

@@ -6,6 +6,10 @@
       <aside class="library-sidebar">
         <div class="library-identity">
           <a class="product-name" href="/reading">{page.productName}</a>
+          <details class="library-menu">
+            <summary aria-label="Library menu"><span aria-hidden="true">☰</span></summary>
+            <div class="library-menu-items"><a href="/imports/goodreads">Import from Goodreads</a></div>
+          </details>
         </div>
         <nav class="shelf-navigation" aria-label="Library shelves">
           {#for item in page.navigation}

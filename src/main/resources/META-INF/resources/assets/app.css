@@ -103,6 +103,65 @@ a {
   background: var(--color-surface);
 }
 
+body.shelf-navigation-pending {
+  cursor: progress;
+}
+
+body.shelf-navigation-pending .site-shell {
+  opacity: 0.42;
+  pointer-events: none;
+  transition: opacity 120ms ease-out;
+}
+
+.shelf-navigation-feedback {
+  position: fixed;
+  z-index: 20;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: var(--space-5);
+  cursor: progress;
+  background: rgb(34 31 26 / 12%);
+}
+
+.shelf-navigation-feedback[hidden] {
+  display: none;
+}
+
+.shelf-navigation-feedback-panel {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  box-shadow: 0 0.5rem 1.5rem rgb(34 31 26 / 18%);
+  color: var(--color-ink);
+  background: var(--color-surface-raised);
+  font-weight: 600;
+}
+
+.shelf-navigation-feedback-spinner {
+  width: 1.125rem;
+  aspect-ratio: 1;
+  border: 0.1875rem solid var(--color-border);
+  border-top-color: var(--color-current);
+  border-radius: 50%;
+  animation: shelf-navigation-spinner 700ms linear infinite;
+}
+
+@keyframes shelf-navigation-spinner {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shelf-navigation-feedback-spinner {
+    animation: none;
+  }
+}
+
 .site-header,
 .page-content {
   width: min(100%, 40rem);
@@ -163,6 +222,43 @@ h1 {
   align-items: baseline;
   justify-content: space-between;
   gap: var(--space-4);
+}
+
+.library-menu {
+  position: relative;
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+.library-menu summary {
+  display: block;
+  cursor: pointer;
+  list-style: none;
+  font-size: 1.25rem;
+}
+
+.library-menu summary::marker,
+.library-menu summary::-webkit-details-marker {
+  display: none;
+  content: "";
+}
+
+.library-menu-items {
+  position: absolute;
+  z-index: 3;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  min-width: 12rem;
+  padding: var(--space-2);
+  border: 1px solid var(--color-border);
+  background: var(--color-canvas);
+  box-shadow: 0 0.5rem 1rem rgb(0 0 0 / 12%);
+}
+
+.library-menu-items a {
+  display: block;
+  padding: var(--space-2);
+  white-space: nowrap;
 }
 
 .product-name {
@@ -766,8 +862,8 @@ h1 {
   }
 
   .library-identity {
-    display: grid;
-    justify-content: stretch;
+    display: flex;
+    justify-content: space-between;
   }
 
   .shelf-navigation {
