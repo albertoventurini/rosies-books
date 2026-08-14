@@ -44,9 +44,15 @@ class GoodreadsImportResource {
   @GET
   @Produces(MediaType.TEXT_HTML)
   public TemplateInstance form() {
+    CurrentUser owner = requireUser();
     return GoodreadsImportTemplates.goodreads(
         new GoodreadsImportPage(
-            requireUser().displayLabel(), UUID.randomUUID().toString(), List.of(), null, null));
+            owner.displayLabel(),
+            UUID.randomUUID().toString(),
+            List.of(),
+            imports.list(owner),
+            null,
+            null));
   }
 
   @POST
@@ -117,6 +123,7 @@ class GoodreadsImportResource {
             owner.displayLabel(),
             id.toString(),
             List.of(),
+            List.of(),
             result,
             coverTasks.progress(owner, id)));
   }
@@ -135,7 +142,12 @@ class GoodreadsImportResource {
         .entity(
             GoodreadsImportTemplates.goodreads(
                 new GoodreadsImportPage(
-                    owner.displayLabel(), requestId == null ? "" : requestId, errors, null, null)))
+                    owner.displayLabel(),
+                    requestId == null ? "" : requestId,
+                    errors,
+                    List.of(),
+                    null,
+                    null)))
         .build();
   }
 }
@@ -144,6 +156,7 @@ record GoodreadsImportPage(
     String userDisplayLabel,
     String requestId,
     List<String> errors,
+    List<GoodreadsImportService.GoodreadsImportResult> previousImports,
     GoodreadsImportService.GoodreadsImportResult result,
     CoverFetchTaskService.Progress coverProgress) {
   public boolean hasResult() {
@@ -152,6 +165,10 @@ record GoodreadsImportPage(
 
   public boolean hasErrors() {
     return !errors.isEmpty();
+  }
+
+  public boolean hasPreviousImports() {
+    return !previousImports.isEmpty();
   }
 
   public boolean hasCoverProgress() {

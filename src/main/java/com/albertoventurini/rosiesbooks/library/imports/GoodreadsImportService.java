@@ -122,6 +122,22 @@ class GoodreadsImportService {
                     row.get(FINISHED)));
   }
 
+  List<GoodreadsImportResult> list(CurrentUser owner) {
+    return dsl.select(REQUEST_ID, IMPORTED, PRESENT, READING, TO_READ, FINISHED)
+        .from(IMPORT)
+        .where(USER_ID.eq(owner.id().value()))
+        .orderBy(CREATED_AT.desc())
+        .fetch(
+            row ->
+                new GoodreadsImportResult(
+                    row.get(REQUEST_ID),
+                    row.get(IMPORTED),
+                    row.get(PRESENT),
+                    row.get(READING),
+                    row.get(TO_READ),
+                    row.get(FINISHED)));
+  }
+
   private UUID resolveEdition(GoodreadsCsvParser.GoodreadsRow row, Instant now) {
     UUID candidate = UUID.randomUUID();
     var insert =

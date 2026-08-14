@@ -9,7 +9,8 @@
         <section class="form-section"><h2>Import complete</h2><p>{page.result.importedCount} imported, {page.result.alreadyPresentCount} already present.</p><ul><li>{page.result.readingCount} added to Reading</li><li>{page.result.toReadCount} added to To Read</li><li>{page.result.finishedCount} added to Finished</li></ul>{#if page.hasCoverProgress}<h2>Cover fetching</h2><ul><li>{page.coverProgress.pending} queued or retrying</li><li>{page.coverProgress.processing} fetching</li><li>{page.coverProgress.downloaded} downloaded</li><li>{page.coverProgress.unavailable} unavailable</li></ul>{/if}<a class="button-link" href="/reading">Close</a></section>
       {#else}
         {#if page.hasErrors}<div class="form-error-summary" role="alert">{#for error in page.errors}<p>{error}</p>{/for}</div>{/if}
-        <form class="manual-form" method="post" action="/imports/goodreads" enctype="multipart/form-data"><input type="hidden" name="requestId" value="{page.requestId}"><div class="form-field"><label for="file">Goodreads CSV export</label><input id="file" name="file" type="file" accept=".csv,text/csv" required></div><button class="button-link" type="submit">Import books</button></form>
+        <form class="manual-form" method="post" action="/imports/goodreads" enctype="multipart/form-data"><input type="hidden" name="requestId" value="{page.requestId}"><div class="form-field"><label for="file">Please select a Goodreads CSV file</label><input id="file" name="file" type="file" accept=".csv,text/csv" required></div><button class="button-link" type="submit">Import books</button></form>
+        {#if page.hasPreviousImports}<section class="form-section"><h2>Previous imports</h2><ul>{#for import in page.previousImports}<li>{import.importedCount} imported, {import.alreadyPresentCount} already present. <a href="/imports/goodreads/{import.requestId}">View results</a></li>{/for}</ul></section>{/if}
       {/if}
     </main>
   {/content}
