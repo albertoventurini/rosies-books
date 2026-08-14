@@ -25,6 +25,7 @@ import org.jooq.impl.DSL;
 @ApplicationScoped
 public class CoverFetchTaskService {
   private static final Logger LOG = Logger.getLogger(CoverFetchTaskService.class.getName());
+  private static final int MAX_ATTEMPTS = 3;
   private final DSLContext dsl;
   private final ProviderCoverPersistenceService covers;
   private final Clock clock;
@@ -167,6 +168,10 @@ public class CoverFetchTaskService {
               .where(COVER_FETCH_TASK.ID.eq(taskId))
               .fetchOptional(COVER_FETCH_TASK.ATTEMPT_COUNT)
               .orElse(1);
+      if (attempts >= MAX_ATTEMPTS) {
+        terminal(transactional, taskId, "NO_COVER", now);
+        return;
+      }
       Duration fallback = Duration.ofMinutes(1).multipliedBy(1L << Math.min(attempts - 1, 6));
       Duration delay =
           ((ProviderCoverPersistenceService.FetchOutcome.Retry) outcome)
