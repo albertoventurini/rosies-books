@@ -6,7 +6,6 @@ import static com.albertoventurini.rosiesbooks.library.persistence.jooq.Tables.U
 
 import com.albertoventurini.rosiesbooks.identity.api.CurrentUser;
 import com.albertoventurini.rosiesbooks.library.internal.Isbn13;
-import com.albertoventurini.rosiesbooks.library.persistence.CoverFetchTaskService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 import java.time.Clock;

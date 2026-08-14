@@ -11,7 +11,7 @@
 
 - Implement only the requested behavior; do not introduce speculative features or abstractions.
 - Work red-green-refactor: first prove the intended test fails, implement, refactor, then run the relevant suites.
-- After every feature, run `./mvnw verify`.
+- After every feature, run `./mvnw spotless:apply` and `./mvnw verify`.
 - Organize top-level packages by feature, not technical layer; colocate each feature's web, use-case, domain, and persistence code.
 - Keep types package-private by default; expose only intentional cross-feature APIs or framework-required entry points.
 - Keep business rules independent of Quarkus, HTTP, Qute, jOOQ, PostgreSQL, OIDC, and provider-specific types.
