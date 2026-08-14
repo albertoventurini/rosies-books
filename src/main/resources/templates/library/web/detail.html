@@ -52,7 +52,7 @@
           {#if page.hasIsbn10}<dt>ISBN-10</dt><dd>{page.isbn10}</dd>{/if}
           {#if page.hasIsbn13}<dt>ISBN-13</dt><dd>{page.isbn13}</dd>{/if}
         </dl>
-        {#if page.hasDescription}<section class="book-detail-section"><h2>Description</h2><p class="preserved-text">{page.description}</p></section>{/if}
+        {#if page.hasDescription}<section class="book-detail-section"><h2>Description</h2>{#for descriptionParagraph in page.descriptionParagraphs}<p>{descriptionParagraph}</p>{/for}</section>{/if}
         {#if page.hasNotes}<section class="book-detail-section"><h2>Private notes</h2><p class="preserved-text">{page.notes}</p></section>{/if}
       </main>
     </div>

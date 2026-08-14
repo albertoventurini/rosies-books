@@ -102,6 +102,12 @@ record BookDetailPage(
     return description != null;
   }
 
+  public List<String> descriptionParagraphs() {
+    return Arrays.stream(description.split("\\R+"))
+        .filter(paragraph -> !paragraph.isBlank())
+        .toList();
+  }
+
   public boolean hasFormat() {
     return format != null;
   }
