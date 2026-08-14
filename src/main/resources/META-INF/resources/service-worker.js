@@ -1,4 +1,4 @@
-const STATIC_CACHE = "rosies-books-static-v3";
+const STATIC_CACHE = "rosies-books-static-v4";
 const OFFLINE_FALLBACK = "/offline.html";
 const PRECACHE_URLS = [
   OFFLINE_FALLBACK,
@@ -20,7 +20,12 @@ const PRECACHE_URLS = [
 const STATIC_ASSET_URLS = new Set(PRECACHE_URLS);
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(STATIC_CACHE).then((cache) => cache.addAll(PRECACHE_URLS)));
+  event.waitUntil(
+    caches
+      .open(STATIC_CACHE)
+      .then((cache) => cache.addAll(PRECACHE_URLS))
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener("activate", (event) => {
@@ -54,7 +59,7 @@ self.addEventListener("fetch", (event) => {
   }
 
   if (STATIC_ASSET_URLS.has(url.pathname)) {
-    event.respondWith(caches.match(request).then((cached) => cached || fetch(request)));
+    event.respondWith(fetch(request).catch(() => caches.match(request)));
     return;
   }
 

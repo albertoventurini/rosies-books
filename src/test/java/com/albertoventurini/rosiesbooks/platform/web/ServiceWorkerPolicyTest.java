@@ -21,7 +21,7 @@ class ServiceWorkerPolicyTest {
     assertTrue(worker.contains("const PRECACHE_URLS"));
     assertTrue(worker.contains("/assets/manifest.webmanifest"));
     assertTrue(worker.contains("/assets/app.css"));
-    assertTrue(worker.contains("rosies-books-static-v3"));
+    assertTrue(worker.contains("rosies-books-static-v4"));
     assertTrue(worker.contains("/assets/icons/rosies-books-rounded-192.png"));
     assertTrue(worker.contains("/assets/icons/rosies-books-rounded-512.png"));
     assertTrue(worker.contains("/assets/fonts/newsreader-latin-v1.woff2"));
@@ -29,6 +29,9 @@ class ServiceWorkerPolicyTest {
     assertTrue(worker.contains("/offline.html"));
     assertTrue(worker.contains("request.mode === \"navigate\""));
     assertTrue(worker.contains("caches.match(OFFLINE_FALLBACK)"));
+    assertTrue(worker.contains("self.skipWaiting()"));
+    assertTrue(worker.contains("self.clients.claim()"));
+    assertTrue(worker.contains("fetch(request).catch(() => caches.match(request))"));
   }
 
   @Test
@@ -40,5 +43,17 @@ class ServiceWorkerPolicyTest {
     assertTrue(worker.contains("url.pathname.startsWith(\"/covers/\")"));
     assertFalse(worker.contains("cache.put("));
     assertFalse(worker.contains("event.request.url"));
+  }
+
+  @Test
+  void registrationForcesWorkerUpdateChecksAndReloadsIntoTheActivatedWorker() throws IOException {
+    String registration =
+        Files.readString(
+            Path.of("src/main/resources/META-INF/resources/assets/pwa-registration.js"));
+
+    assertTrue(registration.contains("updateViaCache: \"none\""));
+    assertTrue(registration.contains("registration.update()"));
+    assertTrue(registration.contains("controllerchange"));
+    assertTrue(registration.contains("window.location.reload()"));
   }
 }

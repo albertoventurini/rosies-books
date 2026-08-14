@@ -54,13 +54,16 @@ is `/reading`. Installation requires a trusted HTTPS origin (or a browser's loca
 
 The app is intentionally online-only for private library data. The worker precaches only the
 generic offline page and public static resources: the manifest, CSS, local fonts, icons, and
-progressive-enhancement scripts. It serves those known assets cache-first, but always fetches
-library pages and application requests from the network. It never stores HTML, books, covers,
+progressive-enhancement scripts. It always fetches library pages and application requests from the
+network. It never stores HTML, books, covers,
 forms, OIDC responses, or mutations, and a failed navigation can show only `/offline.html`.
 
-When changing a precached asset, change the `STATIC_CACHE` version in `service-worker.js` in the
-same release. Activation removes previous `rosies-books-static-*` caches so clients receive the
-new static bundle without retaining old caches indefinitely.
+The worker is served with `Cache-Control: no-cache`, and each page explicitly checks for an
+updated worker. A changed worker precaches its bundle, activates immediately, claims open pages,
+and reloads them once under the new worker. Static assets prefer the network and fall back to the
+precache only offline, so an asset change is visible even when the worker has not changed. Change
+the `STATIC_CACHE` version when changing the precache list; activation removes previous
+`rosies-books-static-*` caches.
 
 The PNG icon set lives in `assets/icons`. Rounded 192 px and 512 px icons are manifest icons;
 rounded 16 px and 32 px icons are browser favicons; the square 180 px icon is the Apple touch

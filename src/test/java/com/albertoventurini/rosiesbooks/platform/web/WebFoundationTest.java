@@ -87,7 +87,13 @@ class WebFoundationTest {
         .body("theme_color", org.hamcrest.Matchers.is("#2f4739"))
         .body("background_color", org.hamcrest.Matchers.is("#e7dfd1"));
 
-    given().when().get("/service-worker.js").then().statusCode(200).contentType("text/javascript");
+    given()
+        .when()
+        .get("/service-worker.js")
+        .then()
+        .statusCode(200)
+        .contentType("text/javascript")
+        .header("Cache-Control", "no-cache");
     given()
         .when()
         .get("/assets/shelf-navigation-feedback.js")

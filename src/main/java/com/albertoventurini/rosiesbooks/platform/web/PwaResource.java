@@ -12,12 +12,24 @@ class PwaResource {
 
   @Route(path = "/assets/manifest.webmanifest", methods = Route.HttpMethod.GET)
   void manifest(RoutingContext context) throws IOException {
-    try (InputStream resource =
-        PwaResource.class.getResourceAsStream("/META-INF/resources/assets/manifest.webmanifest")) {
-      context
-          .response()
-          .putHeader("Content-Type", "application/manifest+json")
-          .end(Buffer.buffer(resource.readAllBytes()));
+    context
+        .response()
+        .putHeader("Content-Type", "application/manifest+json")
+        .end(resource("/META-INF/resources/assets/manifest.webmanifest"));
+  }
+
+  @Route(path = "/service-worker.js", methods = Route.HttpMethod.GET)
+  void serviceWorker(RoutingContext context) throws IOException {
+    context
+        .response()
+        .putHeader("Content-Type", "text/javascript")
+        .putHeader("Cache-Control", "no-cache")
+        .end(resource("/META-INF/resources/service-worker.js"));
+  }
+
+  private static Buffer resource(String resourcePath) throws IOException {
+    try (InputStream resource = PwaResource.class.getResourceAsStream(resourcePath)) {
+      return Buffer.buffer(resource.readAllBytes());
     }
   }
 }
