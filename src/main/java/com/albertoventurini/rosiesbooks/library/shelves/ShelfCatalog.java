@@ -10,6 +10,9 @@ public interface ShelfCatalog {
 
   List<ShelfBook> find(CurrentUser owner, Shelf shelf);
 
+  /** Finds matching books in each non-empty shelf owned by {@code owner}. */
+  List<ShelfSearchResult> search(CurrentUser owner, ShelfSearch query);
+
   /**
    * Finds an owner's Finished books for {@code selectedYear}, deriving available years from that
    * owner's current Finished records and always including {@code currentYear}.

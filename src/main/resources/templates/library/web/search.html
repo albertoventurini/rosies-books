@@ -1,6 +1,6 @@
-{@com.albertoventurini.rosiesbooks.library.web.ShelfPage page}
+{@com.albertoventurini.rosiesbooks.library.web.SearchPage page}
 {#include platform/web/shell}
-  {#title}{page.heading} · {page.productName}{/title}
+  {#title}Search results · {page.productName}{/title}
   {#content}
     <div class="library-shell">
       <aside class="library-sidebar">
@@ -13,51 +13,41 @@
         </div>
         <nav class="shelf-navigation" aria-label="Library shelves">
           {#for item in page.navigation}
-            <a href="{item.route}"{#if item.active} aria-current="page"{/if} class="shelf-navigation-link">{item.label}</a>
+            <a href="{item.route}" class="shelf-navigation-link">{item.label}</a>
           {/for}
         </nav>
       </aside>
       <main class="shelf-main" id="main-content">
-        {#if page.hasNotice}
-          <div class="shelf-notice" role="status" data-transient-notice>{page.notice}</div>
-        {/if}
         <header class="shelf-header">
           <p class="eyebrow">Your library</p>
-          <div class="shelf-heading-row">
-            <h1>{page.heading}</h1>
-            <a class="button-link" href="/books/new">Add book</a>
-          </div>
+          <h1>Search results</h1>
           <form class="library-search" action="/search" method="get" data-library-search>
             <label for="library-search-query">Search your library</label>
             <div class="library-search-controls">
-              <input id="library-search-query" name="q" type="search" autocomplete="off">
+              <input id="library-search-query" name="q" type="search" value="{page.query}" autocomplete="off">
               <button class="button-primary library-search-submit" type="submit" disabled data-library-search-submit>Search</button>
               <noscript><style>.library-search-submit { display: none; }</style><button class="button-primary" type="submit">Search</button></noscript>
             </div>
           </form>
-          {#if page.hasFinishedYear}
-            <nav class="finished-year-navigation" aria-label="Finished year">
-              {#for year in page.finishedYear.options}
-                <a class="finished-year-link" href="{year.route}"{#if year.selected} aria-current="true"{/if}>{year.label}</a>
-              {/for}
-            </nav>
-            <p class="finished-year-count">{page.finishedYear.countText}</p>
-          {/if}
         </header>
-        {#if page.books.empty}
-          <p class="shelf-empty">{page.emptyMessage}</p>
+        {#if page.hasValidationMessage}
+          <p class="form-warning" role="alert">{page.validationMessage}</p>
+        {#else if !page.hasResults}
+          <p class="shelf-empty">No books found</p>
         {#else}
-          <ol class="shelf-list">
-            {#for book in page.books}
-              <li class="shelf-book">
-                {#bookCard book=book /}
-              </li>
-            {/for}
-          </ol>
+          {#for shelf in page.shelves}
+            <section class="search-result-shelf">
+              <h2>{shelf.heading}</h2>
+              <ol class="shelf-list">
+                {#for book in shelf.books}
+                  <li class="shelf-book">{#bookCard book=book /}</li>
+                {/for}
+              </ol>
+            </section>
+          {/for}
         {/if}
       </main>
     </div>
     <script src="/assets/library-search.js" defer></script>
-    {#if page.hasNotice}<script src="/assets/shelf-notice.js" defer></script>{/if}
   {/content}
 {/include}

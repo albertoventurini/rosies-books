@@ -265,6 +265,95 @@ class ShelfResourceTest {
     }
   }
 
+  @Test
+  void searchesAcrossShelvesWithTheNormalNavigationAndHidesEmptyResultShelves() {
+    addBook(
+        DevelopmentUser.READER_ONE,
+        "TO_READ",
+        "Alba e tramonto",
+        List.of("Someone"),
+        LocalDate.of(2026, 1, 1),
+        Instant.parse("2026-01-01T00:00:00Z"));
+    addBook(
+        DevelopmentUser.READER_ONE,
+        "READING",
+        "Another book",
+        List.of("Marco Albertini"),
+        LocalDate.of(2026, 1, 1),
+        Instant.parse("2026-01-02T00:00:00Z"));
+    addBook(
+        DevelopmentUser.READER_ONE,
+        "FINISHED",
+        "Tramonto e alba",
+        List.of("Someone else"),
+        LocalDate.of(2026, 1, 1),
+        Instant.parse("2026-01-03T00:00:00Z"));
+    addBook(
+        DevelopmentUser.READER_TWO,
+        "READING",
+        "Other user's Alberto book",
+        List.of("Secret"),
+        LocalDate.of(2026, 1, 1),
+        Instant.parse("2026-01-04T00:00:00Z"));
+
+    String body =
+        given()
+            .cookie("rosies-dev-user", DevelopmentUser.READER_ONE.alias())
+            .queryParam("q", "Alb")
+            .when()
+            .get("/search")
+            .then()
+            .statusCode(200)
+            .extract()
+            .asString();
+
+    assertThat(body, containsString("<h1>Search results</h1>"));
+    assertThat(body, containsString("<h2>To Read</h2>"));
+    assertThat(body, containsString("<h2>Reading</h2>"));
+    assertThat(body, not(containsString("<h2>Finished</h2>")));
+    assertThat(body, containsString("Alba e tramonto"));
+    assertThat(body, containsString("Another book"));
+    assertThat(body, not(containsString("Tramonto e alba")));
+    assertThat(body, not(containsString("Other user's Alberto book")));
+    assertThat(body, containsString("class=\"shelf-book-card\""));
+    assertThat(body, containsString("href=\"/reading\" class=\"shelf-navigation-link\""));
+    assertThat(body, not(containsString("aria-current=\"page\"")));
+  }
+
+  @Test
+  void rendersSearchControlsOnEveryShelfAndHandlesInvalidAndEmptySearches() {
+    for (String route : List.of("/reading", "/to-read", "/finished")) {
+      given()
+          .cookie("rosies-dev-user", DevelopmentUser.READER_ONE.alias())
+          .when()
+          .get(route)
+          .then()
+          .statusCode(200)
+          .body(containsString("action=\"/search\""))
+          .body(containsString("data-library-search-submit"))
+          .body(containsString("disabled"))
+          .body(containsString("/assets/library-search.js"));
+    }
+
+    given()
+        .cookie("rosies-dev-user", DevelopmentUser.READER_ONE.alias())
+        .queryParam("q", "ab")
+        .when()
+        .get("/search")
+        .then()
+        .statusCode(200)
+        .body(containsString("Enter at least 3 letters, or at least 6 digits for an ISBN."));
+
+    given()
+        .cookie("rosies-dev-user", DevelopmentUser.READER_ONE.alias())
+        .queryParam("q", "absent")
+        .when()
+        .get("/search")
+        .then()
+        .statusCode(200)
+        .body(containsString("No books found"));
+  }
+
   private void assertActiveAndEmpty(String route, String heading, String emptyMessage) {
     String body =
         given()

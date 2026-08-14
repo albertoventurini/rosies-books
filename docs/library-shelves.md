@@ -13,6 +13,7 @@ The browser routes are:
 | `GET`, `HEAD` | `/reading` | Current user's Reading shelf |
 | `GET`, `HEAD` | `/to-read` | Current user's To Read shelf |
 | `GET`, `HEAD` | `/finished[?year=YYYY]` | Current user's Finished shelf for one year |
+| `GET`, `HEAD` | `/search?q=QUERY` | Current user's cross-shelf search results |
 | `GET`, `HEAD` | `/books/{userEditionId}/state` | Shelf-change form for an owned book |
 | `POST` | `/books/{userEditionId}/state` | Validate, confirm, cancel, or apply a shelf change |
 | `GET`, `HEAD` | `/books/{userEditionId}/delete` | Permanent-deletion confirmation for an owned book |
@@ -24,6 +25,20 @@ Shelf routes return `401 Unauthorized` when `CurrentUserProvider` cannot resolve
 They never fall back to a development identity. In development and tests, selecting a user still
 posts to `/dev/users`, sets the alias cookie, and redirects through `/`; the root redirect then
 takes the browser to `/reading`.
+
+## Library search
+
+Every shelf includes an ordinary GET search form. JavaScript disables its normal submit button until
+the trimmed input has at least three letters, or is an ISBN prefix containing at least six digits;
+the no-JavaScript fallback remains submit-capable and the server applies the same validation.
+Spaces and hyphens are ignored for an otherwise numeric ISBN query. Invalid direct requests return
+the search page with an explanatory validation message.
+
+Search is owner-scoped and case-insensitive. Text matches only from the beginning of an effective
+title or the beginning of an author word; ISBN searches match the beginning of the user's effective
+ISBN (a private ISBN override replaces the canonical value). Results group non-empty shelves in To
+Read, Reading, Finished order, retain each shelf's normal book order, and use the same book cards
+and shelf navigation as ordinary shelves. A valid query with no matches says `No books found`.
 
 `identity.api.CurrentUser` carries two values: the stable `UserId` used for every ownership and
 authorization decision, and a normalized, nonblank display label intended for escaped UI output.

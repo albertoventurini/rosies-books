@@ -7,6 +7,8 @@ import io.quarkus.qute.TemplateInstance;
 class ShelfTemplates {
 
   static native TemplateInstance shelf(ShelfPage page);
+
+  static native TemplateInstance search(SearchPage page);
 }
 
 @CheckedTemplate(basePath = "library/web")

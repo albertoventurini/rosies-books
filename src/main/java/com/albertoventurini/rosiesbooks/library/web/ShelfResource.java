@@ -4,6 +4,7 @@ import com.albertoventurini.rosiesbooks.identity.api.CurrentUser;
 import com.albertoventurini.rosiesbooks.identity.api.CurrentUserProvider;
 import com.albertoventurini.rosiesbooks.library.shelves.Shelf;
 import com.albertoventurini.rosiesbooks.library.shelves.ShelfCatalog;
+import com.albertoventurini.rosiesbooks.library.shelves.ShelfSearch;
 import io.quarkus.qute.TemplateInstance;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -72,6 +73,23 @@ class ShelfResource {
             notice(notice),
             LocalDate.now(clock.withZone(zone)),
             zone));
+  }
+
+  @GET
+  @Path("search")
+  @Produces(MediaType.TEXT_HTML)
+  public TemplateInstance search(@QueryParam("q") String submitted) {
+    CurrentUser owner = requireCurrentUser();
+    return ShelfSearch.parse(submitted)
+        .map(
+            query ->
+                ShelfTemplates.search(
+                    SearchPage.results(
+                        query.input(),
+                        shelves.search(owner, query),
+                        LocalDate.now(clock.withZone(zone)),
+                        zone)))
+        .orElseGet(() -> ShelfTemplates.search(SearchPage.invalid(submitted)));
   }
 
   private TemplateInstance render(Shelf shelf, String noticeCode) {

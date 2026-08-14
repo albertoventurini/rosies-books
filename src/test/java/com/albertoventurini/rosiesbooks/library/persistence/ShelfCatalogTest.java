@@ -14,6 +14,7 @@ import com.albertoventurini.rosiesbooks.library.internal.UserEditionId;
 import com.albertoventurini.rosiesbooks.library.shelves.Shelf;
 import com.albertoventurini.rosiesbooks.library.shelves.ShelfBook;
 import com.albertoventurini.rosiesbooks.library.shelves.ShelfCatalog;
+import com.albertoventurini.rosiesbooks.library.shelves.ShelfSearch;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import java.time.Instant;
@@ -164,6 +165,38 @@ class ShelfCatalogTest {
         shelves.findFinished(firstUser, Year.of(2025), Year.of(2025)).orElseThrow().books());
     assertEquals(
         java.util.Optional.empty(), shelves.findFinished(firstUser, Year.of(2023), Year.of(2025)));
+  }
+
+  @Test
+  void searchesEveryShelfByTitlePrefixAndAuthorWordPrefixWithoutLeakingAnotherUsersBooks() {
+    addBook(firstUser, "TO_READ", "Alba e tramonto", List.of("Unrelated"), 61);
+    addBook(firstUser, "READING", "Another title", List.of("Marco Albertini"), 62);
+    addBook(firstUser, "FINISHED", "Tramonto e alba", List.of("Alberto Venturini"), 63);
+    addBook(secondUser, "READING", "Other user's Albert book", List.of("Secret"), 64);
+
+    var results = shelves.search(firstUser, ShelfSearch.parse("aLb").orElseThrow());
+
+    assertEquals(
+        List.of(Shelf.TO_READ, Shelf.READING, Shelf.FINISHED),
+        results.stream().map(result -> result.shelf()).toList());
+    assertEquals(
+        List.of("Alba e tramonto", "Another title", "Tramonto e alba"),
+        results.stream().flatMap(result -> result.books().stream()).map(ShelfBook::title).toList());
+  }
+
+  @Test
+  void searchesNormalizedIsbnPrefixes() {
+    UUID book = addBook(firstUser, "TO_READ", "ISBN book", List.of("Author"), 71);
+    dsl.update(EDITION)
+        .set(EDITION.ISBN_13, "9780306406157")
+        .where(EDITION.ID.eq(new UUID(1, 71)))
+        .execute();
+
+    var results = shelves.search(firstUser, ShelfSearch.parse("978-030").orElseThrow());
+
+    assertEquals(List.of(Shelf.TO_READ), results.stream().map(result -> result.shelf()).toList());
+    assertEquals(book, results.getFirst().books().getFirst().userEditionId().value());
+    assertEquals(java.util.Optional.empty(), ShelfSearch.parse("97803"));
   }
 
   private void assertTitles(Shelf shelf, String... expected) {

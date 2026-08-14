@@ -16,11 +16,14 @@ import com.albertoventurini.rosiesbooks.library.shelves.FinishedShelf;
 import com.albertoventurini.rosiesbooks.library.shelves.Shelf;
 import com.albertoventurini.rosiesbooks.library.shelves.ShelfBook;
 import com.albertoventurini.rosiesbooks.library.shelves.ShelfCatalog;
+import com.albertoventurini.rosiesbooks.library.shelves.ShelfSearch;
+import com.albertoventurini.rosiesbooks.library.shelves.ShelfSearchResult;
 import jakarta.enterprise.context.ApplicationScoped;
 import java.time.LocalDate;
 import java.time.Year;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -44,6 +47,18 @@ class JooqShelfCatalog implements ShelfCatalog {
     Objects.requireNonNull(owner, "owner");
     Objects.requireNonNull(shelf, "shelf");
     return find(owner, shelf, DSL.noCondition());
+  }
+
+  @Override
+  public List<ShelfSearchResult> search(CurrentUser owner, ShelfSearch query) {
+    Objects.requireNonNull(owner, "owner");
+    Objects.requireNonNull(query, "query");
+    Condition matches = searchCondition(query);
+    return List.of(Shelf.TO_READ, Shelf.READING, Shelf.FINISHED).stream()
+        .map(shelf -> new ShelfBooks(shelf, find(owner, shelf, matches)))
+        .filter(result -> !result.books.isEmpty())
+        .map(result -> new ShelfSearchResult(result.shelf, result.books))
+        .toList();
   }
 
   @Override
@@ -135,6 +150,50 @@ class JooqShelfCatalog implements ShelfCatalog {
                   row.get(COVER_ASSET.SHA256));
             });
   }
+
+  private static Condition searchCondition(ShelfSearch query) {
+    if (query instanceof ShelfSearch.Isbn isbn) {
+      Field<String> effectiveIsbn10 =
+          DSL.when(
+                  USER_EDITION_METADATA_OVERRIDE.ISBN_10_IS_OVERRIDDEN.eq(true),
+                  USER_EDITION_METADATA_OVERRIDE.ISBN_10_VALUE)
+              .otherwise(EDITION.ISBN_10);
+      Field<String> effectiveIsbn13 =
+          DSL.when(
+                  USER_EDITION_METADATA_OVERRIDE.ISBN_13_IS_OVERRIDDEN.eq(true),
+                  USER_EDITION_METADATA_OVERRIDE.ISBN_13_VALUE)
+              .otherwise(EDITION.ISBN_13);
+      return effectiveIsbn10
+          .like(isbn.digits() + "%")
+          .or(effectiveIsbn13.like(isbn.digits() + "%"));
+    }
+
+    String text = query.input().toLowerCase(Locale.ROOT);
+    return DSL.lower(USER_EDITION.EFFECTIVE_TITLE_SEARCH)
+        .like(likePrefix(text), '\\')
+        .or(
+            DSL.condition(
+                "lower({0}) ~ {1}",
+                USER_EDITION.EFFECTIVE_AUTHORS_SEARCH, "(^|[^[:alnum:]])" + regexLiteral(text)));
+  }
+
+  private static String likePrefix(String value) {
+    return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%";
+  }
+
+  private static String regexLiteral(String value) {
+    StringBuilder escaped = new StringBuilder(value.length());
+    for (int index = 0; index < value.length(); index++) {
+      char character = value.charAt(index);
+      if ("\\.^$|?*+()[]{}".indexOf(character) >= 0) {
+        escaped.append('\\');
+      }
+      escaped.append(character);
+    }
+    return escaped.toString();
+  }
+
+  private record ShelfBooks(Shelf shelf, List<ShelfBook> books) {}
 
   private static ReadingState readingState(
       String state, LocalDate startedOn, LocalDate finishedOn) {
