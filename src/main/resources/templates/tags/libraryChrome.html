@@ -1,0 +1,19 @@
+{@com.albertoventurini.rosiesbooks.library.web.LibraryChrome chrome}
+<div class="library-shell">
+  <aside class="library-sidebar">
+    <div class="library-identity">
+      <a class="product-name" href="/reading">{chrome.productName}</a>
+      <a class="library-add-book" href="/books/new">Add book</a>
+      <details class="library-menu">
+        <summary aria-label="Library menu"><span aria-hidden="true">☰</span></summary>
+        <div class="library-menu-items"><a href="/search">Search your library</a><a href="/imports/goodreads">Import from Goodreads</a></div>
+      </details>
+    </div>
+    <nav class="shelf-navigation" aria-label="Library shelves">
+      {#for item in chrome.navigation}
+        <a href="{item.route}"{#if item.active} aria-current="page"{/if} class="shelf-navigation-link">{item.label}</a>
+      {/for}
+    </nav>
+  </aside>
+  {nested-content}
+</div>

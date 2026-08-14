@@ -58,6 +58,10 @@ record SearchPage(
     return !shelves.isEmpty();
   }
 
+  public LibraryChrome chrome() {
+    return new LibraryChrome(productName, navigation);
+  }
+
   private static List<ShelfNavigationItem> inactiveNavigation() {
     return Arrays.stream(Shelf.values())
         .map(shelf -> new ShelfNavigationItem(shelf.route(), shelf.heading(), false))

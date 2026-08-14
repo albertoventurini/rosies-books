@@ -189,7 +189,7 @@
     if (restoreFocus && returnFocus) returnFocus.focus();
   };
 
-  trigger.addEventListener("click", () => {
+  const openScanner = () => {
     if (scannerOpen) return;
     returnFocus = trigger;
     scannerOpen = true;
@@ -202,7 +202,10 @@
     closeButton.focus();
     const savedCameraDeviceId = preferredCameraDeviceId();
     startScanner(savedCameraDeviceId, Boolean(savedCameraDeviceId));
-  });
+  };
+
+  trigger.addEventListener("click", openScanner);
+  if (new URLSearchParams(window.location.search).get("scan") === "true") openScanner();
 
   switchCameraButton.addEventListener("click", async () => {
     if (!scannerOpen || cameras.length < 2) return;

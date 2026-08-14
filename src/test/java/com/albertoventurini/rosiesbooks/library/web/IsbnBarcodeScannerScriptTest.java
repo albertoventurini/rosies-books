@@ -69,6 +69,18 @@ class IsbnBarcodeScannerScriptTest {
     assertFalse(script.contains("const selectBestCamera = async"));
   }
 
+  @Test
+  void opensTheExistingScannerPathWhenTheBatchScanQueryIsPresent() throws IOException {
+    String script = scannerScript();
+
+    assertTrue(script.contains("const openScanner = () =>"));
+    assertTrue(script.contains("trigger.addEventListener(\"click\", openScanner)"));
+    assertTrue(
+        script.contains(
+            "new URLSearchParams(window.location.search).get(\"scan\") === \"true\")"
+                + " openScanner()"));
+  }
+
   private String scannerScript() throws IOException {
     return Files.readString(
         Path.of("src/main/resources/META-INF/resources/assets/isbn-barcode-scanner.js"));

@@ -2,12 +2,7 @@
 {#include platform/web/shell}
   {#title}Delete book · {page.productName}{/title}
   {#content}
-    <div class="library-shell">
-      <aside class="library-sidebar">
-        <div class="library-identity">
-          <a class="product-name" href="/reading">{page.productName}</a>
-        </div>
-      </aside>
+    {#libraryChrome chrome=page.chrome}
       <main class="manual-main" id="main-content">
         <header class="manual-header">
           <p class="eyebrow">Current shelf: {page.currentShelf}</p>
@@ -37,6 +32,6 @@
           </form>
         {/if}
       </main>
-    </div>
+    {/libraryChrome}
   {/content}
 {/include}

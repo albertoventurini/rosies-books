@@ -10,6 +10,10 @@ record ManualBookPage(
     List<ShelfNavigationItem> navigation,
     ManualBookForm form) {
 
+  public LibraryChrome chrome() {
+    return new LibraryChrome(productName, navigation);
+  }
+
   ManualBookPage(String userDisplayLabel, ManualBookForm form) {
     this(
         "Rosie's books",

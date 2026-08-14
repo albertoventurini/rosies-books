@@ -66,6 +66,10 @@ record ProviderAddBookPage(
     return "/books/new/manual?isbn=" + URLEncoder.encode(submittedIsbn, StandardCharsets.UTF_8);
   }
 
+  public LibraryChrome chrome() {
+    return new LibraryChrome(productName, navigation);
+  }
+
   record Result(
       SelectedEdition edition, String reviewToken, ManualBookForm form, String localCoverUrl) {
     public List<String> descriptionParagraphs() {

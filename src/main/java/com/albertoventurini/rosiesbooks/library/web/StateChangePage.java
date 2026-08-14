@@ -144,6 +144,14 @@ record StateChangePage(
     return finishedOn;
   }
 
+  public LibraryChrome chrome() {
+    return LibraryChrome.forShelf(
+        java.util.Arrays.stream(com.albertoventurini.rosiesbooks.library.shelves.Shelf.values())
+            .filter(shelf -> shelf.route().equals(currentShelfRoute))
+            .findFirst()
+            .orElse(null));
+  }
+
   private static List<StateTargetView> targets(ReadingState state, String selected) {
     if (state instanceof com.albertoventurini.rosiesbooks.library.internal.ToRead) {
       return List.of(

@@ -2,17 +2,7 @@
 {#include platform/web/shell}
   {#title}Add a book manually · {page.productName}{/title}
   {#content}
-    <div class="library-shell">
-      <aside class="library-sidebar">
-        <div class="library-identity">
-          <a class="product-name" href="/reading">{page.productName}</a>
-        </div>
-        <nav class="shelf-navigation" aria-label="Library shelves">
-          {#for item in page.navigation}
-            <a href="{item.route}" class="shelf-navigation-link">{item.label}</a>
-          {/for}
-        </nav>
-      </aside>
+    {#libraryChrome chrome=page.chrome}
       <main class="manual-main" id="main-content">
         <header class="manual-header">
           <p class="eyebrow">Your library</p>
@@ -151,6 +141,6 @@
           </div>
         </form>
       </main>
-    </div>
+    {/libraryChrome}
   {/content}
 {/include}

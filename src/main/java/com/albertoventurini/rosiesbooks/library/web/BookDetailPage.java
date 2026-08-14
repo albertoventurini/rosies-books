@@ -148,6 +148,10 @@ record BookDetailPage(
     return notice != null;
   }
 
+  public LibraryChrome chrome() {
+    return new LibraryChrome("Rosie's books", navigation);
+  }
+
   private static String date(LocalDate value) {
     return value.format(DateTimeFormatter.ofPattern("d MMM uuuu", Locale.ENGLISH));
   }

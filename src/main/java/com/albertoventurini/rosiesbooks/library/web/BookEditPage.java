@@ -5,4 +5,8 @@ record BookEditPage(
   public String productName() {
     return "Rosie's books";
   }
+
+  public LibraryChrome chrome() {
+    return LibraryChrome.inactive();
+  }
 }

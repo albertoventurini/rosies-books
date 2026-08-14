@@ -2,17 +2,7 @@
 {#include platform/web/shell}
   {#title}Add a book · {page.productName}{/title}
   {#content}
-    <div class="library-shell">
-      <aside class="library-sidebar">
-        <div class="library-identity">
-          <a class="product-name" href="/reading">{page.productName}</a>
-        </div>
-        <nav class="shelf-navigation" aria-label="Library shelves">
-          {#for item in page.navigation}
-            <a href="{item.route}"{#if item.active} aria-current="page"{/if} class="shelf-navigation-link">{item.label}</a>
-          {/for}
-        </nav>
-      </aside>
+    {#libraryChrome chrome=page.chrome}
       <main class="manual-main" id="main-content">
       <header class="manual-header"><p class="eyebrow">Your library</p><h1>Add a book</h1><p>Look up one exact edition by ISBN, or enter its details yourself.</p></header>
       {#if page.message}<div class="form-error-summary" role="alert"><p>{page.message}</p></div>{/if}
@@ -45,12 +35,12 @@
             <div class="form-field"><label for="state">Shelf</label><select id="state" name="state" data-shelf-target><option value="TO_READ"{#if page.result.get.form.toRead} selected{/if}>To Read</option><option value="READING"{#if page.result.get.form.reading} selected{/if}>Reading</option><option value="FINISHED"{#if page.result.get.form.finished} selected{/if}>Finished</option></select></div>
             <div data-shelf-date-fields="READING"{#if page.result.get.form.reading}{#else} hidden{/if}><div class="form-field"><label for="readingStartedOn">Start date</label><input id="readingStartedOn" type="date" name="startedOn" value="{page.result.get.form.startedOn}" required{#if page.result.get.form.reading}{#else} disabled{/if}>{#for error in page.result.get.form.errorsFor('startedOn')}<p class="field-errors">{error}</p>{/for}</div></div>
             <div data-shelf-date-fields="FINISHED"{#if page.result.get.form.finished}{#else} hidden{/if}><div class="form-grid"><div class="form-field"><label for="finishedStartedOn">Start date <span class="label-note">optional</span></label><input id="finishedStartedOn" type="date" name="startedOn" value="{page.result.get.form.startedOn}"{#if page.result.get.form.finished}{#else} disabled{/if}></div><div class="form-field"><label for="finishedOn">Finish date</label><input id="finishedOn" type="date" name="finishedOn" value="{page.result.get.form.finishedOn}" required{#if page.result.get.form.finished}{#else} disabled{/if}>{#for error in page.result.get.form.errorsFor('finishedOn')}<p class="field-errors">{error}</p>{/for}</div></div></div>
-            <div class="form-actions"><a href="/books/new">Cancel</a><button class="button-primary" type="submit" name="intent" value="confirm">Add book</button></div>
+            <div class="form-actions"><a href="/books/new">Cancel</a><button class="button-primary" type="submit" name="intent" value="confirm">Add book</button><button class="button-secondary" type="submit" name="intent" value="confirm-and-scan-next">Add &amp; scan next</button></div>
           </form>
         </section>
       {/if}
       </main>
-    </div>
+    {/libraryChrome}
     <script src="/assets/state-change.js" defer></script>
     <section class="barcode-scanner" id="barcode-scanner" role="dialog" aria-modal="true" aria-labelledby="barcode-scanner-title" hidden tabindex="-1">
       <div class="barcode-scanner-header"><h2 id="barcode-scanner-title">Scan book barcode</h2><div class="barcode-scanner-actions"><button class="button-secondary" id="barcode-scanner-switch-camera" type="button" hidden disabled>Switch camera</button><button class="button-secondary" id="barcode-scanner-close" type="button">Close</button></div></div>

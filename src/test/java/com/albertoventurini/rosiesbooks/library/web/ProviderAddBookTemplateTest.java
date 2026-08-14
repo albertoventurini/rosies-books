@@ -44,12 +44,11 @@ class ProviderAddBookTemplateTest {
         Files.readString(Path.of("src/main/resources/templates/library/web/add.html"));
 
     assertTrue(template.contains("action=\"/books/new/add\""));
-    assertTrue(template.contains("aria-label=\"Library shelves\""));
-    assertTrue(template.contains("{#for item in page.navigation}"));
-    assertTrue(template.contains("href=\"{item.route}\""));
-    assertTrue(template.contains(">{item.label}</a>"));
+    assertTrue(template.contains("{#libraryChrome chrome=page.chrome}"));
     assertTrue(template.contains("name=\"state\""));
     assertTrue(template.contains(">Add book</button>"));
+    assertTrue(template.contains("value=\"confirm-and-scan-next\""));
+    assertTrue(template.contains("Add &amp; scan next"));
     assertTrue(template.contains("class=\"isbn-result-cover\""));
     assertTrue(template.contains("page.result.get.edition.cover"));
     assertTrue(template.contains("class=\"isbn-result-facts\""));
@@ -87,5 +86,33 @@ class ProviderAddBookTemplateTest {
         ProviderAddBookPage.empty("Reader").navigation().stream()
             .map(ShelfNavigationItem::route)
             .toList());
+  }
+
+  @Test
+  void usesTheSharedLibraryChromeForEveryLibraryPage() throws IOException {
+    List<Path> templates =
+        List.of(
+            Path.of("src/main/resources/templates/library/web/add.html"),
+            Path.of("src/main/resources/templates/library/web/manual.html"),
+            Path.of("src/main/resources/templates/library/web/shelf.html"),
+            Path.of("src/main/resources/templates/library/web/search.html"),
+            Path.of("src/main/resources/templates/library/web/detail.html"),
+            Path.of("src/main/resources/templates/library/web/edit.html"),
+            Path.of("src/main/resources/templates/library/web/state.html"),
+            Path.of("src/main/resources/templates/library/web/delete.html"),
+            Path.of("src/main/resources/templates/library/imports/goodreads.html"));
+
+    for (Path template : templates) {
+      assertTrue(Files.readString(template).contains("{#libraryChrome chrome=page.chrome}"));
+    }
+    String chrome =
+        Files.readString(Path.of("src/main/resources/templates/tags/libraryChrome.html"));
+    assertTrue(chrome.contains("href=\"/books/new\">Add book</a>"));
+    assertTrue(chrome.contains("aria-label=\"Library menu\""));
+    assertTrue(chrome.contains("aria-label=\"Library shelves\""));
+    assertTrue(chrome.contains("{nested-content}"));
+    assertFalse(
+        Files.readString(Path.of("src/main/resources/templates/library/web/shelf.html"))
+            .contains("shelf-heading-row"));
   }
 }

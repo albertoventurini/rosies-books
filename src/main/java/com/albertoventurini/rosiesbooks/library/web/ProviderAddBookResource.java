@@ -141,7 +141,8 @@ class ProviderAddBookResource {
       return Response.ok(
               ProviderBookTemplates.add(addPage(owner, accepted.get(), reviewToken, form)))
           .build();
-    if (!"confirm".equals(intent))
+    boolean scanNext = "confirm-and-scan-next".equals(intent);
+    if (!"confirm".equals(intent) && !scanNext)
       return badAdd(
           owner,
           accepted.get(),
@@ -162,7 +163,11 @@ class ProviderAddBookResource {
             .edition()
             .cover()
             .ifPresent(source -> attemptCover(added.editionId(), source));
-      return Response.seeOther(URI.create("/books/" + added.id().value() + "?notice=book-added"))
+      return Response.seeOther(
+              URI.create(
+                  scanNext
+                      ? "/books/new?scan=true"
+                      : "/books/" + added.id().value() + "?notice=book-added"))
           .build();
     } catch (StaleReviewException exception) {
       return bad(

@@ -59,6 +59,10 @@ record ShelfPage(
     return notice != null;
   }
 
+  public LibraryChrome chrome() {
+    return new LibraryChrome(productName, navigation);
+  }
+
   static ShelfPage finished(
       String userDisplayLabel,
       FinishedShelf finished,

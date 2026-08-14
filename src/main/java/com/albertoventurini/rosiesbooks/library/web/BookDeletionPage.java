@@ -42,4 +42,12 @@ record BookDeletionPage(
   public boolean hasError() {
     return error != null;
   }
+
+  public LibraryChrome chrome() {
+    return LibraryChrome.forShelf(
+        java.util.Arrays.stream(com.albertoventurini.rosiesbooks.library.shelves.Shelf.values())
+            .filter(shelf -> shelf.route().equals(currentShelfRoute))
+            .findFirst()
+            .orElse(null));
+  }
 }

@@ -2,31 +2,14 @@
 {#include platform/web/shell}
   {#title}{page.heading} · {page.productName}{/title}
   {#content}
-    <div class="library-shell">
-      <aside class="library-sidebar">
-        <div class="library-identity">
-          <a class="product-name" href="/reading">{page.productName}</a>
-          <details class="library-menu">
-            <summary aria-label="Library menu"><span aria-hidden="true">☰</span></summary>
-            <div class="library-menu-items"><a href="/search">Search your library</a><a href="/imports/goodreads">Import from Goodreads</a></div>
-          </details>
-        </div>
-        <nav class="shelf-navigation" aria-label="Library shelves">
-          {#for item in page.navigation}
-            <a href="{item.route}"{#if item.active} aria-current="page"{/if} class="shelf-navigation-link">{item.label}</a>
-          {/for}
-        </nav>
-      </aside>
+    {#libraryChrome chrome=page.chrome}
       <main class="shelf-main" id="main-content">
         {#if page.hasNotice}
           <div class="shelf-notice" role="status" data-transient-notice>{page.notice}</div>
         {/if}
         <header class="shelf-header">
           <p class="eyebrow">Your library</p>
-          <div class="shelf-heading-row">
-            <h1>{page.heading}</h1>
-            <a class="button-link" href="/books/new">Add book</a>
-          </div>
+          <h1>{page.heading}</h1>
           {#if page.hasFinishedYear}
             <nav class="finished-year-navigation" aria-label="Finished year">
               {#for year in page.finishedYear.options}
@@ -48,7 +31,7 @@
           </ol>
         {/if}
       </main>
-    </div>
+    {/libraryChrome}
     {#if page.hasNotice}<script src="/assets/shelf-notice.js" defer></script>{/if}
   {/content}
 {/include}

@@ -3,6 +3,7 @@
   {#title}Import from Goodreads · {page.productName}{/title}
   {#if page.refreshCoverProgress}<meta http-equiv="refresh" content="10">{/if}
   {#content}
+    {#libraryChrome chrome=page.chrome}
     <main class="manual-main" id="main-content">
       <header class="manual-header"><p class="eyebrow">Your library</p><h1>Import from Goodreads</h1></header>
       {#if page.hasResult}
@@ -13,5 +14,6 @@
         {#if page.hasPreviousImports}<section class="form-section"><h2>Previous imports</h2><ul>{#for import in page.previousImports}<li>{import.importedCount} imported, {import.alreadyPresentCount} already present. <a href="/imports/goodreads/{import.requestId}">View results</a></li>{/for}</ul></section>{/if}
       {/if}
     </main>
+    {/libraryChrome}
   {/content}
 {/include}

@@ -184,6 +184,10 @@ record GoodreadsImportPage(
   public String productName() {
     return "Rosie's books";
   }
+
+  public LibraryChrome chrome() {
+    return LibraryChrome.inactive();
+  }
 }
 
 @CheckedTemplate(basePath = "library/imports")

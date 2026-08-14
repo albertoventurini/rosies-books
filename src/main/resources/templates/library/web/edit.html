@@ -2,12 +2,7 @@
 {#include platform/web/shell}
   {#title}Edit details · {page.productName}{/title}
   {#content}
-    <div class="library-shell">
-      <aside class="library-sidebar">
-        <div class="library-identity">
-          <a class="product-name" href="/reading">{page.productName}</a>
-        </div>
-      </aside>
+    {#libraryChrome chrome=page.chrome}
       <main class="manual-main" id="main-content">
       <header class="manual-header"><p class="eyebrow">Your library</p><h1>Edit details</h1></header>
       {#if page.form.errors.size > 0}<div class="form-error-summary" role="alert"><p>Check the highlighted fields and try again.</p>{#for error in page.form.errorsFor('form')}<p>{error}</p>{/for}</div>{/if}
@@ -26,6 +21,6 @@
         <div class="form-actions"><a href="{page.detailUrl}">Cancel</a><button class="button-primary" type="submit" name="intent" value="save">Save details</button></div>
       </form>
       </main>
-    </div>
+    {/libraryChrome}
   {/content}
 {/include}
