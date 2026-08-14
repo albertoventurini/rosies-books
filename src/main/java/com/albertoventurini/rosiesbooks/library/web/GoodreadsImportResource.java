@@ -1,8 +1,10 @@
-package com.albertoventurini.rosiesbooks.library.imports;
+package com.albertoventurini.rosiesbooks.library.web;
 
 import com.albertoventurini.rosiesbooks.identity.api.CurrentUser;
 import com.albertoventurini.rosiesbooks.identity.api.CurrentUserProvider;
 import com.albertoventurini.rosiesbooks.library.persistence.CoverFetchTaskService;
+import com.albertoventurini.rosiesbooks.library.persistence.GoodreadsCsvParser;
+import com.albertoventurini.rosiesbooks.library.persistence.GoodreadsImportService;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
 import jakarta.ws.rs.Consumes;

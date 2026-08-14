@@ -1,4 +1,4 @@
-package com.albertoventurini.rosiesbooks.library.imports;
+package com.albertoventurini.rosiesbooks.library.persistence;
 
 import com.albertoventurini.rosiesbooks.library.internal.Isbn10;
 import com.albertoventurini.rosiesbooks.library.internal.Isbn13;
@@ -19,10 +19,10 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 
 /** Parses the deliberately small, stable subset of Goodreads' CSV export. */
-final class GoodreadsCsvParser {
+public final class GoodreadsCsvParser {
   private static final Set<String> REQUIRED = Set.of("Title", "Author", "Exclusive Shelf");
 
-  GoodreadsParseResult parse(String csv) {
+  public GoodreadsParseResult parse(String csv) {
     List<String> errors = new ArrayList<>();
     List<GoodreadsRow> rows = new ArrayList<>();
     try (CSVParser parser =
@@ -157,7 +157,7 @@ final class GoodreadsCsvParser {
     }
   }
 
-  record GoodreadsRow(
+  public record GoodreadsRow(
       String title,
       List<String> authors,
       Optional<Isbn13> isbn13,
@@ -170,7 +170,7 @@ final class GoodreadsCsvParser {
       LocalDate addedOn,
       LocalDate readOn) {}
 
-  record GoodreadsParseResult(List<GoodreadsRow> rows, List<String> errors) {
+  public record GoodreadsParseResult(List<GoodreadsRow> rows, List<String> errors) {
     static GoodreadsParseResult valid(List<GoodreadsRow> rows) {
       return new GoodreadsParseResult(List.copyOf(rows), List.of());
     }
@@ -179,7 +179,7 @@ final class GoodreadsCsvParser {
       return new GoodreadsParseResult(List.of(), List.copyOf(errors));
     }
 
-    boolean valid() {
+    public boolean valid() {
       return errors.isEmpty();
     }
   }

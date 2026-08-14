@@ -1,8 +1,10 @@
 package com.albertoventurini.rosiesbooks.library.persistence;
 
 import static com.albertoventurini.rosiesbooks.library.persistence.jooq.Tables.COVER_ASSET;
+import static com.albertoventurini.rosiesbooks.library.persistence.jooq.Tables.COVER_FETCH_TASK;
 import static com.albertoventurini.rosiesbooks.library.persistence.jooq.Tables.EDITION;
 import static com.albertoventurini.rosiesbooks.library.persistence.jooq.Tables.EDITION_AUTHOR;
+import static com.albertoventurini.rosiesbooks.library.persistence.jooq.Tables.GOODREADS_IMPORT;
 import static com.albertoventurini.rosiesbooks.library.persistence.jooq.Tables.USER_EDITION;
 import static com.albertoventurini.rosiesbooks.library.persistence.jooq.Tables.USER_EDITION_AUTHOR_OVERRIDE;
 import static com.albertoventurini.rosiesbooks.library.persistence.jooq.Tables.USER_EDITION_METADATA_OVERRIDE;
@@ -40,7 +42,9 @@ class CoreOwnershipSchemaTest {
             "edition_author", EDITION_AUTHOR,
             "user_edition", USER_EDITION,
             "user_edition_metadata_override", USER_EDITION_METADATA_OVERRIDE,
-            "user_edition_author_override", USER_EDITION_AUTHOR_OVERRIDE);
+            "user_edition_author_override", USER_EDITION_AUTHOR_OVERRIDE,
+            "goodreads_import", GOODREADS_IMPORT,
+            "cover_fetch_task", COVER_FETCH_TASK);
 
     for (var entry : generated.entrySet()) {
       Map<String, ColumnShape> generatedColumns = new LinkedHashMap<>();
@@ -83,7 +87,9 @@ class CoreOwnershipSchemaTest {
             "edition_author", "edition_author_pkey",
             "user_edition", "user_edition_pkey",
             "user_edition_metadata_override", "user_edition_metadata_override_pkey",
-            "user_edition_author_override", "user_edition_author_override_pkey"),
+            "user_edition_author_override", "user_edition_author_override_pkey",
+            "goodreads_import", "goodreads_import_pkey",
+            "cover_fetch_task", "cover_fetch_task_pkey"),
         dsl.fetch(
                 """
                 select tc.table_name, tc.constraint_name
@@ -95,14 +101,18 @@ class CoreOwnershipSchemaTest {
             .intoMap("table_name", "constraint_name"));
 
     assertEquals(
-        Map.of(
-            "user_preference_user_fkey", "CASCADE",
-            "edition_cover_asset_fkey", "SET NULL",
-            "edition_author_edition_fkey", "CASCADE",
-            "user_edition_user_fkey", "CASCADE",
-            "user_edition_edition_fkey", "RESTRICT",
-            "user_edition_metadata_override_user_edition_fkey", "CASCADE",
-            "user_edition_author_override_metadata_fkey", "CASCADE"),
+        Map.ofEntries(
+            Map.entry("user_preference_user_fkey", "CASCADE"),
+            Map.entry("edition_cover_asset_fkey", "SET NULL"),
+            Map.entry("edition_author_edition_fkey", "CASCADE"),
+            Map.entry("user_edition_user_fkey", "CASCADE"),
+            Map.entry("user_edition_edition_fkey", "RESTRICT"),
+            Map.entry("user_edition_metadata_override_user_edition_fkey", "CASCADE"),
+            Map.entry("user_edition_author_override_metadata_fkey", "CASCADE"),
+            Map.entry("goodreads_import_user_fkey", "CASCADE"),
+            Map.entry("cover_fetch_task_user_fkey", "CASCADE"),
+            Map.entry("cover_fetch_task_user_edition_fkey", "CASCADE"),
+            Map.entry("cover_fetch_task_import_fkey", "CASCADE")),
         dsl.fetch(
                 """
                 select constraint_name, delete_rule
@@ -155,7 +165,10 @@ class CoreOwnershipSchemaTest {
                 "user_edition_metadata_override_publication_date_value",
                 "user_edition_metadata_override_isbn_10_checksum",
                 "user_edition_metadata_override_isbn_13_checksum",
-                "user_edition_metadata_override_title_value")));
+                "user_edition_metadata_override_title_value",
+                "goodreads_import_counts_nonnegative",
+                "cover_fetch_task_status_check",
+                "cover_fetch_task_attempt_count_nonnegative")));
   }
 
   private static String javaKind(Class<?> type) {

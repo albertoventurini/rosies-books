@@ -1,4 +1,4 @@
-package com.albertoventurini.rosiesbooks.library.imports;
+package com.albertoventurini.rosiesbooks.library.persistence;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;

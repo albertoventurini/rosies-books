@@ -1,4 +1,4 @@
-package com.albertoventurini.rosiesbooks.library.imports;
+package com.albertoventurini.rosiesbooks.library.web;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.containsString;

@@ -54,7 +54,8 @@ class ProviderAddBookTemplateTest {
     assertTrue(template.contains("page.result.get.edition.cover"));
     assertTrue(template.contains("class=\"isbn-result-facts\""));
     assertTrue(template.contains("class=\"form-section isbn-result\""));
-    assertTrue(template.contains("{#for descriptionParagraph in page.result.get.descriptionParagraphs}"));
+    assertTrue(
+        template.contains("{#for descriptionParagraph in page.result.get.descriptionParagraphs}"));
     assertTrue(template.contains("<p>{descriptionParagraph}</p>"));
     assertTrue(template.contains("data-shelf-target"));
     assertTrue(template.contains("data-shelf-date-fields=\"READING\""));

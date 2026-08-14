@@ -1,4 +1,4 @@
-package com.albertoventurini.rosiesbooks.library.imports;
+package com.albertoventurini.rosiesbooks.library.persistence;
 
 import static com.albertoventurini.rosiesbooks.library.persistence.jooq.Tables.EDITION;
 import static com.albertoventurini.rosiesbooks.library.persistence.jooq.Tables.EDITION_AUTHOR;
@@ -27,7 +27,7 @@ import org.jooq.impl.DSL;
 
 /** Transactional owner-private Goodreads import and durable result lookup. */
 @ApplicationScoped
-class GoodreadsImportService {
+public class GoodreadsImportService {
   private static final Table<?> IMPORT = DSL.table(DSL.name("goodreads_import"));
   private static final Field<UUID> REQUEST_ID = DSL.field(DSL.name("request_id"), UUID.class);
   private static final Field<UUID> USER_ID = DSL.field(DSL.name("user_id"), UUID.class);
@@ -46,7 +46,7 @@ class GoodreadsImportService {
   private final CoverFetchTaskService coverTasks;
   private final ZoneId zone;
 
-  GoodreadsImportService(DSLContext dsl, Clock clock, CoverFetchTaskService coverTasks) {
+  public GoodreadsImportService(DSLContext dsl, Clock clock, CoverFetchTaskService coverTasks) {
     this.dsl = dsl;
     this.clock = clock;
     this.coverTasks = coverTasks;
@@ -54,7 +54,7 @@ class GoodreadsImportService {
   }
 
   @Transactional
-  GoodreadsImportResult importRows(
+  public GoodreadsImportResult importRows(
       CurrentUser owner, UUID requestId, List<GoodreadsCsvParser.GoodreadsRow> rows) {
     Objects.requireNonNull(owner);
     Objects.requireNonNull(requestId);
@@ -107,7 +107,7 @@ class GoodreadsImportService {
     return result;
   }
 
-  Optional<GoodreadsImportResult> find(CurrentUser owner, UUID requestId) {
+  public Optional<GoodreadsImportResult> find(CurrentUser owner, UUID requestId) {
     return dsl.select(REQUEST_ID, IMPORTED, PRESENT, READING, TO_READ, FINISHED)
         .from(IMPORT)
         .where(USER_ID.eq(owner.id().value()).and(REQUEST_ID.eq(requestId)))
@@ -122,7 +122,7 @@ class GoodreadsImportService {
                     row.get(FINISHED)));
   }
 
-  List<GoodreadsImportResult> list(CurrentUser owner) {
+  public List<GoodreadsImportResult> list(CurrentUser owner) {
     return dsl.select(REQUEST_ID, IMPORTED, PRESENT, READING, TO_READ, FINISHED)
         .from(IMPORT)
         .where(USER_ID.eq(owner.id().value()))
@@ -247,7 +247,7 @@ class GoodreadsImportService {
 
   private record State(String name, LocalDate startedOn, LocalDate finishedOn) {}
 
-  record GoodreadsImportResult(
+  public record GoodreadsImportResult(
       UUID requestId,
       int importedCount,
       int alreadyPresentCount,
