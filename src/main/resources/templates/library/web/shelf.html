@@ -8,7 +8,7 @@
           <a class="product-name" href="/reading">{page.productName}</a>
           <details class="library-menu">
             <summary aria-label="Library menu"><span aria-hidden="true">☰</span></summary>
-            <div class="library-menu-items"><a href="/imports/goodreads">Import from Goodreads</a></div>
+            <div class="library-menu-items"><a href="/search">Search your library</a><a href="/imports/goodreads">Import from Goodreads</a></div>
           </details>
         </div>
         <nav class="shelf-navigation" aria-label="Library shelves">
@@ -27,14 +27,6 @@
             <h1>{page.heading}</h1>
             <a class="button-link" href="/books/new">Add book</a>
           </div>
-          <form class="library-search" action="/search" method="get" data-library-search>
-            <label for="library-search-query">Search your library</label>
-            <div class="library-search-controls">
-              <input id="library-search-query" name="q" type="search" autocomplete="off">
-              <button class="button-primary library-search-submit" type="submit" disabled data-library-search-submit>Search</button>
-              <noscript><style>.library-search-submit { display: none; }</style><button class="button-primary" type="submit">Search</button></noscript>
-            </div>
-          </form>
           {#if page.hasFinishedYear}
             <nav class="finished-year-navigation" aria-label="Finished year">
               {#for year in page.finishedYear.options}
@@ -57,7 +49,6 @@
         {/if}
       </main>
     </div>
-    <script src="/assets/library-search.js" defer></script>
     {#if page.hasNotice}<script src="/assets/shelf-notice.js" defer></script>{/if}
   {/content}
 {/include}

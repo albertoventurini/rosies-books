@@ -80,6 +80,9 @@ class ShelfResource {
   @Produces(MediaType.TEXT_HTML)
   public TemplateInstance search(@QueryParam("q") String submitted) {
     CurrentUser owner = requireCurrentUser();
+    if (submitted == null) {
+      return ShelfTemplates.search(SearchPage.blank());
+    }
     return ShelfSearch.parse(submitted)
         .map(
             query ->

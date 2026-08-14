@@ -321,7 +321,7 @@ class ShelfResourceTest {
   }
 
   @Test
-  void rendersSearchControlsOnEveryShelfAndHandlesInvalidAndEmptySearches() {
+  void rendersSearchPageLinkAboveGoodreadsImportAndKeepsSearchControlsOffShelves() {
     for (String route : List.of("/reading", "/to-read", "/finished")) {
       given()
           .cookie("rosies-dev-user", DevelopmentUser.READER_ONE.alias())
@@ -329,11 +329,29 @@ class ShelfResourceTest {
           .get(route)
           .then()
           .statusCode(200)
-          .body(containsString("action=\"/search\""))
-          .body(containsString("data-library-search-submit"))
-          .body(containsString("disabled"))
-          .body(containsString("/assets/library-search.js"));
+          .body(not(containsString("action=\"/search\"")))
+          .body(not(containsString("data-library-search-submit")))
+          .body(containsString("href=\"/search\">Search your library</a>"))
+          .body(
+              containsString(
+                  "href=\"/search\">Search your library</a><a href=\"/imports/goodreads\""));
     }
+
+    given()
+        .cookie("rosies-dev-user", DevelopmentUser.READER_ONE.alias())
+        .when()
+        .get("/search")
+        .then()
+        .statusCode(200)
+        .body(containsString("action=\"/search\""))
+        .body(containsString("data-library-search-submit"))
+        .body(containsString("disabled"))
+        .body(containsString("/assets/library-search.js"))
+        .body(not(containsString("Enter at least 3 letters")));
+  }
+
+  @Test
+  void handlesInvalidAndEmptySearches() {
 
     given()
         .cookie("rosies-dev-user", DevelopmentUser.READER_ONE.alias())

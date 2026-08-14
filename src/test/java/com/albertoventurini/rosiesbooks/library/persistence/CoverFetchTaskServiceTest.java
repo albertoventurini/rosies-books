@@ -104,7 +104,8 @@ class CoverFetchTaskServiceTest {
         .where(COVER_FETCH_TASK.ID.eq(claim.taskId()))
         .execute();
 
-    tasks.complete(claim.taskId(), new ProviderCoverPersistenceService.FetchOutcome.Retry(Optional.empty()));
+    tasks.complete(
+        claim.taskId(), new ProviderCoverPersistenceService.FetchOutcome.Retry(Optional.empty()));
 
     assertEquals(
         "NO_COVER",

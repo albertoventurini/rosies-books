@@ -37,6 +37,10 @@ record SearchPage(
             .toList());
   }
 
+  static SearchPage blank() {
+    return new SearchPage("Rosie's books", inactiveNavigation(), "", null, List.of());
+  }
+
   static SearchPage invalid(String submitted) {
     return new SearchPage(
         "Rosie's books",
