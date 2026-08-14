@@ -2,6 +2,7 @@ package com.albertoventurini.rosiesbooks.library.imports;
 
 import com.albertoventurini.rosiesbooks.identity.api.CurrentUser;
 import com.albertoventurini.rosiesbooks.identity.api.CurrentUserProvider;
+import com.albertoventurini.rosiesbooks.library.persistence.CoverFetchTaskService;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
 import jakarta.ws.rs.Consumes;
@@ -28,11 +29,16 @@ class GoodreadsImportResource {
   private static final long MAX_BYTES = 5L * 1024 * 1024;
   private final CurrentUserProvider currentUsers;
   private final GoodreadsImportService imports;
+  private final CoverFetchTaskService coverTasks;
   private final GoodreadsCsvParser parser = new GoodreadsCsvParser();
 
-  GoodreadsImportResource(CurrentUserProvider currentUsers, GoodreadsImportService imports) {
+  GoodreadsImportResource(
+      CurrentUserProvider currentUsers,
+      GoodreadsImportService imports,
+      CoverFetchTaskService coverTasks) {
     this.currentUsers = currentUsers;
     this.imports = imports;
+    this.coverTasks = coverTasks;
   }
 
   @GET
@@ -40,7 +46,7 @@ class GoodreadsImportResource {
   public TemplateInstance form() {
     return GoodreadsImportTemplates.goodreads(
         new GoodreadsImportPage(
-            requireUser().displayLabel(), UUID.randomUUID().toString(), List.of(), null));
+            requireUser().displayLabel(), UUID.randomUUID().toString(), List.of(), null, null));
   }
 
   @POST
@@ -107,7 +113,12 @@ class GoodreadsImportResource {
     GoodreadsImportService.GoodreadsImportResult result =
         imports.find(owner, id).orElseThrow(NotFoundException::new);
     return GoodreadsImportTemplates.goodreads(
-        new GoodreadsImportPage(owner.displayLabel(), id.toString(), List.of(), result));
+        new GoodreadsImportPage(
+            owner.displayLabel(),
+            id.toString(),
+            List.of(),
+            result,
+            coverTasks.progress(owner, id)));
   }
 
   private CurrentUser requireUser() {
@@ -124,7 +135,7 @@ class GoodreadsImportResource {
         .entity(
             GoodreadsImportTemplates.goodreads(
                 new GoodreadsImportPage(
-                    owner.displayLabel(), requestId == null ? "" : requestId, errors, null)))
+                    owner.displayLabel(), requestId == null ? "" : requestId, errors, null, null)))
         .build();
   }
 }
@@ -133,13 +144,22 @@ record GoodreadsImportPage(
     String userDisplayLabel,
     String requestId,
     List<String> errors,
-    GoodreadsImportService.GoodreadsImportResult result) {
+    GoodreadsImportService.GoodreadsImportResult result,
+    CoverFetchTaskService.Progress coverProgress) {
   public boolean hasResult() {
     return result != null;
   }
 
   public boolean hasErrors() {
     return !errors.isEmpty();
+  }
+
+  public boolean hasCoverProgress() {
+    return coverProgress != null;
+  }
+
+  public boolean refreshCoverProgress() {
+    return coverProgress != null && coverProgress.outstanding();
   }
 
   public String productName() {

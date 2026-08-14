@@ -75,7 +75,8 @@ class BookDetailResourceTest {
         .body(containsString("href=\"/books/" + book + "/delete\""))
         .body(not(containsString("← Back to shelf")))
         .body(not(containsString("<p class=\"eyebrow\">To Read</p>")))
-        .body(not(containsString("/cover\"")));
+        .body(not(containsString("/cover\"")))
+        .body(not(containsString("Fetch cover")));
 
     given()
         .cookie("rosies-dev-user", DevelopmentUser.READER_ONE.alias())
@@ -146,17 +147,15 @@ class BookDetailResourceTest {
   }
 
   @Test
-  void offersCoverRefreshForAnOwnedCoverlessProviderEditionWithAnIsbn() {
+  void offersCoverFetchForAnOwnedCoverlessManualEditionWithAnIsbn() {
     UUID edition = UUID.randomUUID();
     UUID book = UUID.randomUUID();
     OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
     dsl.insertInto(EDITION)
         .set(EDITION.ID, edition)
         .set(EDITION.ISBN_13, "9780306406157")
-        .set(EDITION.PROVIDER_NAME, "googlebooks")
-        .set(EDITION.PROVIDER_EDITION_ID, "google-volume")
         .set(EDITION.TITLE, "Coverless provider book")
-        .set(EDITION.METADATA_ORIGIN, "PROVIDER")
+        .set(EDITION.METADATA_ORIGIN, "MANUAL")
         .set(EDITION.CREATED_AT, now)
         .set(EDITION.UPDATED_AT, now)
         .execute();
@@ -182,7 +181,7 @@ class BookDetailResourceTest {
         .get("/books/" + book)
         .then()
         .statusCode(200)
-        .body(containsString("Refresh cover"))
+        .body(containsString("Fetch cover"))
         .body(containsString("action=\"/books/" + book + "/cover/refresh\""));
   }
 }

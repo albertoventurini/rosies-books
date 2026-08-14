@@ -12,8 +12,10 @@ import com.albertoventurini.rosiesbooks.provider.api.TrustedCoverReference;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.Optional;
 import java.util.UUID;
 import org.jooq.DSLContext;
 
@@ -76,6 +78,37 @@ public class ProviderCoverPersistenceService {
       fetchAndAttach(edition.id(), edition.trustedCoverSource().get());
   }
 
+  /** Fetches a cover by exact ISBN for a durable task. */
+  @Transactional
+  public FetchOutcome fetchForIsbn(UUID editionId, String rawIsbn13) {
+    if (editionId == null || rawIsbn13 == null) return new FetchOutcome.NoCover();
+    boolean alreadyCovered =
+        dsl.fetchExists(
+            dsl.selectOne()
+                .from(EDITION)
+                .where(EDITION.ID.eq(editionId).and(EDITION.COVER_ASSET_ID.isNotNull())));
+    if (alreadyCovered) return new FetchOutcome.Success();
+    IsbnLookupResult result;
+    try {
+      result = lookup.lookup(new Isbn13(rawIsbn13));
+    } catch (RuntimeException failure) {
+      return new FetchOutcome.Retry(Optional.empty());
+    }
+    if (result instanceof IsbnLookupResult.NotFound) return new FetchOutcome.NoCover();
+    if (result instanceof IsbnLookupResult.RateLimited limited)
+      return new FetchOutcome.Retry(limited.retryAfter());
+    if (!(result instanceof IsbnLookupResult.Found found))
+      return new FetchOutcome.Retry(Optional.empty());
+    if (found.edition().cover().isEmpty()) return new FetchOutcome.NoCover();
+    fetchAndAttach(editionId, found.edition().cover().get());
+    boolean attached =
+        dsl.fetchExists(
+            dsl.selectOne()
+                .from(EDITION)
+                .where(EDITION.ID.eq(editionId).and(EDITION.COVER_ASSET_ID.isNotNull())));
+    return attached ? new FetchOutcome.Success() : new FetchOutcome.Retry(Optional.empty());
+  }
+
   /** Refreshes only the requesting user's coverless linked edition, never its metadata. */
   @Transactional
   public void refresh(CurrentUser owner, UserEditionId userEditionId) {
@@ -108,5 +141,18 @@ public class ProviderCoverPersistenceService {
                 // A corrupt persisted source is not a destination that can be retried.
               }
             });
+  }
+
+  public sealed interface FetchOutcome
+      permits FetchOutcome.Success, FetchOutcome.NoCover, FetchOutcome.Retry {
+    record Success() implements FetchOutcome {}
+
+    record NoCover() implements FetchOutcome {}
+
+    record Retry(Optional<Duration> retryAfter) implements FetchOutcome {
+      public Retry {
+        retryAfter = retryAfter == null ? Optional.empty() : retryAfter;
+      }
+    }
   }
 }

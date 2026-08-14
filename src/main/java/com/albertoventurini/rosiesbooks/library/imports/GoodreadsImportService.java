@@ -6,6 +6,7 @@ import static com.albertoventurini.rosiesbooks.library.persistence.jooq.Tables.U
 
 import com.albertoventurini.rosiesbooks.identity.api.CurrentUser;
 import com.albertoventurini.rosiesbooks.library.internal.Isbn13;
+import com.albertoventurini.rosiesbooks.library.persistence.CoverFetchTaskService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 import java.time.Clock;
@@ -14,6 +15,7 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -41,11 +43,13 @@ class GoodreadsImportService {
       DSL.field(DSL.name("created_at"), OffsetDateTime.class);
   private final DSLContext dsl;
   private final Clock clock;
+  private final CoverFetchTaskService coverTasks;
   private final ZoneId zone;
 
-  GoodreadsImportService(DSLContext dsl, Clock clock) {
+  GoodreadsImportService(DSLContext dsl, Clock clock, CoverFetchTaskService coverTasks) {
     this.dsl = dsl;
     this.clock = clock;
+    this.coverTasks = coverTasks;
     this.zone = ZoneId.of("Africa/Johannesburg");
   }
 
@@ -65,6 +69,7 @@ class GoodreadsImportService {
     Instant now = Instant.now(clock);
     LocalDate today = LocalDate.now(clock.withZone(zone));
     int imported = 0, present = 0, reading = 0, toRead = 0, finished = 0;
+    List<UUID> queuedUserEditions = new ArrayList<>();
     for (int position = 0; position < rows.size(); position++) {
       GoodreadsCsvParser.GoodreadsRow row = rows.get(position);
       UUID editionId = resolveEdition(row, now);
@@ -73,14 +78,16 @@ class GoodreadsImportService {
         continue;
       }
       State state = state(row, today);
-      link(
-          owner,
-          editionId,
-          row,
-          state,
-          row.addedOn() == null
-              ? now
-              : row.addedOn().atStartOfDay(zone).plusSeconds(position).toInstant());
+      UUID userEditionId =
+          link(
+              owner,
+              editionId,
+              row,
+              state,
+              row.addedOn() == null
+                  ? now
+                  : row.addedOn().atStartOfDay(zone).plusSeconds(position).toInstant());
+      queuedUserEditions.add(userEditionId);
       imported++;
       switch (state.name) {
         case "READING" -> reading++;
@@ -95,6 +102,8 @@ class GoodreadsImportService {
         .values(
             requestId, owner.id().value(), imported, present, reading, toRead, finished, atUtc(now))
         .execute();
+    queuedUserEditions.forEach(
+        userEditionId -> coverTasks.enqueueImport(owner, requestId, userEditionId));
     return result;
   }
 
@@ -171,7 +180,7 @@ class GoodreadsImportService {
                     .and(USER_EDITION.EDITION_ID.eq(editionId))));
   }
 
-  private void link(
+  private UUID link(
       CurrentUser owner,
       UUID editionId,
       GoodreadsCsvParser.GoodreadsRow row,
@@ -185,8 +194,9 @@ class GoodreadsImportService {
                 .where(EDITION_AUTHOR.EDITION_ID.eq(editionId))
                 .orderBy(EDITION_AUTHOR.POSITION)
                 .fetch(EDITION_AUTHOR.NAME));
+    UUID userEditionId = UUID.randomUUID();
     dsl.insertInto(USER_EDITION)
-        .set(USER_EDITION.ID, UUID.randomUUID())
+        .set(USER_EDITION.ID, userEditionId)
         .set(USER_EDITION.USER_ID, owner.id().value())
         .set(USER_EDITION.EDITION_ID, editionId)
         .set(USER_EDITION.STATE, state.name)
@@ -199,6 +209,7 @@ class GoodreadsImportService {
         .set(USER_EDITION.UPDATED_AT, atUtc(createdAt))
         .set(USER_EDITION.VERSION, 0L)
         .execute();
+    return userEditionId;
   }
 
   private static State state(GoodreadsCsvParser.GoodreadsRow row, LocalDate today) {

@@ -59,6 +59,10 @@
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-scheduler</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
       <artifactId>quarkus-oidc</artifactId>
     </dependency>
     <dependency>
@@ -200,7 +204,7 @@
               <generator>
                 <database>
                   <name>org.jooq.meta.extensions.ddl.DDLDatabase</name>
-                  <includes>cover_asset|user_preference|edition|edition_author|user_edition|user_edition_metadata_override|user_edition_author_override|goodreads_import</includes>
+                  <includes>cover_asset|user_preference|edition|edition_author|user_edition|user_edition_metadata_override|user_edition_author_override|goodreads_import|cover_fetch_task</includes>
                   <properties>
                     <property>
                       <key>scripts</key>

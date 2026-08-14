@@ -4,7 +4,7 @@ import com.albertoventurini.rosiesbooks.identity.api.CurrentUser;
 import com.albertoventurini.rosiesbooks.identity.api.CurrentUserProvider;
 import com.albertoventurini.rosiesbooks.library.api.BookDetailCatalog;
 import com.albertoventurini.rosiesbooks.library.internal.UserEditionId;
-import com.albertoventurini.rosiesbooks.library.persistence.ProviderCoverPersistenceService;
+import com.albertoventurini.rosiesbooks.library.persistence.CoverFetchTaskService;
 import io.quarkus.qute.TemplateInstance;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -22,15 +22,15 @@ class BookDetailResource {
 
   private final CurrentUserProvider currentUsers;
   private final BookDetailCatalog details;
-  private final ProviderCoverPersistenceService covers;
+  private final CoverFetchTaskService coverTasks;
 
   BookDetailResource(
       CurrentUserProvider currentUsers,
       BookDetailCatalog details,
-      ProviderCoverPersistenceService covers) {
+      CoverFetchTaskService coverTasks) {
     this.currentUsers = currentUsers;
     this.details = details;
-    this.covers = covers;
+    this.coverTasks = coverTasks;
   }
 
   @POST
@@ -39,7 +39,7 @@ class BookDetailResource {
     CurrentUser owner = requireCurrentUser();
     UserEditionId id = parse(rawId);
     try {
-      covers.refresh(owner, id);
+      coverTasks.request(owner, id);
     } catch (RuntimeException ignored) {
       // Refresh is best effort; the book remains usable with its placeholder.
     }
